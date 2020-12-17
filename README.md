@@ -1,6 +1,6 @@
 # Twitch CLI (Open Beta Version)
 
-- [Twitch CLI (Open Beta Version)](#twitch-cli-early-preview-version)
+- [Twitch CLI (Open Beta Version)](#twitch-cli-open-beta-version)
   - [Download](#download)
   - [Usage](#usage)
   - [Commands](#commands)
