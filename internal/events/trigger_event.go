@@ -11,8 +11,8 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
-// TriggerParamaters defines the parameters used to emit an event.
-type TriggerParamaters struct {
+// TriggerParameters defines the parameters used to emit an event.
+type TriggerParameters struct {
 	Event          string
 	Transport      string
 	IsAnonymous    bool
@@ -33,8 +33,8 @@ type TriggerResponse struct {
 	Timestamp string
 }
 
-// Fire emits an event using the TriggerParamaters defined above.
-func Fire(p TriggerParamaters) (string, error) {
+// Fire emits an event using the TriggerParameters defined above.
+func Fire(p TriggerParameters) (string, error) {
 	if len(triggerTypeMap[p.Transport]) == 0 {
 		return "", errors.New("Invalid transport")
 	}

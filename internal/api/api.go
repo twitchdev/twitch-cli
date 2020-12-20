@@ -26,22 +26,22 @@ type clientInformation struct {
 }
 
 // NewRequest is used to request data from the Twitch API using a HTTP GET request- this function is a wrapper for the apiRequest function that handles the network call
-func NewRequest(method string, path string, queryParamaters []string, body []byte, prettyPrint bool) {
+func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool) {
 	client, err := getClientInformation()
 
 	if err != nil {
 		fmt.Println("Error fetching client information", err.Error())
 	}
 
-	paramaters := url.Values{}
+	Parameters := url.Values{}
 
-	if queryParamaters != nil {
+	if queryParameters != nil {
 		path += "?"
-		for _, param := range queryParamaters {
+		for _, param := range queryParameters {
 			value := strings.Split(param, "=")
-			paramaters.Add(value[0], value[1])
+			Parameters.Add(value[0], value[1])
 		}
-		path += paramaters.Encode()
+		path += Parameters.Encode()
 	}
 	resp, err := apiRequest(strings.ToUpper(method), baseURL+path, body, apiRequestParameters{
 		ClientID: client.ClientID,
@@ -80,9 +80,6 @@ func ValidOptions(method string) []string {
 		}
 	}
 
-	// for _, endpoint := range names {
-	// 	names = append(names, strings.Split(endpoint, "/")...)
-	// }
 	sort.Strings(names)
 
 	return names
@@ -106,7 +103,7 @@ func getClientInformation() (clientInformation, error) {
 		refreshToken := viper.GetString("refreshToken")
 
 		if refreshToken == "" {
-			log.Fatal("Please run github.com/twitchdev/twitch-cli token")
+			log.Fatal("Please run twitch token")
 		}
 
 		clientSecret := viper.GetString("clientSecret")
@@ -119,7 +116,7 @@ func getClientInformation() (clientInformation, error) {
 		})
 
 		if err != nil {
-			log.Fatal("Unable to refresh token, please rerun github.com/twitchdev/twitch-cli token", err.Error())
+			log.Fatal("Unable to refresh token, please rerun twitch token", err.Error())
 		}
 	}
 

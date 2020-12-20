@@ -8,7 +8,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
-func RefireEvent(id string, p TriggerParamaters) (string, error) {
+func RefireEvent(id string, p TriggerParameters) (string, error) {
 	res, err := util.GetEventByID(id)
 	if err != nil {
 		return "", err

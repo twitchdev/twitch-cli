@@ -45,7 +45,7 @@ func configureCmdRun(cmd *cobra.Command, args []string) {
 	clientSecretPrompt := promptui.Prompt{
 		Label: "Client Secret",
 		Validate: func(s string) error {
-			if len(s) != 30 {
+			if len(s) == 30 || len(s) == 31 {
 				return errors.New("Invalid length for Client Secret")
 			}
 			return nil

@@ -65,8 +65,12 @@ func init() {
 
 	apiCmd.PersistentFlags().StringArrayVarP(&queryParameters, "query-params", "q", nil, "Available multiple times. Passes in query parameters to endpoints using the format of `key=value`.")
 	apiCmd.PersistentFlags().StringVarP(&body, "body", "b", "", "Passes a body to the request. Alteratively supports CURL-like references to files using the format of `@data,json`.")
-	// default here is false to enable -p commands to toggle off without explicitly defining -p=false as -p false will not work. The below commands invert the bool to pass the true default
+
+	// default here is false to enable -p commands to toggle off without explicitly defining -p=false as -p false will not work. The below commands invert the bool to pass the true default. Deprecated, so marking as hidden in favor of the unformatted flag.
 	apiCmd.PersistentFlags().BoolVarP(&prettyPrint, "pretty-print", "p", false, "Whether to pretty-print API requests. Default is true.")
+	apiCmd.PersistentFlags().MarkHidden("pretty-print")
+
+	apiCmd.PersistentFlags().BoolVarP(&prettyPrint, "unformatted", "u", false, "Whether to have API requests come back unformatted/non-prettyprinted. Default is false.")
 }
 
 func cmdRun(cmd *cobra.Command, args []string) {

@@ -87,7 +87,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 	}
 
 	for i := 0; i < count; i++ {
-		res, err := trigger.Fire(trigger.TriggerParamaters{
+		res, err := trigger.Fire(trigger.TriggerParameters{
 			Event:          args[0],
 			Transport:      transport,
 			ForwardAddress: forwardAddress,
@@ -108,7 +108,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 }
 
 func retriggerCmdRun(cmd *cobra.Command, args []string) {
-	res, err := trigger.RefireEvent(eventID, trigger.TriggerParamaters{
+	res, err := trigger.RefireEvent(eventID, trigger.TriggerParameters{
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
 	})

@@ -32,7 +32,7 @@ Allows the user to make GET calls to endpoints on Helix. Requires a logged in to
 | Flag             | Shorthand | Description                                                                                                   | Example              | Required? (Y/N) |
 |------------------|-----------|---------------------------------------------------------------------------------------------------------------|----------------------|-----------------|
 | `--query-param`  | `-q`      | Query parameters for the endpoint in `key=value` format. Multiple can be entered to give multiple parameters. | `get -q login=ninja` | N               |
-| `--pretty-print` | `-p`      | Whether to pretty-print API requests. Default is `true`.                                                      | `get -p`             | N               |
+| `--unformatted`  | `-u`      | Whether to return unformatted responses. Default is `false`.                                                  | `get -u`             | N               |
 
 **Examples**
 
