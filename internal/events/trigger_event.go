@@ -75,6 +75,14 @@ func Fire(p TriggerParamaters) (string, error) {
 			IsAnonymous: p.IsAnonymous,
 		})
 
+	case "follow":
+		resp, err = GenerateFollowBody(FollowParams{
+			Type:      event,
+			Transport: p.Transport,
+			FromUser:  p.FromUser,
+			ToUser:    p.ToUser,
+		})
+
 	case "transaction":
 		resp, err = GenerateTransactionBody(TransactionParams{
 			Transport: p.Transport,

@@ -4,11 +4,11 @@ package trigger
 
 var triggerTypeMap = map[string]map[string]string{
 	"eventsub": {
-		"cheer":       "channels.cheer",
-		"subscribe":   "channels.subscribe",
-		"unsubscribe": "channels.unsubscribe",
-		"gift":        "channels.subscribe",
-		"follow":      "users.follow",
+		"cheer":       "channel.cheer",
+		"subscribe":   "channel.subscribe",
+		"unsubscribe": "channel.unsubscribe",
+		"gift":        "channel.subscribe",
+		"follow":      "channel.follow",
 		"transaction": "",
 	},
 	"websub": {
@@ -20,11 +20,11 @@ var triggerTypeMap = map[string]map[string]string{
 		"transaction": "transaction",
 	},
 	"websockets": {
-		"cheer":       "channels.cheer",
-		"subscribe":   "channels.subscribe",
-		"unsubscribe": "channels.unsubscribe",
-		"gift":        "channels.subscribe",
-		"follow":      "users.follow",
+		"cheer":       "channel.cheer",
+		"subscribe":   "channel.subscribe",
+		"unsubscribe": "channel.unsubscribe",
+		"gift":        "channel.subscribe",
+		"follow":      "channel.follow",
 		"transaction": "",
 	},
 }
@@ -35,7 +35,7 @@ var triggerSupported = map[string]bool{
 	"gift":        true,
 	"cheer":       true,
 	"transaction": true,
-	"follow":      false,
+	"follow":      true,
 }
 
 var transportSupported = map[string]bool{
