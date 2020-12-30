@@ -45,7 +45,7 @@ func GenerateFollowBody(p FollowParams) (TriggerResponse, error) {
 					BroadcasterUserID: p.ToUser,
 				},
 				Transport: models.EventsubTransport{
-					Method:   "eventsub",
+					Method:   "webhook",
 					Callback: "null",
 				},
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339),

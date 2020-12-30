@@ -45,7 +45,7 @@ var notificationHeaders = map[string][]header{
 	},
 	"websub": {
 		{
-			HeaderName:  `Twitch-Notification-Retry`,
+			HeaderName:  `Twitch-Notification-Timestamp`,
 			HeaderValue: util.GetTimestamp().Format(time.RFC3339),
 		},
 		{

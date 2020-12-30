@@ -71,7 +71,10 @@ func getDatabase() (sql.DB, error) {
 	}
 
 	if needToInit == true {
-		initDatabase(*db)
+		err = initDatabase(*db)
+		if err != nil {
+			return sql.DB{}, err
+		}
 	}
 
 	checkAndUpdate(*db)

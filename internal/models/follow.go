@@ -20,3 +20,8 @@ type FollowWebSubResponseData struct {
 	ToName     string `json:"to_name"`
 	FollowedAt string `json:"followed_at"`
 }
+
+type FollowEventSubResponse struct {
+	Subscription EventsubSubscription `json:"subscription"`
+	Event        FollowEventSubEvent  `json:"event"`
+}
