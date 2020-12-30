@@ -19,6 +19,9 @@ type TriggerParameters struct {
 	FromUser       string
 	ToUser         string
 	GiftUser       string
+	Status         string
+	ObjectId       string
+	Cost           int64
 	ForwardAddress string
 	Secret         string
 	Verbose        bool
@@ -90,6 +93,31 @@ func Fire(p TriggerParameters) (string, error) {
 			FromUser:  p.FromUser,
 			ToUser:    p.ToUser,
 		})
+
+	// channel points events
+	case "add-redemption", "update-redemption":
+		resp, err = GenerateRedemptionBody(RedemptionParams{
+			Transport: p.Transport,
+			Type:      event,
+			ToUser:    p.ToUser,
+			FromUser:  p.FromUser,
+			Title:     "",
+			Prompt:    "",
+			Status:    p.Status,
+			RewardId:  p.ObjectId,
+			Cost:      p.Cost,
+		})
+
+	case "add-reward", "update-reward", "remove-reward":
+		resp, err = GenerateRewardBody(RewardParams{
+			Transport: p.Transport,
+			Type:      event,
+			ToUser:    p.ToUser,
+			Title:     "",
+			Prompt:    "",
+			Cost:      p.Cost,
+		})
+
 	default:
 		return "", nil
 	}
