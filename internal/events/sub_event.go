@@ -60,7 +60,7 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 					BroadcasterUserID: params.ToUser,
 				},
 				Transport: models.EventsubTransport{
-					Method:   "eventsub",
+					Method:   "webhook",
 					Callback: "null",
 				},
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339),

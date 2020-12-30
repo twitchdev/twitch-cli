@@ -11,3 +11,8 @@ type CheerEventSubEvent struct {
 	Message             string  `json:"message"`
 	Bits                float64 `json:"bits"`
 }
+
+type CheerEventSubResponse struct {
+	Subscription EventsubSubscription `json:"subscription"`
+	Event        CheerEventSubEvent   `json:"event"`
+}
