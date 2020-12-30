@@ -64,7 +64,7 @@ func GenerateRedemptionBody(p RedemptionParams) (TriggerResponse, error) {
 
 	switch p.Transport {
 	case "eventsub":
-		body := *&models.EventsubResponse{
+		body := *&models.RedemptionEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
 				Type:    p.Type,

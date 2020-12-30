@@ -20,3 +20,8 @@ type RedemptionReward struct {
 	Cost   int64  `json:"cost"`
 	Prompt string `json:"prompt"`
 }
+
+type RedemptionEventSubResponse struct {
+	Subscription EventsubSubscription    `json:"subscription"`
+	Event        RedemptionEventSubEvent `json:"event"`
+}

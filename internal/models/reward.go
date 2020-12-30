@@ -39,3 +39,8 @@ type RewardImage struct {
 	Url2x string `json:"url_2x"`
 	Url4x string `json:"url_4x"`
 }
+
+type RewardEventSubResponse struct {
+	Subscription EventsubSubscription `json:"subscription"`
+	Event        RewardEventSubEvent  `json:"event"`
+}
