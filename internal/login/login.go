@@ -21,6 +21,7 @@ type LoginParameters struct {
 	ClientID     string
 	ClientSecret string
 	Scopes       string
+	Token        string
 }
 
 type RefreshParameters struct {
@@ -123,6 +124,20 @@ func UserCredentialsLogin(p LoginParameters) {
 	expiresAt := time.Now().Add(time.Duration(int64(time.Second) * int64(r.ExpiresIn)))
 	println(fmt.Sprintf("User Access Token: %s\nRefresh Token: %s\nExpires At: %s\nScopes: %s", r.AccessToken, r.RefreshToken, expiresAt, r.Scope))
 	storeInConfig(r.AccessToken, r.RefreshToken, r.Scope, expiresAt)
+	return
+}
+
+
+func CredentialsLogout(p LoginParameters) {
+	twitchClientCredentialsURL := fmt.Sprintf(`https://id.twitch.tv/oauth2/revoke?client_id=%s&token=%s`, p.ClientID, p.Token)
+
+	_, err := loginRequest(http.MethodPost, twitchClientCredentialsURL, nil)
+	if err != nil {
+		log.Fatal(err.Error())
+		return
+	}
+
+	println("Done.")
 	return
 }
 
