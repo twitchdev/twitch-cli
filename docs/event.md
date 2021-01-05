@@ -15,28 +15,36 @@ Used to either create or send mock events for use with local webhooks testing.
 
 **Args**
 
-| Argument      | Description                                                        |
-|---------------|--------------------------------------------------------------------|
-| `subscribe`   | A standard subscription event. Triggers a basic tier 1 sub.        |
-| `unsubscribe` | A standard unsubscribe event. Triggers a basic tier 1 sub.         |
-| `gift`        | A gifted subscription event. Triggers a basic tier 1 sub.          |
-| `cheer`       | Only usable with the `eventsub` transport, shows Cheers from chat. |
-| `transaction` | Bits in Extensions transactions events.                            |
+| Argument            | Description                                                        |
+|---------------------|--------------------------------------------------------------------|
+| `subscribe`         | A standard subscription event. Triggers a basic tier 1 sub.        |
+| `unsubscribe`       | A standard unsubscribe event. Triggers a basic tier 1 sub.         |
+| `gift`              | A gifted subscription event. Triggers a basic tier 1 sub.          |
+| `cheer`             | Only usable with the `eventsub` transport, shows Cheers from chat. |
+| `transaction`       | Bits in Extensions transactions events.                            |
+| `add-reward`        | Channel Points EventSub event for a Custom Reward being added.     |
+| `update-reward`     | Channel Points EventSub event for a Custom Reward being updated.   |
+| `remove-reward`     | Channel Points EventSub event for a Custom Reward being removed.   |
+| `add-redemption`    | Channel Points EventSub event for a redemption being performed.    |
+| `update-redemption` | Channel Points EventSub event for a redemption being updated.      |
 
 
 
 **Flags**
 
-| Flag                | Shorthand | Description                                                                                                                | Example                     | Required? (Y/N) |
-|---------------------|-----------|----------------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
-| `--forward-address` | `-F`      | Web server address for where to send mock events.                                                                          | `-F https://localhost:8080` | N               |
-| `--transport`       | `-T`      | The method used to send events. Default is eventsub, but can send using websub.                                            | `-T websub`                 | N               |
-| `--to-user`         | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                         | `-t 44635596`               | N               |
-| `--from-user`       | `-f`      | Denotes the sender's TUID of the event, for example the user that follows another user or the subscriber to a broadcaster. | `-f 44635596`               | N               |
-| `--gift-user`       | `-g`      | Used only for subcription-based events, denotes the gifting user ID                                                        | `-g 44635596`               | N               |
-| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.                                               | `-s testsecret`             | N               |
-| `--count`           | `-c`      | Count of events to fire. This can be used to simulate an influx of subscriptions.                                          | `-c 100`                    | N               |
-| `--anonymous`       | `-a`      | If the event is anonymous. Only applies to `gift` and `cheer` events.                                                      | `-a`                        | N               |
+| Flag                | Shorthand | Description                                                                                                                | Example                                   | Required? (Y/N) |
+|---------------------|-----------|----------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|-----------------|
+| `--forward-address` | `-F`      | Web server address for where to send mock events.                                                                          | `-F https://localhost:8080`               | N               |
+| `--transport`       | `-T`      | The method used to send events. Default is eventsub, but can send using websub.                                            | `-T websub`                               | N               |
+| `--to-user`         | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                         | `-t 44635596`                             | N               |
+| `--from-user`       | `-f`      | Denotes the sender's TUID of the event, for example the user that follows another user or the subscriber to a broadcaster. | `-f 44635596`                             | N               |
+| `--gift-user`       | `-g`      | Used only for subcription-based events, denotes the gifting user ID                                                        | `-g 44635596`                             | N               |
+| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.                                               | `-s testsecret`                           | N               |
+| `--count`           | `-c`      | Count of events to fire. This can be used to simulate an influx of subscriptions.                                          | `-c 100`                                  | N               |
+| `--anonymous`       | `-a`      | If the event is anonymous. Only applies to `gift` and `cheer` events.                                                      | `-a`                                      | N               |
+| `--status`          | `-S`      | Status of the event object, currently applies to channel points redemptions.                                               | `-S fulfilled`                            | N               |
+| `--item-id`         | `-i`      | Manually set the ID of the event payload item (for example the reward ID in redemption events).                          | `-i 032e4a6c-4aef-11eb-a9f5-1f703d1f0b92` | N               |
+| `--cost`            | `-C`      | Amount of bits or channel points redeemed/used in the event.                                                               | `-C 250`                                  | N               |
 
 **Examples**
 
