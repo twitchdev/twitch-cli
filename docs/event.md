@@ -43,7 +43,7 @@ Used to either create or send mock events for use with local webhooks testing.
 | `--count`           | `-c`      | Count of events to fire. This can be used to simulate an influx of subscriptions.                                          | `-c 100`                                  | N               |
 | `--anonymous`       | `-a`      | If the event is anonymous. Only applies to `gift` and `cheer` events.                                                      | `-a`                                      | N               |
 | `--status`          | `-S`      | Status of the event object, currently applies to channel points redemptions.                                               | `-S fulfilled`                            | N               |
-| `--object-id`       | `-i`      | Manually set the ID of the event payload object (for example the reward ID in redemption events).                          | `-i 032e4a6c-4aef-11eb-a9f5-1f703d1f0b92` | N               |
+| `--item-id`         | `-i`      | Manually set the ID of the event payload item (for example the reward ID in redemption events).                          | `-i 032e4a6c-4aef-11eb-a9f5-1f703d1f0b92` | N               |
 | `--cost`            | `-C`      | Amount of bits or channel points redeemed/used in the event.                                                               | `-C 250`                                  | N               |
 
 **Examples**
