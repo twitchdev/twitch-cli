@@ -27,22 +27,22 @@ func init() {
 	loginCmd.Flags().BoolVarP(&isUserToken, "user-token", "u", false, "Whether to login as a user or getting an app access token.")
 	loginCmd.Flags().StringVarP(&userScopes, "scopes", "s", "", "Space seperated list of scopes to request with your user token.")
 	loginCmd.Flags().StringVarP(&revokeToken, "revoke", "r", "", "Instead of generating a new token, revoke the one passed to this parameter.")
-	loginCmd.Flags().StringVarP(&overrideClientId, "client-id", "i", "", "Override/manually set client ID for token actions. By default client ID from CLI config will be used.")
+	loginCmd.Flags().StringVar(&overrideClientId, "client-id", "", "Override/manually set client ID for token actions. By default client ID from CLI config will be used.")
 }
 
 func loginCmdRun(cmd *cobra.Command, args []string) {
 	clientID = viper.GetString("clientId")
 	clientSecret = viper.GetString("clientSecret")
 
-	if overrideClientId != "" {
-		clientID = overrideClientId
-	}
-
 	if clientID == "" || clientSecret == "" {
 		println("No Client ID or Secret found in configuration. Triggering configuration now.")
 		configureCmd.Run(cmd, args)
 		clientID = viper.GetString("clientId")
 		clientSecret = viper.GetString("clientSecret")
+	}
+
+	if overrideClientId != "" {
+		clientID = overrideClientId
 	}
 
 	var p = login.LoginParameters{
