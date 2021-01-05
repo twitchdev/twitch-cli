@@ -34,6 +34,6 @@ type SubEventSubResponse struct {
 type SubEventSubEvent struct {
 	UserID              string `json:"user_id"`
 	UserName            string `json:"user_name"`
-	BroadcasterUserID   string `json:"broadcast_user_id"`
-	BroadcasterUserName string `json:"broadcast_user_name"`
+	BroadcasterUserID   string `json:"broadcaster_user_id"`
+	BroadcasterUserName string `json:"broadcaster_user_name"`
 }
