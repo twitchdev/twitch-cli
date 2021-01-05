@@ -25,5 +25,5 @@ None.
 ```sh
 twitch token -u -s "user:read:email" // gets a user token with the user:read:email scope
 twitch token // fetches an app access token
-twitch token -r 0123456789abcdefghijABCDEFGHIJ -i uo6dggojyb8d6soh92zknwmi5ej1q2 // revokes the token 0123... for the client ID uo6d...
+twitch token -r 0123456789abcdefghijABCDEFGHIJ --client-id uo6dggojyb8d6soh92zknwmi5ej1q2 // revokes the token 0123... for the client ID uo6d...
 ```
