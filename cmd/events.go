@@ -22,7 +22,7 @@ var (
 	eventID        string
 	secret         string
 	status         string
-	objectId       string
+	itemId         string
 	cost           int64
 	count          int
 )
@@ -67,7 +67,7 @@ func init() {
 	triggerCmd.Flags().IntVarP(&count, "count", "c", 1, "Count of events to trigger. This will simulate a sub gift, or large number of cheers.")
 	triggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.")
 	triggerCmd.Flags().StringVarP(&status, "status", "S", "", "Status of the event object, currently applies to channel points redemptions.")
-	triggerCmd.Flags().StringVarP(&objectId, "object-id", "i", "", "Manually set the ID of the event payload object (for example the reward ID in redemption events).")
+	triggerCmd.Flags().StringVarP(&itemId, "item-id", "i", "", "Manually set the ID of the event payload item (for example the reward ID in redemption events).")
 	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of bits or channel points redeemed/used in the event.")
 
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
@@ -103,7 +103,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 			Secret:         secret,
 			IsAnonymous:    isAnonymous,
 			Status:         status,
-			ObjectId:       objectId,
+			ItemId:         itemId,
 			Cost:           cost,
 		})
 

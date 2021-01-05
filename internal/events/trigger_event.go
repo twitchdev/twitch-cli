@@ -20,7 +20,7 @@ type TriggerParameters struct {
 	ToUser         string
 	GiftUser       string
 	Status         string
-	ObjectId       string
+	ItemId         string
 	Cost           int64
 	ForwardAddress string
 	Secret         string
@@ -104,7 +104,7 @@ func Fire(p TriggerParameters) (string, error) {
 			Title:     "",
 			Prompt:    "",
 			Status:    p.Status,
-			RewardId:  p.ObjectId,
+			RewardId:  p.ItemId,
 			Cost:      p.Cost,
 		})
 
