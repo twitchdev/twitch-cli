@@ -72,6 +72,8 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 				BroadcasterUserID:    params.ToUser,
 				BroadcasterUserLogin: toUserName,
 				BroadcasterUserName:  toUserName,
+				Tier:                 "1000",
+				IsGift:               params.IsGift,
 			},
 		}
 

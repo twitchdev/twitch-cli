@@ -38,4 +38,6 @@ type SubEventSubEvent struct {
 	BroadcasterUserID    string `json:"broadcaster_user_id"`
 	BroadcasterUserLogin string `json:"broadcaster_user_login"`
 	BroadcasterUserName  string `json:"broadcaster_user_name"`
+	Tier                 string `json:"tier"`
+	IsGift               bool   `json:"is_gift"`
 }

@@ -18,7 +18,7 @@ type CheerParams struct {
 	ToUser      string
 	FromUser    string
 	Message     string
-	Bits        float64
+	Bits        int64
 }
 
 func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
@@ -41,6 +41,10 @@ func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
 	if p.IsAnonymous == true {
 		p.FromUser = ""
 		fromUserName = ""
+	}
+
+	if p.Bits <= 0 {
+		p.Bits = 100
 	}
 
 	switch p.Transport {
@@ -67,7 +71,8 @@ func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
 				BroadcasterUserLogin: fromUserName,
 				BroadcasterUserName:  fromUserName,
 				IsAnonymous:          p.IsAnonymous,
-				Bits:                 100,
+				Message:              "This is a test event.",
+				Bits:                 p.Bits,
 			},
 		}
 
