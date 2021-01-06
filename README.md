@@ -2,6 +2,8 @@
 
 - [Twitch CLI (Open Beta Version)](#twitch-cli-open-beta-version)
   - [Download](#download)
+    - [Homebrew](#homebrew)
+    - [Manual Download](#manual-download)
   - [Usage](#usage)
   - [Commands](#commands)
   - [Contributing](#contributing)
@@ -9,12 +11,21 @@
 
 ## Download
 
+There are two options to download/install the Twitch CLI.
+
+### Homebrew
+
+If you are using MacOS or Linux, we recommend using [Homebrew](https://brew.sh/) for installing the CLI as it will also manage the versioning for you. 
+
+To install via Homebrew, run `brew install twitchdev/twitch/twitch-cli` and it'll be callable via `twitch`. 
+
+### Manual Download
+
 To download, go to the [Releases tab of GitHub](https://github.com/twitchdev/twitch-cli/releases). The examples in the documentation assume you have put this into your PATH and renamed to `twitch` (or symlinked as such).
 
-**Note**: if using Mac OS, you may need to adjust the permissions of the file to allow for execution. This is only temporary while we work to get this into Homebrew in the future. 
+**Note**: If using MacOS and downloading manually, you may need to adjust the permissions of the file to allow for execution.
 
 To do so, please run: `chmod 755 <filename>` where the filename is the name of the downloaded binary. 
-
 
 ## Usage
 
