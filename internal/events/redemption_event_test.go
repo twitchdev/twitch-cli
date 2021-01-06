@@ -1,5 +1,5 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-IDentifier: Apache-2.0
 package trigger
 
 import (
@@ -18,7 +18,7 @@ func TestEventsubRedemption(t *testing.T) {
 		Title:     "Test Title",
 		Prompt:    "Test Prompt",
 		Status:    "tested",
-		RewardId:  "12345678-1234-abcd-5678-000000000000",
+		RewardID:  "12345678-1234-abcd-5678-000000000000",
 		Cost:      1337,
 	}
 
@@ -32,12 +32,12 @@ func TestEventsubRedemption(t *testing.T) {
 		t.Error("Error unmarshalling JSON")
 	}
 
-	if body.Event.BroadcasterUserId != toUser {
-		t.Errorf("Expected to user %v, got %v", toUser, body.Event.BroadcasterUserId)
+	if body.Event.BroadcasterUserID != toUser {
+		t.Errorf("Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 	}
 
-	if body.Event.UserId != fromUser {
-		t.Errorf("Expected from user %v, got %v", r.ToUser, body.Event.UserId)
+	if body.Event.UserID != fromUser {
+		t.Errorf("Expected from user %v, got %v", r.ToUser, body.Event.UserID)
 	}
 
 	if body.Event.Status != "tested" {
@@ -48,7 +48,7 @@ func TestEventsubRedemption(t *testing.T) {
 		t.Errorf("Expected reward cost 1337, got %v", body.Event.Reward.Cost)
 	}
 
-	if body.Event.Reward.Id != "12345678-1234-abcd-5678-000000000000" {
-		t.Errorf("Expected reward cost 12345678-1234-abcd-5678-00000000000, got %v", body.Event.Reward.Id)
+	if body.Event.Reward.ID != "12345678-1234-abcd-5678-000000000000" {
+		t.Errorf("Expected reward cost 12345678-1234-abcd-5678-00000000000, got %v", body.Event.Reward.ID)
 	}
 }

@@ -60,12 +60,14 @@ func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339),
 			},
 			Event: models.CheerEventSubEvent{
-				UserID:              p.FromUser,
-				UserName:            toUserName,
-				BroadcasterUserID:   p.ToUser,
-				BroadcasterUserName: fromUserName,
-				IsAnonymous:         p.IsAnonymous,
-				Bits:                100,
+				UserID:               p.FromUser,
+				UserLogin:            toUserName,
+				UserName:             toUserName,
+				BroadcasterUserID:    p.ToUser,
+				BroadcasterUserLogin: fromUserName,
+				BroadcasterUserName:  fromUserName,
+				IsAnonymous:          p.IsAnonymous,
+				Bits:                 100,
 			},
 		}
 

@@ -29,8 +29,8 @@ func TestEventsubReward(t *testing.T) {
 		t.Error("Error unmarshalling JSON")
 	}
 
-	if body.Event.BroadcasterUserId != toUser {
-		t.Errorf("Expected to user %v, got %v", toUser, body.Event.BroadcasterUserId)
+	if body.Event.BroadcasterUserID != toUser {
+		t.Errorf("Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 	}
 
 	if body.Event.Cost != 1337 {

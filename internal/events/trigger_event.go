@@ -104,7 +104,7 @@ func Fire(p TriggerParameters) (string, error) {
 			Title:     "",
 			Prompt:    "",
 			Status:    p.Status,
-			RewardId:  p.ItemId,
+			RewardID:  p.ItemId,
 			Cost:      p.Cost,
 		})
 

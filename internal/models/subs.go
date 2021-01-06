@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 package models
 
-type SubEventData struct {
+type SubWebSubEventData struct {
 	BroadcasterID   string `json:"broadcaster_id"`
 	BroadcasterName string `json:"broadcaster_name"`
 	IsGift          bool   `json:"is_gift"`
@@ -19,11 +19,11 @@ type SubWebSubResponse struct {
 }
 
 type SubWebSubResponseData struct {
-	ID             string       `json:"id"`
-	EventType      string       `json:"event_type"`
-	EventTimestamp string       `json:"event_timestamp"`
-	Version        string       `json:"version"`
-	EventData      SubEventData `json:"event_data"`
+	ID             string             `json:"id"`
+	EventType      string             `json:"event_type"`
+	EventTimestamp string             `json:"event_timestamp"`
+	Version        string             `json:"version"`
+	EventData      SubWebSubEventData `json:"event_data"`
 }
 
 type SubEventSubResponse struct {
@@ -32,8 +32,10 @@ type SubEventSubResponse struct {
 }
 
 type SubEventSubEvent struct {
-	UserID              string `json:"user_id"`
-	UserName            string `json:"user_name"`
-	BroadcasterUserID   string `json:"broadcaster_user_id"`
-	BroadcasterUserName string `json:"broadcaster_user_name"`
+	UserID               string `json:"user_id"`
+	UserLogin            string `json:"user_login"`
+	UserName             string `json:"user_name"`
+	BroadcasterUserID    string `json:"broadcaster_user_id"`
+	BroadcasterUserLogin string `json:"broadcaster_user_login"`
+	BroadcasterUserName  string `json:"broadcaster_user_name"`
 }

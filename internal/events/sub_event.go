@@ -66,10 +66,12 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339),
 			},
 			Event: models.SubEventSubEvent{
-				UserID:              params.FromUser,
-				UserName:            fromUserName,
-				BroadcasterUserID:   params.ToUser,
-				BroadcasterUserName: toUserName,
+				UserID:               params.FromUser,
+				UserLogin:            fromUserName,
+				UserName:             fromUserName,
+				BroadcasterUserID:    params.ToUser,
+				BroadcasterUserLogin: toUserName,
+				BroadcasterUserName:  toUserName,
 			},
 		}
 
@@ -85,7 +87,7 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 					EventType:      params.Type,
 					EventTimestamp: time.Now().Format(time.RFC3339),
 					Version:        "1.0",
-					EventData: models.SubEventData{
+					EventData: models.SubWebSubEventData{
 						BroadcasterID:   params.ToUser,
 						BroadcasterName: toUserName,
 						UserID:          params.FromUser,
