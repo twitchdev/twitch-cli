@@ -1,5 +1,5 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-// SPDX-License-IDentifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 package trigger
 
 import (
