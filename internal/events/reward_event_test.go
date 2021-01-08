@@ -7,11 +7,14 @@ import (
 	"testing"
 
 	"github.com/twitchdev/twitch-cli/internal/models"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestEventsubReward(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
 	params := *&RewardParams{
-		Transport: "eventsub",
+		Transport: TransportEventSub,
 		Type:      "channel.channel_points_custom_reward.add",
 		ToUser:    toUser,
 		Title:     "Test Title",
@@ -20,20 +23,38 @@ func TestEventsubReward(t *testing.T) {
 	}
 
 	r, err := GenerateRewardBody(params)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
+
 	var body models.RewardEventSubResponse
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
 
-	if err = json.Unmarshal(r.JSON, &body); err != nil {
-		t.Error("Error unmarshalling JSON")
+	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
+	a.Equal(params.Cost, body.Event.Cost, "Expected cost %v, got %v", params.Cost, body.Event.Cost)
+
+	params = *&RewardParams{
+		Transport: TransportEventSub,
 	}
 
-	if body.Event.BroadcasterUserId != toUser {
-		t.Errorf("Expected to user %v, got %v", toUser, body.Event.BroadcasterUserId)
+	r, err = GenerateRewardBody(params)
+	a.Nil(err)
+
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	a.NotNil(body.Event.BroadcasterUserID)
+	a.NotNil(body.Event.Cost)
+	a.NotNil(body.Event.ID)
+}
+
+func TestWebsubReward(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
+	params := *&RewardParams{
+		Transport: TransportWebSub,
 	}
 
-	if body.Event.Cost != 1337 {
-		t.Errorf("Expected reward cost 1337, got %v", body.Event.Cost)
-	}
+	_, err := GenerateRewardBody(params)
+	a.NotNil(err)
+
 }

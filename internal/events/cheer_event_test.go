@@ -7,58 +7,70 @@ import (
 	"testing"
 
 	"github.com/twitchdev/twitch-cli/internal/models"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestEventsubCheer(t *testing.T) {
+	a := util.SetupTestEnv(t)
 	params := *&CheerParams{
 		FromUser:  fromUser,
 		ToUser:    toUser,
-		Transport: "eventsub",
+		Transport: TransportEventSub,
 	}
 
 	r, err := GenerateCheerBody(params)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err, "Error generating body.")
+
 	var body models.CheerEventSubResponse
 
-	if err = json.Unmarshal(r.JSON, &body); err != nil {
-		t.Error("Error unmarshalling JSON")
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err, "Error unmarshalling JSON")
+
+	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
+	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
+
+	params = *&CheerParams{
+		Transport: TransportEventSub,
 	}
 
-	if body.Event.BroadcasterUserID != toUser {
-		t.Errorf("Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
-	}
+	r, err = GenerateCheerBody(params)
+	a.Nil(err, "Error generating body.")
 
-	if body.Event.UserID != fromUser {
-		t.Errorf("Expected from user %v, got %v", r.ToUser, body.Event.UserID)
-	}
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err, "Error unmarshalling JSON")
 
+	a.NotNil(body.Event.BroadcasterUserID, "BroadcasterUserID empty")
+	a.NotNil(body.Event.UserID, "UserID empty")
 }
 
 func TestEventsubAnonymousCheer(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
 	params := *&CheerParams{
 		FromUser:    fromUser,
 		ToUser:      toUser,
-		Transport:   "eventsub",
+		Transport:   TransportEventSub,
 		IsAnonymous: true,
 	}
 
 	r, err := GenerateCheerBody(params)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
+
 	var body models.CheerEventSubResponse
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
 
-	if err = json.Unmarshal(r.JSON, &body); err != nil {
-		t.Error("Error unmarshalling JSON")
+	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
+	a.Equal("", body.Event.UserID, "Expected empty from user, got %v", body.Event.UserID)
+}
+
+func TestWebsubCheer(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
+	params := *&CheerParams{
+		Transport: TransportWebSub,
 	}
 
-	if body.Event.BroadcasterUserID != toUser {
-		t.Errorf("Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
-	}
-
-	if body.Event.UserID != "" {
-		t.Errorf("Expected from user %v, got %v", r.ToUser, body.Event.UserID)
-	}
+	_, err := GenerateCheerBody(params)
+	a.NotNil(err, "Expected error (Cheer unsupported on websub")
 }

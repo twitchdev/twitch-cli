@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/spf13/viper"
+
 	// sqlite3 driver
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -57,6 +59,10 @@ func getDatabase() (sql.DB, error) {
 	home, err := GetApplicationDir()
 	if err != nil {
 		return sql.DB{}, err
+	}
+
+	if viper.GetString("DB_FILENAME") != "" {
+		dbFileName = viper.GetString("DB_FILENAME")
 	}
 
 	var path = filepath.Join(home, dbFileName)

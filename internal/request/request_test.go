@@ -1,17 +1,17 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: Apache-2.0
 package request
 
 import (
-	"strings"
 	"testing"
+
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestNewRequest(t *testing.T) {
-	r, err := NewRequest("GET", "https://api.twitch.tv/helix/users", nil)
-	if err != nil {
-		t.Errorf("Received error %v for valid request", err)
-	}
+	a := util.SetupTestEnv(t)
 
-	if !strings.Contains(r.Header.Get("User-Agent"), "twitch-cli/") {
-		t.Error("User agent not properly set")
-	}
+	r, err := NewRequest("GET", "https://api.twitch.tv/helix/users", nil)
+	a.Nil(err)
+	a.Contains(r.Header.Get("User-Agent"), "twitch-cli/")
 }

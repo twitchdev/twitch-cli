@@ -11,32 +11,31 @@ import (
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestForwardEventEventsub(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
 	secret := "potaytoes"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 
-		if r.Header.Get("Twitch-Eventsub-Message-Retry") == "" || r.Header.Get("Twitch-Eventsub-Subscription-Version") == "" || r.Header.Get("Twitch-Eventsub-Message-Type") == "" || r.Header.Get("Twitch-Eventsub-Subscription-Type") == "" || r.Header.Get("Twitch-Eventsub-Message-Id") == "" {
-			t.Error("Missing Eventsub headers")
-		}
+		a.NotEmpty(r.Header.Get("Twitch-Eventsub-Message-Retry"))
+		a.NotEmpty(r.Header.Get("Twitch-Eventsub-Subscription-Version"))
+		a.NotEmpty(r.Header.Get("Twitch-Eventsub-Message-Type"))
+		a.NotEmpty(r.Header.Get("Twitch-Eventsub-Subscription-Type"))
+		a.NotEmpty(r.Header.Get("Twitch-Eventsub-Message-Id"))
 
 		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			t.Error(err)
-		}
-
-		if body == nil {
-			t.Errorf("Expected request to have body, got nil")
-		}
+		a.Nil(err)
+		a.NotNil(body)
 
 		mac := hmac.New(sha256.New, []byte(secret))
 		timestamp, err := time.Parse(time.RFC3339, r.Header.Get("Twitch-Eventsub-Message-Timestamp"))
-		if err != nil {
-			t.Error(err)
-		}
+		a.Nil(err)
 
 		id := r.Header.Get("Twitch-Eventsub-Message-Id")
 
@@ -44,64 +43,49 @@ func TestForwardEventEventsub(t *testing.T) {
 		mac.Write(body)
 
 		hash := fmt.Sprintf("sha256=%x", mac.Sum(nil))
-
-		if hash != r.Header.Get("Twitch-Eventsub-Message-Signature") {
-			t.Error("Signature verification failure")
-		}
-
+		a.Equal(hash, r.Header.Get("Twitch-Eventsub-Message-Signature"))
 	}))
 	defer ts.Close()
 
 	sParams := SubscribeParams{
-		Transport: "eventsub",
+		Transport: TransportEventSub,
 		Type:      "channel.subscribe",
 	}
 
 	event, err := GenerateSubBody(sParams)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
 
 	fParams := ForwardParamters{
 		ID:             event.ID,
 		ForwardAddress: ts.URL,
 		JSON:           event.JSON,
-		Transport:      "eventsub",
+		Transport:      TransportEventSub,
 		Event:          sParams.Type,
 		Secret:         secret,
 	}
 
 	_, err = forwardEvent(fParams)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
 }
 
 func TestForwardEventWebsub(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
 	secret := "potaytoes"
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 
 		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			t.Error(err)
-		}
-
-		if body == nil {
-			t.Errorf("Expected request to have body, got nil")
-		}
+		a.Nil(err)
+		a.NotNil(body)
 
 		mac := hmac.New(sha256.New, []byte(secret))
 
 		mac.Write(body)
 
 		hash := fmt.Sprintf("sha256=%x", mac.Sum(nil))
-
-		if hash != r.Header.Get("X-Hub-Signature") {
-			t.Errorf("Signature verification failure, got %v and expected %v", r.Header.Get("X-Hub-Signature"), hash)
-		}
-
+		a.Equal(hash, r.Header.Get("X-Hub-Signature"))
 	}))
 	defer ts.Close()
 
@@ -111,21 +95,18 @@ func TestForwardEventWebsub(t *testing.T) {
 	}
 
 	event, err := GenerateSubBody(sParams)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
 
 	fParams := ForwardParamters{
 		ID:             event.ID,
 		ForwardAddress: ts.URL,
 		JSON:           event.JSON,
-		Transport:      "websub",
+		Transport:      TransportWebSub,
 		Event:          sParams.Type,
 		Secret:         secret,
 	}
 
 	_, err = forwardEvent(fParams)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
+
 }

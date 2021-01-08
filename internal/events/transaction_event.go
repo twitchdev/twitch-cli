@@ -34,9 +34,9 @@ func GenerateTransactionBody(params TransactionParams) (TriggerResponse, error) 
 	}
 
 	switch params.Transport {
-	case "eventsub":
+	case TransportEventSub:
 		return TriggerResponse{}, errors.New("Extension transactions are unsupported on Eventsub")
-	case "websub":
+	case TransportWebSub:
 		body := *&models.TransactionWebSubResponse{
 			Data: []models.TransactionWebsubEvent{
 				{

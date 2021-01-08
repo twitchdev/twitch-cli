@@ -19,7 +19,7 @@ type RedemptionParams struct {
 	Title     string
 	Prompt    string
 	Status    string
-	RewardId  string
+	RewardID  string
 	Cost      int64
 }
 
@@ -54,8 +54,8 @@ func GenerateRedemptionBody(p RedemptionParams) (TriggerResponse, error) {
 		p.Status = "unfulfilled"
 	}
 
-	if p.RewardId == "" {
-		p.RewardId = util.RandomGUID()
+	if p.RewardID == "" {
+		p.RewardID = util.RandomGUID()
 	}
 
 	if p.Cost <= 0 {
@@ -63,7 +63,7 @@ func GenerateRedemptionBody(p RedemptionParams) (TriggerResponse, error) {
 	}
 
 	switch p.Transport {
-	case "eventsub":
+	case TransportEventSub:
 		body := *&models.RedemptionEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
@@ -79,15 +79,15 @@ func GenerateRedemptionBody(p RedemptionParams) (TriggerResponse, error) {
 				CreatedAt: tNow,
 			},
 			Event: models.RedemptionEventSubEvent{
-				Id:                  uuid,
-				BroadcasterUserId:   p.ToUser,
+				ID:                  uuid,
+				BroadcasterUserID:   p.ToUser,
 				BroadcasterUserName: toUserName,
-				UserId:              p.FromUser,
+				UserID:              p.FromUser,
 				UserName:            fromUserName,
 				UserInput:           "Test Input From CLI",
 				Status:              p.Status,
 				Reward: models.RedemptionReward{
-					Id:     p.RewardId,
+					ID:     p.RewardID,
 					Title:  p.Title,
 					Cost:   p.Cost,
 					Prompt: p.Prompt,
@@ -101,7 +101,7 @@ func GenerateRedemptionBody(p RedemptionParams) (TriggerResponse, error) {
 			return TriggerResponse{}, err
 		}
 
-	case "websub":
+	case TransportWebSub:
 		return TriggerResponse{}, errors.New("Websub is unsupported for channel points events")
 	default:
 		return TriggerResponse{}, nil

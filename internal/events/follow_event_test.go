@@ -7,55 +7,57 @@ import (
 	"testing"
 
 	"github.com/twitchdev/twitch-cli/internal/models"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestEventSubFollow(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
 	params := *&FollowParams{
 		FromUser:  fromUser,
 		ToUser:    toUser,
-		Transport: "eventsub",
+		Transport: TransportEventSub,
 	}
 
 	r, err := GenerateFollowBody(params)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
+
 	var body models.FollowEventSubResponse
-	if err = json.Unmarshal(r.JSON, &body); err != nil {
-		t.Error("Error unmarshalling JSON")
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
+	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
+
+	params = *&FollowParams{
+		Transport: TransportEventSub,
 	}
 
-	if body.Event.BroadcasterUserID != toUser {
-		t.Errorf("Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
-	}
+	r, err = GenerateFollowBody(params)
 
-	if body.Event.UserID != fromUser {
-		t.Errorf("Expected from user %v, got %v", r.ToUser, body.Event.UserID)
-	}
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err, "Error unmarshalling JSON")
+
+	a.NotNil(body.Event.BroadcasterUserID, "BroadcasterUserID empty")
+	a.NotNil(body.Event.UserID, "UserID empty")
 }
 
 func TestWebsubFollow(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
 	params := *&FollowParams{
 		FromUser:  fromUser,
 		ToUser:    toUser,
-		Transport: "websub",
+		Transport: TransportWebSub,
 	}
 
 	r, err := GenerateFollowBody(params)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
 
 	var body models.FollowWebSubResponse
-	if err = json.Unmarshal(r.JSON, &body); err != nil {
-		t.Error("Error unmarshalling JSON")
-	}
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
 
-	if body.Data[0].ToID != toUser {
-		t.Errorf("Expected to user %v, got %v", toUser, body.Data[0].ToID)
-	}
-
-	if body.Data[0].FromID != fromUser {
-		t.Errorf("Expected from user %v, got %v", r.ToUser, body.Data[0].FromID)
-	}
+	a.Equal(toUser, body.Data[0].ToID, "Expected to user %v, got %v", toUser, body.Data[0].ToID)
+	a.Equal(fromUser, body.Data[0].FromID, "Expected from user %v, got %v", r.ToUser, body.Data[0].FromID)
 }

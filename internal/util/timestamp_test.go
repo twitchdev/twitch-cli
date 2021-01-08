@@ -8,12 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestVersion(t *testing.T) {
+func TestGetTimestamp(t *testing.T) {
 	a := assert.New(t)
 
-	var testString = "test_version"
-
-	SetVersion(testString)
-	v := GetVersion()
-	a.Equal(testString, v)
+	ts := GetTimestamp()
+	a.NotNil(ts)
 }

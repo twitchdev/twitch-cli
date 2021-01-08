@@ -5,25 +5,22 @@ package util
 import (
 	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRandomUserId(t *testing.T) {
-	userID := RandomUserID()
+	a := assert.New(t)
 
-	if len(userID) == 0 {
-		t.Errorf("RandomUserID() returned string with a length of 0")
-	}
+	userID := RandomUserID()
+	a.NotEqual(0, len(userID), "RandomUserID() returned string with a length of 0")
 }
 
 func TestRandomGUID(t *testing.T) {
-	guid := RandomGUID()
-	if len(guid) == 0 {
-		t.Errorf("RandomGUID() returned string with a length of 0")
-	}
-
+	a := assert.New(t)
 	r, _ := regexp.Compile("^[{]?[0-9a-fA-F]{8}-([0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?$")
+	guid := RandomGUID()
 
-	if r.MatchString(guid) != true {
-		t.Errorf("RandomGUID() returned a string with value %v, which does not meet the GUID pattern", guid)
-	}
+	a.NotEqual(0, len(guid), "RandomGUID() returned string with a length of 0")
+	a.Equal(true, r.MatchString(guid), "RandomGUID() returned a string with value %v, which does not meet the GUID pattern", guid)
 }

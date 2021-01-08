@@ -26,3 +26,15 @@ func GetApplicationDir() (string, error) {
 
 	return path, nil
 }
+
+// GetConfigPath returns a string representation of the configuration's path
+func GetConfigPath() (string, error) {
+	home, err := GetApplicationDir()
+	if err != nil {
+		return "", err
+	}
+
+	configPath := filepath.Join(home, ".twitch-cli.env")
+
+	return configPath, nil
+}

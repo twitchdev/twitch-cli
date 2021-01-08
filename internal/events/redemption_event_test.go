@@ -7,48 +7,57 @@ import (
 	"testing"
 
 	"github.com/twitchdev/twitch-cli/internal/models"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestEventsubRedemption(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
 	params := *&RedemptionParams{
-		Transport: "eventsub",
+		Transport: TransportEventSub,
 		Type:      "channel.channel_points_custom_reward_redemption.add",
 		ToUser:    toUser,
 		FromUser:  fromUser,
 		Title:     "Test Title",
 		Prompt:    "Test Prompt",
 		Status:    "tested",
-		RewardId:  "12345678-1234-abcd-5678-000000000000",
+		RewardID:  "12345678-1234-abcd-5678-000000000000",
 		Cost:      1337,
 	}
 
 	r, err := GenerateRedemptionBody(params)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
+
 	var body models.RedemptionEventSubResponse
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
 
-	if err = json.Unmarshal(r.JSON, &body); err != nil {
-		t.Error("Error unmarshalling JSON")
+	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
+	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
+	a.Equal(params.Status, body.Event.Status)
+	a.Equal(params.Cost, body.Event.Reward.Cost)
+	a.Equal(params.RewardID, body.Event.Reward.ID)
+
+	params = *&RedemptionParams{
+		Transport: TransportEventSub,
+	}
+	r, err = GenerateRedemptionBody(params)
+	a.Nil(err)
+
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	a.NotNil(body.Event.BroadcasterUserID)
+	a.NotNil(body.Event.UserID)
+	a.NotNil(body.Event.Reward.ID)
+}
+func TestWebsubRedemption(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
+	params := *&RedemptionParams{
+		Transport: TransportWebSub,
 	}
 
-	if body.Event.BroadcasterUserId != toUser {
-		t.Errorf("Expected to user %v, got %v", toUser, body.Event.BroadcasterUserId)
-	}
-
-	if body.Event.UserId != fromUser {
-		t.Errorf("Expected from user %v, got %v", r.ToUser, body.Event.UserId)
-	}
-
-	if body.Event.Status != "tested" {
-		t.Errorf("Expected status tested, got %v", body.Event.Status)
-	}
-
-	if body.Event.Reward.Cost != 1337 {
-		t.Errorf("Expected reward cost 1337, got %v", body.Event.Reward.Cost)
-	}
-
-	if body.Event.Reward.Id != "12345678-1234-abcd-5678-000000000000" {
-		t.Errorf("Expected reward cost 12345678-1234-abcd-5678-00000000000, got %v", body.Event.Reward.Id)
-	}
+	_, err := GenerateRedemptionBody(params)
+	a.NotNil(err, "Expected error (Channel Points unsupported on websub")
 }

@@ -7,30 +7,52 @@ import (
 	"testing"
 
 	"github.com/twitchdev/twitch-cli/internal/models"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestWebusbTransaction(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
 	params := *&TransactionParams{
 		FromUser:  fromUser,
 		ToUser:    toUser,
-		Transport: "websub",
+		Transport: TransportWebSub,
 	}
 
 	r, err := GenerateTransactionBody(params)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
 
 	var body models.TransactionWebSubResponse
-	if err = json.Unmarshal(r.JSON, &body); err != nil {
-		t.Error("Error unmarshalling JSON")
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	a.Equal(toUser, body.Data[0].BroadcasterID, "Expected to user %v, got %v", toUser, body.Data[0].BroadcasterID)
+	a.Equal(fromUser, body.Data[0].UserID, "Expected from user %v, got %v", r.ToUser, body.Data[0].UserID)
+
+	params = *&TransactionParams{
+		Transport: TransportWebSub,
 	}
 
-	if body.Data[0].BroadcasterID != toUser {
-		t.Errorf("Expected to user %v, got %v", toUser, body.Data[0].BroadcasterID)
+	r, err = GenerateTransactionBody(params)
+	a.Nil(err)
+
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	a.NotNil(body.Data[0].BroadcasterID)
+	a.NotNil(body.Data[0].UserID)
+
+}
+
+func TestEventsubTransaction(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
+	params := *&TransactionParams{
+		FromUser:  fromUser,
+		ToUser:    toUser,
+		Transport: TransportEventSub,
 	}
 
-	if body.Data[0].UserID != fromUser {
-		t.Errorf("Expected from user %v, got %v", r.ToUser, body.Data[0].UserID)
-	}
+	_, err := GenerateTransactionBody(params)
+	a.NotNil(err)
 }

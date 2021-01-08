@@ -36,6 +36,10 @@ type TriggerResponse struct {
 	Timestamp string
 }
 
+const TransportEventSub = "eventsub"
+const TransportWebSub = "websub"
+const TransportWebsockets = "websockets"
+
 // Fire emits an event using the TriggerParameters defined above.
 func Fire(p TriggerParameters) (string, error) {
 	if len(triggerTypeMap[p.Transport]) == 0 {
@@ -104,7 +108,7 @@ func Fire(p TriggerParameters) (string, error) {
 			Title:     "",
 			Prompt:    "",
 			Status:    p.Status,
-			RewardId:  p.ItemId,
+			RewardID:  p.ItemId,
 			Cost:      p.Cost,
 		})
 

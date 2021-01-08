@@ -29,6 +29,10 @@ type clientInformation struct {
 func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool) {
 	client, err := getClientInformation()
 
+	if viper.GetString("BASE_URL") != "" {
+		baseURL = viper.GetString("BASE_URL")
+	}
+
 	if err != nil {
 		fmt.Println("Error fetching client information", err.Error())
 	}
@@ -109,15 +113,17 @@ func getClientInformation() (clientInformation, error) {
 		clientSecret := viper.GetString("clientSecret")
 
 		var err error
-		token, err = login.RefreshUserToken(login.RefreshParameters{
+		r, err := login.RefreshUserToken(login.RefreshParameters{
 			RefreshToken: refreshToken,
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
+			URL:          login.RefreshTokenURL,
 		})
-
 		if err != nil {
-			log.Fatal("Unable to refresh token, please rerun twitch token", err.Error())
+			return clientInformation{}, err
 		}
+		fmt.Printf("%v", r)
+		token = r.Response.AccessToken
 	}
 
 	return clientInformation{Token: token, ClientID: clientID}, nil

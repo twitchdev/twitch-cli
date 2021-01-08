@@ -46,7 +46,7 @@ func GenerateRewardBody(p RewardParams) (TriggerResponse, error) {
 	}
 
 	switch p.Transport {
-	case "eventsub":
+	case TransportEventSub:
 		body := *&models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
@@ -62,8 +62,8 @@ func GenerateRewardBody(p RewardParams) (TriggerResponse, error) {
 				CreatedAt: tNow,
 			},
 			Event: models.RewardEventSubEvent{
-				Id:                                uuid,
-				BroadcasterUserId:                 p.ToUser,
+				ID:                                uuid,
+				BroadcasterUserID:                 p.ToUser,
 				BroadcasterUserName:               toUserName,
 				IsEnabled:                         true,
 				IsPaused:                          false,
@@ -75,28 +75,28 @@ func GenerateRewardBody(p RewardParams) (TriggerResponse, error) {
 				ShouldRedemptionsSkipRequestQueue: false,
 				CooldownExpiresAt:                 tNow,
 				RedemptionsRedeemedCurrentStream:  0,
-				MaxPerStream:                      models.RewardMax{
+				MaxPerStream: models.RewardMax{
 					IsEnabled: true,
 					Value:     100,
 				},
-				MaxPerUserPerStream:               models.RewardMax{
+				MaxPerUserPerStream: models.RewardMax{
 					IsEnabled: true,
 					Value:     100,
 				},
-				GlobalCooldown:                    models.RewardGlobalCooldown{
+				GlobalCooldown: models.RewardGlobalCooldown{
 					IsEnabled: true,
 					Value:     300,
 				},
-				BackgroundColor:                   "#c0ffee",
-				Image:                             models.RewardImage{
-					Url1x: "https://static-cdn.jtvnw.net/image-1.png",
-					Url2x: "https://static-cdn.jtvnw.net/image-2.png",
-					Url4x: "https://static-cdn.jtvnw.net/image-4.png",
+				BackgroundColor: "#c0ffee",
+				Image: models.RewardImage{
+					URL1x: "https://static-cdn.jtvnw.net/image-1.png",
+					URL2x: "https://static-cdn.jtvnw.net/image-2.png",
+					URL4x: "https://static-cdn.jtvnw.net/image-4.png",
 				},
-				DefaultImage:                      models.RewardImage{
-					Url1x: "https://static-cdn.jtvnw.net/default-1.png",
-					Url2x: "https://static-cdn.jtvnw.net/default-2.png",
-					Url4x: "https://static-cdn.jtvnw.net/default-4.png",
+				DefaultImage: models.RewardImage{
+					URL1x: "https://static-cdn.jtvnw.net/default-1.png",
+					URL2x: "https://static-cdn.jtvnw.net/default-2.png",
+					URL4x: "https://static-cdn.jtvnw.net/default-4.png",
 				},
 			},
 		}
@@ -106,7 +106,7 @@ func GenerateRewardBody(p RewardParams) (TriggerResponse, error) {
 			return TriggerResponse{}, err
 		}
 
-	case "websub":
+	case TransportWebSub:
 		return TriggerResponse{}, errors.New("Websub is unsupported for channel points events")
 	default:
 		return TriggerResponse{}, nil
