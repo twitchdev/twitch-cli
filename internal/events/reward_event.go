@@ -64,6 +64,7 @@ func GenerateRewardBody(p RewardParams) (TriggerResponse, error) {
 			Event: models.RewardEventSubEvent{
 				ID:                                uuid,
 				BroadcasterUserID:                 p.ToUser,
+				BroadcasterUserLogin:              toUserName,
 				BroadcasterUserName:               toUserName,
 				IsEnabled:                         true,
 				IsPaused:                          false,

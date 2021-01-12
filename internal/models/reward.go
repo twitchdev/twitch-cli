@@ -5,6 +5,7 @@ package models
 type RewardEventSubEvent struct {
 	ID                                string               `json:"id"`
 	BroadcasterUserID                 string               `json:"broadcaster_user_id"`
+	BroadcasterUserLogin              string               `json:"broadcaster_user_login"`
 	BroadcasterUserName               string               `json:"broadcaster_user_name"`
 	IsEnabled                         bool                 `json:"is_enabled"`
 	IsPaused                          bool                 `json:"is_paused"`
