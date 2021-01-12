@@ -20,7 +20,9 @@ func TestGetDatabase(t *testing.T) {
 	// delete the existing temp db if it exists
 	path := filepath.Join(p, dbFileName)
 	err := os.Remove(path)
-	if os.ErrNotExist != err {
+
+	// if the error is not that the file doesn't exist, fail the test
+	if !os.IsNotExist(err) {
 		a.Nil(err)
 	}
 
