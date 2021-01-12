@@ -18,7 +18,7 @@ type CheerParams struct {
 	ToUser      string
 	FromUser    string
 	Message     string
-	Bits        float64
+	Bits        int64
 }
 
 func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
@@ -43,6 +43,10 @@ func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
 		fromUserName = ""
 	}
 
+	if p.Bits <= 0 {
+		p.Bits = 100
+	}
+
 	switch p.Transport {
 	case "eventsub":
 		body := *&models.EventsubResponse{
@@ -60,12 +64,15 @@ func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339),
 			},
 			Event: models.CheerEventSubEvent{
-				UserID:              p.FromUser,
-				UserName:            toUserName,
-				BroadcasterUserID:   p.ToUser,
-				BroadcasterUserName: fromUserName,
-				IsAnonymous:         p.IsAnonymous,
-				Bits:                100,
+				UserID:               p.FromUser,
+				UserLogin:            toUserName,
+				UserName:             toUserName,
+				BroadcasterUserID:    p.ToUser,
+				BroadcasterUserLogin: fromUserName,
+				BroadcasterUserName:  fromUserName,
+				IsAnonymous:          p.IsAnonymous,
+				Message:              "This is a test event.",
+				Bits:                 p.Bits,
 			},
 		}
 

@@ -3,8 +3,9 @@
 package models
 
 type RewardEventSubEvent struct {
-	Id                                string               `json:"id"`
-	BroadcasterUserId                 string               `json:"broadcaster_user_id"`
+	ID                                string               `json:"id"`
+	BroadcasterUserID                 string               `json:"broadcaster_user_id"`
+	BroadcasterUserLogin              string               `json:"broadcaster_user_login"`
 	BroadcasterUserName               string               `json:"broadcaster_user_name"`
 	IsEnabled                         bool                 `json:"is_enabled"`
 	IsPaused                          bool                 `json:"is_paused"`
@@ -35,9 +36,9 @@ type RewardGlobalCooldown struct {
 }
 
 type RewardImage struct {
-	Url1x string `json:"url_1x"`
-	Url2x string `json:"url_2x"`
-	Url4x string `json:"url_4x"`
+	URL1x string `json:"url_1x"`
+	URL2x string `json:"url_2x"`
+	URL4x string `json:"url_4x"`
 }
 
 type RewardEventSubResponse struct {

@@ -76,6 +76,7 @@ func Fire(p TriggerParameters) (string, error) {
 			FromUser:    p.FromUser,
 			ToUser:      p.ToUser,
 			IsAnonymous: p.IsAnonymous,
+			Bits:        p.Cost,
 		})
 
 	case "follow":
@@ -104,7 +105,7 @@ func Fire(p TriggerParameters) (string, error) {
 			Title:     "",
 			Prompt:    "",
 			Status:    p.Status,
-			RewardId:  p.ItemId,
+			RewardID:  p.ItemId,
 			Cost:      p.Cost,
 		})
 

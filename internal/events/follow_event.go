@@ -51,10 +51,12 @@ func GenerateFollowBody(p FollowParams) (TriggerResponse, error) {
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339),
 			},
 			Event: models.FollowEventSubEvent{
-				UserID:              p.FromUser,
-				UserName:            fromUserName,
-				BroadcasterUserID:   p.ToUser,
-				BroadcasterUserName: toUserName,
+				UserID:               p.FromUser,
+				UserLogin:            fromUserName,
+				UserName:             fromUserName,
+				BroadcasterUserID:    p.ToUser,
+				BroadcasterUserLogin: toUserName,
+				BroadcasterUserName:  toUserName,
 			},
 		}
 
