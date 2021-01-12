@@ -29,7 +29,7 @@ type header struct {
 }
 
 var notificationHeaders = map[string][]header{
-	"eventsub": {
+	TransportEventSub: {
 		{
 			HeaderName:  `Twitch-Eventsub-Message-Retry`,
 			HeaderValue: `0`,
@@ -43,7 +43,7 @@ var notificationHeaders = map[string][]header{
 			HeaderValue: `test`,
 		},
 	},
-	"websub": {
+	TransportWebSub: {
 		{
 			HeaderName:  `Twitch-Notification-Timestamp`,
 			HeaderValue: util.GetTimestamp().Format(time.RFC3339),
@@ -58,8 +58,7 @@ var notificationHeaders = map[string][]header{
 func forwardEvent(p ForwardParamters) (int, error) {
 	req, err := request.NewRequest(http.MethodPost, p.ForwardAddress, bytes.NewBuffer(p.JSON))
 	if err != nil {
-		println(err)
-		return 0, nil
+		return 0, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -68,12 +67,13 @@ func forwardEvent(p ForwardParamters) (int, error) {
 	}
 
 	switch p.Transport {
-	case "eventsub":
+	case TransportEventSub:
 		req.Header.Set("Twitch-Eventsub-Message-Id", p.ID)
 		req.Header.Set("Twitch-Eventsub-Subscription-Type", p.Event)
-	case "websub":
+	case TransportWebSub:
 		req.Header.Set("Twitch-Notification-Id", p.ID)
 	}
+
 	if p.Secret != "" {
 		getSignatureHeader(req, p.ID, p.Secret, p.Transport, p.JSON)
 	}
@@ -96,13 +96,13 @@ func getSignatureHeader(req *http.Request, id string, secret string, transport s
 	mac := hmac.New(sha256.New, []byte(secret))
 	ts := util.GetTimestamp()
 	switch transport {
-	case "eventsub":
+	case TransportEventSub:
 		req.Header.Set("Twitch-Eventsub-Message-Timestamp", ts.Format(time.RFC3339))
 		prefix := ts.AppendFormat([]byte(id), time.RFC3339)
 		mac.Write(prefix)
 		mac.Write(payload)
 		req.Header.Set("Twitch-Eventsub-Message-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))
-	case "websub":
+	case TransportWebSub:
 		mac.Write(payload)
 		req.Header.Set("X-Hub-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))
 	}

@@ -3,7 +3,6 @@
 package login
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -25,7 +24,6 @@ func loginRequest(method string, url string, payload io.Reader) (loginRequestRes
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Error reading body: %v", err)
 		return loginRequestResponse{}, err
 	}
 
@@ -34,7 +32,6 @@ func loginRequest(method string, url string, payload io.Reader) (loginRequestRes
 	defer resp.Body.Close()
 
 	if err != nil {
-		fmt.Printf("Error reading body: %v", err)
 		return loginRequestResponse{}, err
 	}
 

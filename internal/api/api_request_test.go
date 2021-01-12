@@ -7,41 +7,37 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestApiRequest(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
 	var ok = "{\"status\":\"ok\"}"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(ok))
 
-		if r.Header.Get("Client-ID") != "1234" {
-			t.Error("Client ID invalid.")
-		}
-		_, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			t.Error(err)
-		}
+		a.Equal("1234", r.Header.Get("Client-ID"), "Client ID invalid.")
+		a.Equal("Bearer 4567", r.Header.Get("Authorization"), "Token invalid.")
 
+		_, err := ioutil.ReadAll(r.Body)
+		a.Nil(err)
 	}))
 
 	defer ts.Close()
 
 	params := *&apiRequestParameters{
 		ClientID: "1234",
+		Token:    "4567",
 	}
 
 	resp, err := apiRequest(http.MethodGet, ts.URL, nil, params)
-	if err != nil {
-		t.Error(err)
-	}
+	a.Nil(err)
 
-	if resp.StatusCode != http.StatusOK {
-		t.Errorf("Expected status %v, got %v", http.StatusOK, resp.StatusCode)
-	}
+	a.Equal(http.StatusOK, resp.StatusCode)
+	a.Equal(string(resp.Body), ok)
 
-	if string(resp.Body) != ok {
-		t.Errorf("Expected %v, got %v", ok, resp.Body)
-	}
-
+	resp, err = apiRequest(http.MethodGet, "potato", nil, params)
+	a.NotNil(err)
 }

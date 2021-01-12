@@ -34,6 +34,8 @@ func loginCmdRun(cmd *cobra.Command, args []string) {
 	clientID = viper.GetString("clientId")
 	clientSecret = viper.GetString("clientSecret")
 
+	redirectURL := "http://localhost:3000"
+
 	if clientID == "" || clientSecret == "" {
 		println("No Client ID or Secret found in configuration. Triggering configuration now.")
 		configureCmd.Run(cmd, args)
@@ -49,14 +51,19 @@ func loginCmdRun(cmd *cobra.Command, args []string) {
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Scopes:       userScopes,
+		RedirectURL:  redirectURL,
+		AuthorizeURL: login.UserAuthorizeURL,
 	}
 
 	if revokeToken != "" {
 		p.Token = revokeToken
+		p.URL = login.RevokeTokenURL
 		login.CredentialsLogout(p)
 	} else if isUserToken == true {
+		p.URL = login.UserCredentialsURL
 		login.UserCredentialsLogin(p)
 	} else {
+		p.URL = login.ClientCredentialsURL
 		login.ClientCredentialsLogin(p)
 	}
 }

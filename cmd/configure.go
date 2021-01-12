@@ -5,8 +5,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
+	"log"
 
 	"github.com/twitchdev/twitch-cli/internal/util"
 
@@ -62,18 +61,13 @@ func configureCmdRun(cmd *cobra.Command, args []string) {
 	viper.Set("clientId", clientID)
 	viper.Set("clientSecret", clientSecret)
 
-	home, _ := util.GetApplicationDir()
-	configPath := filepath.Join(home, ".twitch-cli.env")
+	configPath, err := util.GetConfigPath()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	_, err = os.Stat(configPath)
-
-	if !os.IsExist(err) {
-		if _, err := os.Create(configPath); err != nil {
-			fmt.Println("Failed to create configuration.", err.Error())
-		}
-		if err := viper.WriteConfig(); err != nil {
-			fmt.Println("Failed to write configuration.", err.Error())
-		}
+	if err := viper.WriteConfigAs(configPath); err != nil {
+		log.Fatalf("Failed to write configuration: %v", err.Error())
 	}
 
 	fmt.Println("Updated configuration.")

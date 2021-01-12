@@ -63,7 +63,7 @@ func GenerateRedemptionBody(p RedemptionParams) (TriggerResponse, error) {
 	}
 
 	switch p.Transport {
-	case "eventsub":
+	case TransportEventSub:
 		body := *&models.RedemptionEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
@@ -103,7 +103,7 @@ func GenerateRedemptionBody(p RedemptionParams) (TriggerResponse, error) {
 			return TriggerResponse{}, err
 		}
 
-	case "websub":
+	case TransportWebSub:
 		return TriggerResponse{}, errors.New("Websub is unsupported for channel points events")
 	default:
 		return TriggerResponse{}, nil

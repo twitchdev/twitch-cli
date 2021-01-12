@@ -48,7 +48,7 @@ func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
 	}
 
 	switch p.Transport {
-	case "eventsub":
+	case TransportEventSub:
 		body := *&models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
@@ -81,7 +81,7 @@ func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
 			return TriggerResponse{}, err
 		}
 
-	case "websub":
+	case TransportWebSub:
 		return TriggerResponse{}, errors.New("Websub is unsupported for cheer events")
 	default:
 		return TriggerResponse{}, nil

@@ -46,7 +46,7 @@ func GenerateRewardBody(p RewardParams) (TriggerResponse, error) {
 	}
 
 	switch p.Transport {
-	case "eventsub":
+	case TransportEventSub:
 		body := *&models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
@@ -107,7 +107,7 @@ func GenerateRewardBody(p RewardParams) (TriggerResponse, error) {
 			return TriggerResponse{}, err
 		}
 
-	case "websub":
+	case TransportWebSub:
 		return TriggerResponse{}, errors.New("Websub is unsupported for channel points events")
 	default:
 		return TriggerResponse{}, nil

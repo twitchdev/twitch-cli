@@ -12,7 +12,6 @@ import (
 func NewRequest(method string, url string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		println(err)
 		return nil, err
 	}
 	version := util.GetVersion()

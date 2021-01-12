@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -22,32 +23,22 @@ type LoginParameters struct {
 	ClientSecret string
 	Scopes       string
 	Token        string
+	URL          string
+	RedirectURL  string
+	AuthorizeURL string
 }
 
 type RefreshParameters struct {
 	ClientID     string
 	ClientSecret string
 	RefreshToken string
+	URL          string
 }
 
-type RefreshTokenResponse struct {
+type AuthorizationResponse struct {
 	AccessToken  string   `json:"access_token"`
 	RefreshToken string   `json:"refresh_token"`
-	ExpiresIn    float64  `json:"expires_in"`
-	Scope        []string `json:"scope"`
-	TokenType    string   `json:"token_type"`
-}
-
-type ClientCredentialsResponse struct {
-	AccessToken string  `json:"access_token"`
-	ExpiresIn   float64 `json:"expires_in"`
-	TokenType   string  `json:"token_type"`
-}
-
-type AuthorizationCodeResponse struct {
-	AccessToken  string   `json:"access_token"`
-	RefreshToken string   `json:"refresh_token"`
-	ExpiresIn    float64  `json:"expires_in"`
+	ExpiresIn    int64    `json:"expires_in"`
 	Scope        []string `json:"scope"`
 	TokenType    string   `json:"token_type"`
 }
@@ -57,40 +48,48 @@ type UserAuthorizationQueryResponse struct {
 	State string
 }
 
-var redirectURI = "http://localhost:3000"
+type LoginResponse struct {
+	Response  AuthorizationResponse
+	ExpiresAt time.Time
+}
 
-func ClientCredentialsLogin(p LoginParameters) {
-	twitchClientCredentialsURL := fmt.Sprintf(`https://id.twitch.tv/oauth2/token?grant_type=client_credentials&client_id=%s&client_secret=%s`, p.ClientID, p.ClientSecret)
+const ClientCredentialsURL = "https://id.twitch.tv/oauth2/token?grant_type=client_credentials"
+
+const UserCredentialsURL = "https://id.twitch.tv/oauth2/token?grant_type=authorization_code"
+const UserAuthorizeURL = "https://id.twitch.tv/oauth2/authorize?response_type=code"
+
+const RefreshTokenURL = "https://id.twitch.tv/oauth2/token?grant_type=refresh_token"
+
+const RevokeTokenURL = "https://id.twitch.tv/oauth2/revoke"
+
+func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
+	twitchClientCredentialsURL := fmt.Sprintf(`%s&client_id=%s&client_secret=%s`, p.URL, p.ClientID, p.ClientSecret)
 
 	resp, err := loginRequest(http.MethodPost, twitchClientCredentialsURL, nil)
 	if err != nil {
 		log.Fatal(err.Error())
-		return
 	}
 
-	var r ClientCredentialsResponse
-	if err := json.Unmarshal(resp.Body, &r); err != nil {
-		println(err.Error())
-		return
+	r, err := handleLoginResponse(resp.Body)
+	if err != nil {
+		log.Printf("Error handling login: %v", err)
+		return LoginResponse{}, nil
 	}
 
-	expiresAt := time.Now().Add(time.Duration(int64(time.Second) * int64(r.ExpiresIn)))
-	println("App Access Token: ", r.AccessToken)
-	var scopes []string
-	storeInConfig(r.AccessToken, "", scopes, expiresAt)
-	return
+	log.Printf("App Access Token: %s", r.Response.AccessToken)
+	return r, nil
 }
 
-func UserCredentialsLogin(p LoginParameters) {
-	twitchAuthorizeURL := fmt.Sprintf(`https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=%s&redirect_uri=%s&force_verify=true`, p.ClientID, redirectURI)
+func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
+	twitchAuthorizeURL := fmt.Sprintf(`%s&client_id=%s&redirect_uri=%s&force_verify=true`, p.AuthorizeURL, p.ClientID, p.RedirectURL)
 
 	if p.Scopes != "" {
 		twitchAuthorizeURL += "&scope=" + p.Scopes
 	}
+
 	state, err := generateState()
 	if err != nil {
 		log.Fatal(err.Error())
-		return
 	}
 
 	twitchAuthorizeURL += "&state=" + state
@@ -99,65 +98,79 @@ func UserCredentialsLogin(p LoginParameters) {
 
 	ur, err := userAuthServer()
 	if err != nil {
-		println(err.Error())
-		return
+		log.Fatal(err.Error())
 	}
 
 	if ur.State != state {
-		println("state mismatch")
-		return
+		log.Fatal("state mismatch")
 	}
 
-	twitchUserTokenURL := fmt.Sprintf(`https://id.twitch.tv/oauth2/token?grant_type=authorization_code&client_id=%s&client_secret=%s&redirect_uri=%s&code=%s`, p.ClientID, p.ClientSecret, redirectURI, ur.Code)
+	twitchUserTokenURL := fmt.Sprintf(`%s&client_id=%s&client_secret=%s&redirect_uri=%s&code=%s`, p.URL, p.ClientID, p.ClientSecret, p.RedirectURL, ur.Code)
 	resp, err := loginRequest(http.MethodPost, twitchUserTokenURL, nil)
 	if err != nil {
-		fmt.Printf("Error reading body: %v", err)
-		return
+		log.Fatalf("Error reading body: %v", err)
 	}
 
-	var r AuthorizationCodeResponse
-	if err := json.Unmarshal(resp.Body, &r); err != nil {
-		println(err.Error())
-		return
+	r, err := handleLoginResponse(resp.Body)
+	if err != nil {
+		log.Printf("Error handling login: %v", err)
+		return LoginResponse{}, nil
 	}
 
-	expiresAt := time.Now().Add(time.Duration(int64(time.Second) * int64(r.ExpiresIn)))
-	println(fmt.Sprintf("User Access Token: %s\nRefresh Token: %s\nExpires At: %s\nScopes: %s", r.AccessToken, r.RefreshToken, expiresAt, r.Scope))
-	storeInConfig(r.AccessToken, r.RefreshToken, r.Scope, expiresAt)
-	return
+	log.Printf("User Access Token: %s\nRefresh Token: %s\nExpires At: %s\nScopes: %s", r.Response.AccessToken, r.Response.RefreshToken, r.ExpiresAt, r.Response.Scope)
+	return r, nil
 }
 
-func CredentialsLogout(p LoginParameters) {
-	twitchClientCredentialsURL := fmt.Sprintf(`https://id.twitch.tv/oauth2/revoke?client_id=%s&token=%s`, p.ClientID, p.Token)
+func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
+	twitchClientCredentialsURL := fmt.Sprintf(`%s?client_id=%s&token=%s`, p.URL, p.ClientID, p.Token)
 
 	resp, err := loginRequest(http.MethodPost, twitchClientCredentialsURL, nil)
 	if err != nil {
-		log.Fatal(err.Error())
-		return
+		log.Printf(err.Error())
+		return LoginResponse{}, err
 	}
 
-	if resp.StatusCode != 200 {
-		println("API responded with an error:")
-		println(string(resp.Body))
-	} else {
-		println("Token '" + p.Token + "' has been successfully revoked.")
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("API responded with an error while revoking token: %v", resp.Body)
+		return LoginResponse{}, errors.New("API responded with an error while revoking token")
 	}
+
+	log.Printf("Token %s has been successfully revoked.", p.Token)
+	return LoginResponse{}, nil
 }
 
-func RefreshUserToken(p RefreshParameters) (string, error) {
-	twitchRefreshTokenURL := fmt.Sprintf(`https://id.twitch.tv/oauth2/token?grant_type=refresh_token&client_id=%s&client_secret=%s&redirect_uri=&refresh_token=%s`, p.ClientID, p.ClientSecret, p.RefreshToken)
+func RefreshUserToken(p RefreshParameters) (LoginResponse, error) {
+	twitchRefreshTokenURL := fmt.Sprintf(`%s&client_id=%s&client_secret=%s&redirect_uri=&refresh_token=%s`, p.URL, p.ClientID, p.ClientSecret, p.RefreshToken)
 	resp, err := loginRequest(http.MethodPost, twitchRefreshTokenURL, nil)
 	if err != nil {
-		return "", err
+		return LoginResponse{}, err
 	}
-	var r RefreshTokenResponse
 
-	if err := json.Unmarshal(resp.Body, &r); err != nil {
-		return "", nil
+	if resp.StatusCode == http.StatusBadRequest {
+		return LoginResponse{}, errors.New("Error with client while refreshing. Please rerun twitch configure")
+	}
+
+	r, err := handleLoginResponse(resp.Body)
+	if err != nil {
+		log.Printf("Error handling login: %v", err)
+		return LoginResponse{}, err
+	}
+
+	return r, nil
+}
+
+func handleLoginResponse(body []byte) (LoginResponse, error) {
+	var r AuthorizationResponse
+	if err := json.Unmarshal(body, &r); err != nil {
+		return LoginResponse{}, err
 	}
 	expiresAt := time.Now().Add(time.Duration(int64(time.Second) * int64(r.ExpiresIn)))
 	storeInConfig(r.AccessToken, r.RefreshToken, r.Scope, expiresAt)
-	return r.AccessToken, nil
+
+	return LoginResponse{
+		Response:  r,
+		ExpiresAt: expiresAt,
+	}, nil
 }
 
 func generateState() (string, error) {
@@ -169,7 +182,7 @@ func generateState() (string, error) {
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
-func openBrowser(url string) {
+func openBrowser(url string) error {
 	var err error
 	switch runtime.GOOS {
 	case "linux":
@@ -181,9 +194,8 @@ func openBrowser(url string) {
 	default:
 		err = fmt.Errorf("unsupported platform")
 	}
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	return err
 }
 
 func userAuthServer() (UserAuthorizationQueryResponse, error) {
@@ -218,5 +230,12 @@ func storeInConfig(token string, refresh string, scopes []string, expiresAt time
 	viper.Set("tokenScopes", scopes)
 	viper.Set("tokenExpiration", expiresAt.Format(time.RFC3339))
 
-	viper.WriteConfig()
+	err := viper.WriteConfig()
+	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		err = viper.SafeWriteConfig()
+	}
+
+	if err != nil {
+		log.Fatalf("Error writing configuration: %s", err)
+	}
 }

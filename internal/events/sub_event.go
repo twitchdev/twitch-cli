@@ -50,7 +50,7 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 	}
 
 	switch params.Transport {
-	case "eventsub":
+	case TransportEventSub:
 		body := *&models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
@@ -81,7 +81,7 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 		if err != nil {
 			return TriggerResponse{}, err
 		}
-	case "websub":
+	case TransportWebSub:
 		body := *&models.SubWebSubResponse{
 			Data: []models.SubWebSubResponseData{
 				{

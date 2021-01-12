@@ -35,7 +35,7 @@ func GenerateFollowBody(p FollowParams) (TriggerResponse, error) {
 	}
 
 	switch p.Transport {
-	case "eventsub":
+	case TransportEventSub:
 		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
@@ -65,7 +65,7 @@ func GenerateFollowBody(p FollowParams) (TriggerResponse, error) {
 			return TriggerResponse{}, err
 		}
 
-	case "websub":
+	case TransportWebSub:
 		body := models.FollowWebSubResponse{
 			Data: []models.FollowWebSubResponseData{
 				{
