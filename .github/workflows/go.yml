@@ -14,6 +14,7 @@ jobs:
           script: |
               const existingRelease = await github.repos.getReleaseByTag({owner:"twitchdev", repo:"twitch-cli", tag:"Nightly"})
               if (!existingRelease) {return}
+              console.log(existingRelease.id)
               await github.repos.deleteRelease({owner:"twitchdev", repo:"twitch-cli", release_id:existingRelease.id})
       - name: Checkout
         uses: actions/checkout@v2
