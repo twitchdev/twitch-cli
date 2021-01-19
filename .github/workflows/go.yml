@@ -14,8 +14,8 @@ jobs:
           script: |
               const existingRelease = await github.repos.getReleaseByTag({owner:"twitchdev", repo:"twitch-cli", tag:"Nightly"})
               if (!existingRelease) {return}
-              console.log(existingRelease)
-              await github.repos.deleteRelease({owner:"twitchdev", repo:"twitch-cli", release_id:existingRelease.id})
+              console.log(existingRelease.data)
+              await github.repos.deleteRelease({owner:"twitchdev", repo:"twitch-cli", release_id:existingRelease.data.id})
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build with xgo
