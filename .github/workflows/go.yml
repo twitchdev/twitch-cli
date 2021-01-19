@@ -15,7 +15,7 @@ jobs:
           dest: build
           targets: windows/amd64,linux/amd64,darwin/amd64
           v: true
-          ldflags: -s -w
+          ldflags: -s -w -X main.buildVersion=nightly
           buildmode: default
           prefix: twitch
       - run: mv build/twitch-windows* build/twitch-windows.exe
