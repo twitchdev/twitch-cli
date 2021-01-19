@@ -7,6 +7,13 @@ jobs:
     name: Upload Release Asset
     runs-on: ubuntu-latest
     steps:
+      - name: Delete existing release
+        uses: actions/github-script@v3
+        with:
+          script: |
+              const existingRelease = await github.repos.getReleaseByTag({owner:"twitchdev", repo:"twitch-cli", tag:"Nightly"})
+              if !existingRelease {return}
+              await github.repos.deleteRelease({owner:"twitchdev", repo:"twitch-cli", release_id:existingRelease.id})
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build with xgo
