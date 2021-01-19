@@ -32,7 +32,7 @@ jobs:
       - run: mv build/twitch-linux* build/twitch-linux
       - name: Get current date
         id: date
-        run: echo "name=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -40,7 +40,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: Nightly
-          release_name: Nightly Release - ${{ steps.date.outputs.date }}
+          release_name: Nightly Release - ${{ env.DATE }}
           draft: false
           prerelease: true
       - name: Upload Windows Asset
