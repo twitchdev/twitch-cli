@@ -33,6 +33,12 @@ jobs:
       - name: Get current date
         id: date
         run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: Update Nightly Tag
+        uses: richardsimko/update-tag@v1
+        with:
+          tag_name: Nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
