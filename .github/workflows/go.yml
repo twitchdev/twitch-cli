@@ -10,7 +10,7 @@ jobs:
       - name: Delete existing release
         uses: actions/github-script@v3
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          debug: true
           script: |
               const existingRelease = await github.repos.getReleaseByTag({owner:"twitchdev", repo:"twitch-cli", tag:"Nightly"})
               if (!existingRelease) {return}
