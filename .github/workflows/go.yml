@@ -9,9 +9,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - run: mv build/twitch-windows* build/twitch-windows.exe
-      - run: mv build/twitch-darwin* build/twitch-macos
-      - run: mv build/twitch-linux* build/twitch-linux
       - name: Build with xgo
         uses: crazy-max/ghaction-xgo@v1
         with:
@@ -21,6 +18,9 @@ jobs:
           ldflags: -s -w
           buildmode: default
           prefix: twitch
+      - run: mv build/twitch-windows* build/twitch-windows.exe
+      - run: mv build/twitch-darwin* build/twitch-macos
+      - run: mv build/twitch-linux* build/twitch-linux
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
