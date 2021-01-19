@@ -1,5 +1,8 @@
-on: workflow_dispatch
-
+on: 
+  workflow_dispatch:
+  schedule: 
+    - cron: '0 0 * * *'
+    
 name: Nightly Release
 
 jobs:
