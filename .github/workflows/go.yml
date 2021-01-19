@@ -1,0 +1,63 @@
+on: workflow_dispatch
+
+name: Nightly Release
+
+jobs:
+  build:
+    name: Upload Release Asset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - run: mv build/twitch-windows* build/twitch-windows.exe
+      - run: mv build/twitch-darwin* build/twitch-macos
+      - run: mv build/twitch-linux* build/twitch-linux
+      - name: Build with xgo
+        uses: crazy-max/ghaction-xgo@v1
+        with:
+          dest: build
+          targets: windows/amd64,linux/amd64,darwin/amd64
+          v: true
+          ldflags: -s -w
+          buildmode: default
+          prefix: twitch
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: Nightly
+          release_name: Nighly Release
+          draft: false
+          prerelease: true
+      - name: Upload Windows Asset
+        id: upload-release-asset-win 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./build/twitch-windows.exe
+          asset_name: twitch-windows.exe
+          asset_content_type: application/x-dosexec
+      - name: Upload MacOS Asset
+        id: upload-release-asset-mac
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./build/twitch-macos
+          asset_name: twitch-macos
+          asset_content_type: application/x-mach-binary
+      - name: Upload Linux Asset
+        id: upload-release-asset-linux
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./build/twitch-linux
+          asset_name: twitch-linux
+          asset_content_type: application/x-executable
