@@ -1,10 +1,11 @@
-version = "0.2.2"
+version = "0.2.3"
 
 release:
 	docker run --rm --privileged \
 		-v $$PWD:/go/src/github.com/twitchdev/twitch-cli \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/twitchdev/twitch-cli \
+		-e GITHUB_TOKEN=${GITHUB_TOKEN} \
 		mailchain/goreleaser-xcgo --rm-dist 
 
 build:
