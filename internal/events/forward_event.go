@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package trigger
+package events
 
 import (
 	"bytes"
@@ -21,6 +21,7 @@ type ForwardParamters struct {
 	Transport      string
 	Secret         string
 	Event          string
+	Method         string
 }
 
 type header struct {
@@ -55,10 +56,15 @@ var notificationHeaders = map[string][]header{
 	},
 }
 
-func forwardEvent(p ForwardParamters) (int, error) {
-	req, err := request.NewRequest(http.MethodPost, p.ForwardAddress, bytes.NewBuffer(p.JSON))
+func forwardEvent(p ForwardParamters) (*http.Response, error) {
+	method := http.MethodPost
+	if p.Method != "" {
+		method = p.Method
+	}
+
+	req, err := request.NewRequest(method, p.ForwardAddress, bytes.NewBuffer(p.JSON))
 	if err != nil {
-		return 0, err
+		return &http.Response{}, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -84,12 +90,10 @@ func forwardEvent(p ForwardParamters) (int, error) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		return 0, err
+		return resp, err
 	}
 
-	defer resp.Body.Close()
-
-	return resp.StatusCode, nil
+	return resp, nil
 }
 
 func getSignatureHeader(req *http.Request, id string, secret string, transport string, payload []byte) {

@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package trigger
+package events
 
 import (
 	"encoding/json"
@@ -54,6 +54,7 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 		body := *&models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
+				Status:  "enabled",
 				Type:    params.Type,
 				Version: "test",
 				Condition: models.EventsubCondition{

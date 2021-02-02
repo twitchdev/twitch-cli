@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package trigger
+package events
 
 import (
 	"errors"
@@ -144,7 +144,7 @@ func Fire(p TriggerParameters) (string, error) {
 	}
 
 	if p.ForwardAddress != "" {
-		statusCode, err := forwardEvent(ForwardParamters{
+		resp, err := forwardEvent(ForwardParamters{
 			ID:             resp.ID,
 			Transport:      p.Transport,
 			JSON:           resp.JSON,
@@ -152,12 +152,13 @@ func Fire(p TriggerParameters) (string, error) {
 			ForwardAddress: p.ForwardAddress,
 			Event:          event,
 		})
+		defer resp.Body.Close()
 
 		if err != nil {
 			return "", err
 		}
 
-		println(fmt.Sprintf(`[%v] Request Sent`, statusCode))
+		println(fmt.Sprintf(`[%v] Request Sent`, resp.StatusCode))
 	}
 
 	return string(resp.JSON), nil

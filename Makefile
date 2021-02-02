@@ -1,4 +1,4 @@
-version = "0.2.1"
+version = "0.3.0"
 
 release:
 	xgo -out build/twitch --targets "darwin/amd64,windows/amd64,linux/amd64" --ldflags "-X main.buildVersion=$(version)" ./

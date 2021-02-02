@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package trigger
+package events
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 	p.Transport = res.Transport
 
 	if p.ForwardAddress != "" {
-		s, err := forwardEvent(ForwardParamters{
+		resp, err := forwardEvent(ForwardParamters{
 			ID:             id,
 			Transport:      res.Transport,
 			ForwardAddress: p.ForwardAddress,
@@ -25,10 +25,12 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 			JSON:           []byte(res.JSON),
 			Event:          triggerTypeMap[res.Transport][res.Event],
 		})
+		defer resp.Body.Close()
+
 		if err != nil {
 			return "", err
 		}
-		fmt.Printf("[%v] Endpoint received refired event.", s)
+		fmt.Printf("[%v] Endpoint received refired event.", resp.StatusCode)
 	}
 
 	return res.JSON, nil

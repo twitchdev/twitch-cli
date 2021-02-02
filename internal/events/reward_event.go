@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package trigger
+package events
 
 import (
 	"encoding/json"
@@ -50,6 +50,7 @@ func GenerateRewardBody(p RewardParams) (TriggerResponse, error) {
 		body := *&models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      uuid,
+				Status:  "enabled",
 				Type:    p.Type,
 				Version: "test",
 				Condition: models.EventsubCondition{

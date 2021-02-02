@@ -4,6 +4,7 @@ package models
 
 type EventsubSubscription struct {
 	ID        string            `json:"id"`
+	Status    string            `json:"status"`
 	Type      string            `json:"type"`
 	Version   string            `json:"version"`
 	Condition EventsubCondition `json:"condition"`
@@ -23,4 +24,9 @@ type EventsubCondition struct {
 type EventsubResponse struct {
 	Subscription EventsubSubscription `json:"subscription"`
 	Event        interface{}          `json:"event"`
+}
+
+type EventsubSubscriptionVerification struct {
+	Challenge    string               `json:"challenge"`
+	Subscription EventsubSubscription `json:"subscription"`
 }
