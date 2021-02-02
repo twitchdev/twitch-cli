@@ -5,6 +5,7 @@
 *.so
 *.dylib
 build/
+dist/
 twitch-cli
 
 # Test binary, built with `go test -c`

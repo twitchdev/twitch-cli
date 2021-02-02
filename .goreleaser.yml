@@ -1,0 +1,89 @@
+# This is an example .goreleaser.yml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+before:
+  hooks:
+    - go mod download
+builds:
+  - id: twitch-darwin
+    ldflags: -X main.buildVersion={{ .Version }}
+    binary: twitch
+    env:
+      - CGO_ENABLED=1  
+      - CC=o64-clang 
+      - CXX=o64-clang++
+    goos:
+      - darwin
+    goarch:
+      - amd64
+  - id: twitch-linux
+    ldflags: -X main.buildVersion={{ .Version }}
+    binary: twitch
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: twitch-windows-x64
+    ldflags: -X main.buildVersion={{ .Version }}
+    binary: twitch
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    goos:
+      - windows
+    goarch:
+      - amd64
+  - id: twitch-windows-i386
+    ldflags: -X main.buildVersion={{ .Version }}
+    binary: twitch
+    main: ./main.go
+    env:
+      - CGO_ENABLED=1
+      - CC=i686-w64-mingw32-gcc-posix
+      - CXX=i686-w64-mingw32-g++-posix
+    goos:
+      - windows
+    goarch:
+      - 386
+scoop:
+  bucket:
+    owner: twitchdev
+    name: scoop-bucket
+  homepage: https://github.com/twitchdev/twitch-cli
+  description: CLI for Twitch's developer offerings
+  license: MIT
+brews:
+  -
+    github:
+      owner: twitchdev
+      name: homebrew-twitch
+    folder: Formula
+    homepage: https://github.com/twitchdev/twitch-cli
+    description: CLI for Twitch's developer offerings
+    install: |
+      ldflags = "-X main.buildVersion=#{version}"
+      system "go", "build", "-ldflags=#{ldflags}"
+      bin.install "twitch-cli" => "twitch"
+    test: |
+      system "#{bin}/twitch -v"
+archives:
+  - replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+    format_overrides:
+    - goos: windows
+      format: zip
+checksum:
+  name_template: 'checksums.txt'
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

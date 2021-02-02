@@ -38,7 +38,7 @@ The Twitch CLI uses [Github pull requests](https://github.com/twitchdev/twitch-c
  *  The Twitch CLI officially supports Mac, Windows, and Linux Intel-based systems
  *  All commands and functionality should be documented appropriately
 
-To confirm it will build with these systems, feel free to run `make build`. 
+To confirm it will build with these systems, feel free to run `make build_all`. 
 
 The Twitch CLI strives to have a consistent set of documentation that matches the command structure and any new functionality must have accompanying documentation in the PR.
 
