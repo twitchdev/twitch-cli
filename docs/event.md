@@ -3,6 +3,7 @@
   - [Description](#description)
   - [Trigger](#trigger)
   - [Retrigger](#retrigger)
+  - [Verify-Subscription](#verify-subscription)
 
 ## Description 
 
@@ -73,8 +74,6 @@ The resulting ID would be `713f3254-0178-9757-7439-d779400c0999`.
 **Args**
 None
 
-
-
 **Flags**
 
 | Flag                | Shorthand | Description                                                                                                                | Example                     | Required? (Y/N) |
@@ -88,4 +87,37 @@ None
 
 ```sh
 twitch event retrigger -i "713f3254-0178-9757-7439-d779400c0999" -F https://localhost:8080/ // triggers the previous cheer event to localhost:8080
+```
+
+## Verify-Subscription
+
+Allows you to test if your webserver responds to subscription requests properly. 
+
+**Args**
+
+| Argument            | Description                                                        |
+|---------------------|--------------------------------------------------------------------|
+| `subscribe`         | A standard subscription event. Triggers a basic tier 1 sub.        |
+| `unsubscribe`       | A standard unsubscribe event. Triggers a basic tier 1 sub.         |
+| `gift`              | A gifted subscription event. Triggers a basic tier 1 sub.          |
+| `cheer`             | Only usable with the `eventsub` transport, shows Cheers from chat. |
+| `transaction`       | Bits in Extensions transactions events.                            |
+| `add-reward`        | Channel Points EventSub event for a Custom Reward being added.     |
+| `update-reward`     | Channel Points EventSub event for a Custom Reward being updated.   |
+| `remove-reward`     | Channel Points EventSub event for a Custom Reward being removed.   |
+| `add-redemption`    | Channel Points EventSub event for a redemption being performed.    |
+| `update-redemption` | Channel Points EventSub event for a redemption being updated.      |
+
+**Flags**
+
+| Flag                | Shorthand | Description                                                                                                                | Example                     | Required? (Y/N) |
+|---------------------|-----------|----------------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
+| `--forward-address` | `-F`      | Web server address for where to send mock subscription.                                                                    | `-F https://localhost:8080` | N               |
+| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.                                               | `-s testsecret`             | N               |
+| `--transport`       | `-T`      | The method used to send events. Default is eventsub, but can send using websub.                                            | `-T websub`                 | N               |
+
+**Examples**
+
+```sh
+twitch event verify-subscription cheer -F https://localhost:8080/ // triggers a fake "cheer" EventSub subscription and validates if localhost responds properly
 ```

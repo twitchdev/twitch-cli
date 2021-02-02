@@ -49,7 +49,7 @@ var triggerCmd = &cobra.Command{
 var verifyCmd = &cobra.Command{
 	Use:   "verify-subscription [event]",
 	Short: "Mocks the subscription verification event that can be forwarded to a local webserver for testing.",
-	Long: fmt.Sprintf(`Creates mock events that can be forwarded to a local webserver for event testing.
+	Long: fmt.Sprintf(`Mocks the subscription verification event that can be forwarded to a local webserver for testing.
 	Supported:
 	%s`, events.ValidTriggers()),
 	Args:      cobra.MaximumNArgs(1),
