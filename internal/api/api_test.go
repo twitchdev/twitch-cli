@@ -62,7 +62,7 @@ func TestGetClientInformation(t *testing.T) {
 	viper.Set("refreshtoken", "123")
 
 	// check in the future
-	viper.Set("tokenexpiration", util.GetTimestamp().Add(10*time.Minute).Format(time.RFC3339))
+	viper.Set("tokenexpiration", util.GetTimestamp().Add(10*time.Minute).Format(time.RFC3339Nano))
 	clientInfo, err := getClientInformation()
 	a.Nil(err)
 	a.Equal(clientInfo.Token, "4567")
