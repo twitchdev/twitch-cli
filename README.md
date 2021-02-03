@@ -3,6 +3,7 @@
 - [Twitch CLI (Open Beta Version)](#twitch-cli-open-beta-version)
   - [Download](#download)
     - [Homebrew](#homebrew)
+    - [Scoop](#scoop)
     - [Manual Download](#manual-download)
   - [Usage](#usage)
   - [Commands](#commands)
@@ -11,13 +12,26 @@
 
 ## Download
 
-There are two options to download/install the Twitch CLI.
+There are two options to download/install the Twitch CLI for each platform. 
 
 ### Homebrew
 
 If you are using MacOS or Linux, we recommend using [Homebrew](https://brew.sh/) for installing the CLI as it will also manage the versioning for you. 
 
 To install via Homebrew, run `brew install twitchdev/twitch/twitch-cli` and it'll be callable via `twitch`. 
+
+### Scoop
+
+If you are using Windows, we recommend using [Scoop](https://scoop.sh/) for installing the CLI, as it'll also manage versioning. 
+
+To install via Scoop, run: 
+
+```sh
+scoop bucket add twitch https://github.com/twitchdev/scoop-bucket.git
+scoop install twitch-cli
+```
+
+This will install it into your path, and it'll be callable via `twitch`. 
 
 ### Manual Download
 
