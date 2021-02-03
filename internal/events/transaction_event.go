@@ -41,7 +41,7 @@ func GenerateTransactionBody(params TransactionParams) (TriggerResponse, error) 
 			Data: []models.TransactionWebsubEvent{
 				{
 					ID:              uuid,
-					Timestamp:       util.GetTimestamp().Format(time.RFC3339),
+					Timestamp:       util.GetTimestamp().Format(time.RFC3339Nano),
 					BroadcasterID:   params.ToUser,
 					BroadcasterName: "testBroadcaster",
 					UserID:          params.FromUser,

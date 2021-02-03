@@ -47,7 +47,7 @@ var notificationHeaders = map[string][]header{
 	TransportWebSub: {
 		{
 			HeaderName:  `Twitch-Notification-Timestamp`,
-			HeaderValue: util.GetTimestamp().Format(time.RFC3339),
+			HeaderValue: util.GetTimestamp().Format(time.RFC3339Nano),
 		},
 		{
 			HeaderName:  `Twitch-Notification-Retry`,
@@ -101,8 +101,8 @@ func getSignatureHeader(req *http.Request, id string, secret string, transport s
 	ts := util.GetTimestamp()
 	switch transport {
 	case TransportEventSub:
-		req.Header.Set("Twitch-Eventsub-Message-Timestamp", ts.Format(time.RFC3339))
-		prefix := ts.AppendFormat([]byte(id), time.RFC3339)
+		req.Header.Set("Twitch-Eventsub-Message-Timestamp", ts.Format(time.RFC3339Nano))
+		prefix := ts.AppendFormat([]byte(id), time.RFC3339Nano)
 		mac.Write(prefix)
 		mac.Write(payload)
 		req.Header.Set("Twitch-Eventsub-Message-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))

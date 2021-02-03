@@ -228,7 +228,7 @@ func storeInConfig(token string, refresh string, scopes []string, expiresAt time
 	viper.Set("accessToken", token)
 	viper.Set("refreshToken", refresh)
 	viper.Set("tokenScopes", scopes)
-	viper.Set("tokenExpiration", expiresAt.Format(time.RFC3339))
+	viper.Set("tokenExpiration", expiresAt.Format(time.RFC3339Nano))
 
 	err := viper.WriteConfig()
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {

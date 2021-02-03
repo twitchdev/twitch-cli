@@ -110,7 +110,7 @@ func generateWebhookSubscriptionBody(transport string, event string, challenge s
 	var res []byte
 	var err error
 	id := util.RandomGUID()
-	ts := util.GetTimestamp().Format(time.RFC3339)
+	ts := util.GetTimestamp().Format(time.RFC3339Nano)
 	switch transport {
 	case TransportEventSub:
 		body := models.EventsubSubscriptionVerification{
@@ -119,7 +119,7 @@ func generateWebhookSubscriptionBody(transport string, event string, challenge s
 				ID:      id,
 				Status:  "webhook_callback_verification_pending",
 				Type:    event,
-				Version: "test",
+				Version: "1",
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: util.RandomUserID(),
 				},

@@ -25,7 +25,7 @@ type RedemptionParams struct {
 
 func GenerateRedemptionBody(p RedemptionParams) (TriggerResponse, error) {
 	uuid := util.RandomGUID()
-	tNow := util.GetTimestamp().Format(time.RFC3339)
+	tNow := util.GetTimestamp().Format(time.RFC3339Nano)
 	var event []byte
 	var err error
 
@@ -69,7 +69,7 @@ func GenerateRedemptionBody(p RedemptionParams) (TriggerResponse, error) {
 				ID:      uuid,
 				Status:  "enabled",
 				Type:    p.Type,
-				Version: "test",
+				Version: "1",
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: p.ToUser,
 				},

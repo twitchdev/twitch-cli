@@ -56,7 +56,7 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 				ID:      uuid,
 				Status:  "enabled",
 				Type:    params.Type,
-				Version: "test",
+				Version: "1",
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: params.ToUser,
 				},
@@ -64,7 +64,7 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 					Method:   "webhook",
 					Callback: "null",
 				},
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339),
+				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 			Event: models.SubEventSubEvent{
 				UserID:               params.FromUser,
@@ -86,9 +86,9 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 		body := *&models.SubWebSubResponse{
 			Data: []models.SubWebSubResponseData{
 				{
-					ID:             "test",
+					ID:             uuid,
 					EventType:      params.Type,
-					EventTimestamp: time.Now().Format(time.RFC3339),
+					EventTimestamp: time.Now().Format(time.RFC3339Nano),
 					Version:        "1.0",
 					EventData: models.SubWebSubEventData{
 						BroadcasterID:   params.ToUser,

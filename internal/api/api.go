@@ -102,7 +102,7 @@ func getClientInformation() (clientInformation, error) {
 		}, nil
 	}
 
-	ex, _ := time.Parse(time.RFC3339, expiration)
+	ex, _ := time.Parse(time.RFC3339Nano, expiration)
 	if ex.Before(time.Now()) {
 		refreshToken := viper.GetString("refreshToken")
 
