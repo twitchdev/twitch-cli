@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package trigger
+package events
 
 import (
 	"encoding/json"
@@ -41,14 +41,14 @@ func TestEventsubRedemption(t *testing.T) {
 	params = *&RedemptionParams{
 		Transport: TransportEventSub,
 	}
-  
+
 	r, err = GenerateRedemptionBody(params)
 	a.Nil(err)
 
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 
-  a.NotNil(body.Event.BroadcasterUserID)
+	a.NotNil(body.Event.BroadcasterUserID)
 	a.NotNil(body.Event.UserID)
 	a.NotNil(body.Event.Reward.ID)
 }
