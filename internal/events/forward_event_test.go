@@ -34,12 +34,12 @@ func TestForwardEventEventsub(t *testing.T) {
 		a.NotNil(body)
 
 		mac := hmac.New(sha256.New, []byte(secret))
-		timestamp, err := time.Parse(time.RFC3339, r.Header.Get("Twitch-Eventsub-Message-Timestamp"))
+		timestamp, err := time.Parse(time.RFC3339Nano, r.Header.Get("Twitch-Eventsub-Message-Timestamp"))
 		a.Nil(err)
 
 		id := r.Header.Get("Twitch-Eventsub-Message-Id")
 
-		mac.Write(timestamp.AppendFormat([]byte(id), time.RFC3339))
+		mac.Write(timestamp.AppendFormat([]byte(id), time.RFC3339Nano))
 		mac.Write(body)
 
 		hash := fmt.Sprintf("sha256=%x", mac.Sum(nil))

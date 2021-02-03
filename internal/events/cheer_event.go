@@ -54,7 +54,7 @@ func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
 				ID:      uuid,
 				Status:  "enabled",
 				Type:    p.Type,
-				Version: "test",
+				Version: "1",
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: p.ToUser,
 				},
@@ -62,7 +62,7 @@ func GenerateCheerBody(p CheerParams) (TriggerResponse, error) {
 					Method:   "webhook",
 					Callback: "null",
 				},
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339),
+				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 			Event: models.CheerEventSubEvent{
 				UserID:               p.FromUser,

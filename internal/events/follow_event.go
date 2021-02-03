@@ -41,7 +41,7 @@ func GenerateFollowBody(p FollowParams) (TriggerResponse, error) {
 				ID:      uuid,
 				Status:  "enabled",
 				Type:    p.Type,
-				Version: "test",
+				Version: "1",
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: p.ToUser,
 				},
@@ -49,7 +49,7 @@ func GenerateFollowBody(p FollowParams) (TriggerResponse, error) {
 					Method:   "webhook",
 					Callback: "null",
 				},
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339),
+				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 			Event: models.FollowEventSubEvent{
 				UserID:               p.FromUser,

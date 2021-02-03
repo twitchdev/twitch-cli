@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/login"
+	"github.com/twitchdev/twitch-cli/internal/util"
 
 	"github.com/TylerBrock/colorjson"
 	"github.com/fatih/color"
@@ -102,8 +103,8 @@ func getClientInformation() (clientInformation, error) {
 		}, nil
 	}
 
-	ex, _ := time.Parse(time.RFC3339, expiration)
-	if ex.Before(time.Now()) {
+	ex, _ := time.Parse(time.RFC3339Nano, expiration)
+	if ex.Before(util.GetTimestamp()) {
 		refreshToken := viper.GetString("refreshToken")
 
 		if refreshToken == "" {

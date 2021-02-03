@@ -137,7 +137,7 @@ func Fire(p TriggerParameters) (string, error) {
 		FromUser:  resp.FromUser,
 		ToUser:    resp.ToUser,
 		Transport: p.Transport,
-		Timestamp: time.Now().Format(time.RFC3339),
+		Timestamp: util.GetTimestamp().Format(time.RFC3339Nano),
 	})
 	if err != nil {
 		return "", err

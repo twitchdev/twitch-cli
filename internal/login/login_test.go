@@ -23,7 +23,7 @@ var params = LoginParameters{
 }
 
 var response = LoginResponse{
-	ExpiresAt: time.Now().Add(10 * time.Minute),
+	ExpiresAt: util.GetTimestamp().Add(10 * time.Minute),
 	Response: AuthorizationResponse{
 		TokenType:    "bearer",
 		AccessToken:  "890",
@@ -101,7 +101,7 @@ func TestStoreInConfig(t *testing.T) {
 	a.Equal(r.AccessToken, viper.Get("accesstoken"), "Invalid token in config.")
 	a.Equal(r.RefreshToken, viper.Get("refreshtoken"), "Invalid refresh token in config.")
 	a.Equal(r.Scope, viper.Get("tokenscopes"), "Invalid scopes in config.")
-	a.Equal(response.ExpiresAt.Format(time.RFC3339), viper.GetString("tokenexpiration"), "Invalid expiration in config.")
+	a.Equal(response.ExpiresAt.Format(time.RFC3339Nano), viper.GetString("tokenexpiration"), "Invalid expiration in config.")
 }
 
 func TestRefreshUserToken(t *testing.T) {

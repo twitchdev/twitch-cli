@@ -47,7 +47,7 @@ func TestRetriveFromDB(t *testing.T) {
 		FromUser:  "1234",
 		ToUser:    "5678",
 		Transport: "test",
-		Timestamp: GetTimestamp().Format(time.RFC3339),
+		Timestamp: GetTimestamp().Format(time.RFC3339Nano),
 	}
 
 	err := InsertIntoDB(ecParams)
