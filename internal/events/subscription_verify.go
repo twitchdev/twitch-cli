@@ -90,7 +90,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid response. Received challenge %s in body`, challenge))
 			r.IsChallengeValid = true
 		} else {
-			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid response. Challenge %s received in body, expected %s`, respChallenge, challenge))
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid response. Received %s as body, expected %s`, respChallenge, challenge))
 			r.IsChallengeValid = false
 		}
 
