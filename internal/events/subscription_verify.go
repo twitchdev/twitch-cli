@@ -5,6 +5,7 @@ package events
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -23,8 +24,9 @@ type VerifyParameters struct {
 }
 
 type VerifyResponse struct {
-	IsValid bool
-	Body    string
+	IsStatusValid    bool
+	IsChallengeValid bool
+	Body             string
 }
 
 func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
@@ -41,7 +43,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	event := triggerTypeMap[p.Transport][p.Event]
 	challenge := util.RandomGUID()
 
-	body, err := generateWebhookSubscriptionBody(p.Transport, event, challenge)
+	body, err := generateWebhookSubscriptionBody(p.Transport, event, challenge, p.ForwardAddress)
 	if err != nil {
 		return VerifyResponse{}, err
 	}
@@ -84,19 +86,27 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		}
 
 		respChallenge := string(body)
-		if respChallenge == challenge && resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-			color.New().Add(color.FgGreen).Println(`✔ Valid response`)
-			r.IsValid = true
+		if respChallenge == challenge {
+			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid response. Received challenge %s in body`, challenge))
+			r.IsChallengeValid = true
 		} else {
-			color.New().Add(color.FgRed).Println(`✗ Invalid response`)
-			r.IsValid = false
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid response. Challenge %s received in body, expected %s`, respChallenge, challenge))
+			r.IsChallengeValid = false
+		}
+
+		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid status code. Received status %v`, resp.StatusCode))
+			r.IsStatusValid = true
+		} else {
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid status code. Received %v, expected a 2XX status`, resp.StatusCode))
+			r.IsStatusValid = false
 		}
 	}
 
 	return r, nil
 }
 
-func generateWebhookSubscriptionBody(transport string, event string, challenge string) (TriggerResponse, error) {
+func generateWebhookSubscriptionBody(transport string, event string, challenge string, callback string) (TriggerResponse, error) {
 	var res []byte
 	var err error
 	id := util.RandomGUID()
@@ -115,7 +125,7 @@ func generateWebhookSubscriptionBody(transport string, event string, challenge s
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
-					Callback: "",
+					Callback: callback,
 				},
 				CreatedAt: ts,
 			},

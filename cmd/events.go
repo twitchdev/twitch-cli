@@ -92,6 +92,7 @@ func init() {
 	verifyCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
 	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to Webhooks 2/EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.")
+	verifyCmd.MarkFlagRequired("forward-address")
 }
 
 func triggerCmdRun(cmd *cobra.Command, args []string) {
@@ -161,7 +162,7 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	res, err := events.VerifyWebhookSubscription(events.VerifyParameters{
+	_, err := events.VerifyWebhookSubscription(events.VerifyParameters{
 		Event:          args[0],
 		Transport:      transport,
 		ForwardAddress: forwardAddress,
@@ -172,6 +173,4 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		println(err.Error())
 		return
 	}
-
-	fmt.Println(res.Body)
 }

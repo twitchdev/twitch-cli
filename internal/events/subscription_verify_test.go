@@ -27,8 +27,11 @@ func TestSubscriptionVerify(t *testing.T) {
 			var verification models.EventsubSubscriptionVerification
 			err := json.Unmarshal(body, &verification)
 			a.Nil(err)
-
 			challenge = verification.Challenge
+
+			if r.URL.Path == "/badendpoint" {
+				challenge = "badresponse"
+			}
 		} else if r.Method == http.MethodGet {
 			q := r.URL.Query()
 
@@ -48,12 +51,12 @@ func TestSubscriptionVerify(t *testing.T) {
 	}
 	res, err := VerifyWebhookSubscription(p)
 	a.Nil(err)
-	a.Equal(res.IsValid, true)
+	a.Equal(res.IsChallengeValid, true)
 
 	p.Transport = TransportWebSub
 	res, err = VerifyWebhookSubscription(p)
 	a.Nil(err)
-	a.Equal(res.IsValid, true)
+	a.Equal(res.IsChallengeValid, true)
 
 	p.Event = "cheer"
 	_, err = VerifyWebhookSubscription(p)
@@ -63,4 +66,13 @@ func TestSubscriptionVerify(t *testing.T) {
 	_, err = VerifyWebhookSubscription(p)
 	a.NotNil(err)
 
+	p = VerifyParameters{
+		ForwardAddress: ts.URL + "/badendpoint",
+		Transport:      TransportEventSub,
+		Event:          "subscribe",
+		Secret:         "potatoes",
+	}
+	res, err = VerifyWebhookSubscription(p)
+	a.Nil(err)
+	a.Equal(res.IsChallengeValid, false)
 }
