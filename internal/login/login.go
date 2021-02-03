@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 type LoginParameters struct {
@@ -164,7 +165,7 @@ func handleLoginResponse(body []byte) (LoginResponse, error) {
 	if err := json.Unmarshal(body, &r); err != nil {
 		return LoginResponse{}, err
 	}
-	expiresAt := time.Now().Add(time.Duration(int64(time.Second) * int64(r.ExpiresIn)))
+	expiresAt := util.GetTimestamp().Add(time.Duration(int64(time.Second) * int64(r.ExpiresIn)))
 	storeInConfig(r.AccessToken, r.RefreshToken, r.Scope, expiresAt)
 
 	return LoginResponse{

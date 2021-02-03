@@ -17,3 +17,6 @@ twitch-cli
 # Editor configs
 .vsvode/
 .idea/
+
+# junk files
+.DS_Store

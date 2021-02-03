@@ -23,7 +23,7 @@ var params = LoginParameters{
 }
 
 var response = LoginResponse{
-	ExpiresAt: time.Now().Add(10 * time.Minute),
+	ExpiresAt: util.GetTimestamp().Add(10 * time.Minute),
 	Response: AuthorizationResponse{
 		TokenType:    "bearer",
 		AccessToken:  "890",
