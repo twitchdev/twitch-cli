@@ -74,7 +74,7 @@ func GenerateFollowBody(p FollowParams) (TriggerResponse, error) {
 					FromName:   fromUserName,
 					ToID:       p.ToUser,
 					ToName:     toUserName,
-					FollowedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+					FollowedAt: util.GetTimestamp().Format(time.RFC3339),
 				},
 			},
 		}

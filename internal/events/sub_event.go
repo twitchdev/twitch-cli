@@ -88,7 +88,7 @@ func GenerateSubBody(params SubscribeParams) (TriggerResponse, error) {
 				{
 					ID:             uuid,
 					EventType:      params.Type,
-					EventTimestamp: util.GetTimestamp().Format(time.RFC3339Nano),
+					EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
 					Version:        "1.0",
 					EventData: models.SubWebSubEventData{
 						BroadcasterID:   params.ToUser,
