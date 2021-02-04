@@ -63,18 +63,18 @@ func TestGetClientInformation(t *testing.T) {
 
 	// check in the future
 	viper.Set("tokenexpiration", util.GetTimestamp().Add(10*time.Minute).Format(time.RFC3339Nano))
-	clientInfo, err := getClientInformation()
+	clientInfo, err := GetClientInformation()
 	a.Nil(err)
 	a.Equal(clientInfo.Token, "4567")
 
 	// non-expiring tokens
 	viper.Set("tokenexpiration", "0")
-	clientInfo, err = getClientInformation()
+	clientInfo, err = GetClientInformation()
 	a.Nil(err)
 	a.Equal(clientInfo.Token, "4567")
 
 	// expired, but will fail since it's not valid :)
 	viper.Set("tokenexpiration", "1")
-	clientInfo, err = getClientInformation()
+	clientInfo, err = GetClientInformation()
 	a.NotNil(err)
 }
