@@ -1,4 +1,4 @@
-version = "0.2.4"
+version = "0.3.0"
 
 release:
 	docker build https://github.com/mailchain/goreleaser-xcgo.git --build-arg GORELEASER_VERSION=0.155.0 --build-arg GORELEASER_SHA=2a33aa15933cfd5bd2b714860c4876fa76f1fab8f46a7c6d29a8e32c7f9445f2 -t twitch-cli:latest
