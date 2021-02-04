@@ -28,7 +28,7 @@ type clientInformation struct {
 
 // NewRequest is used to request data from the Twitch API using a HTTP GET request- this function is a wrapper for the apiRequest function that handles the network call
 func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool) {
-	client, err := getClientInformation()
+	client, err := GetClientInformation()
 
 	if viper.GetString("BASE_URL") != "" {
 		baseURL = viper.GetString("BASE_URL")
@@ -90,7 +90,7 @@ func ValidOptions(method string) []string {
 	return names
 }
 
-func getClientInformation() (clientInformation, error) {
+func GetClientInformation() (clientInformation, error) {
 	clientID := viper.GetString("clientID")
 	expiration := viper.GetString("tokenexpiration")
 	token := viper.GetString("accessToken")
