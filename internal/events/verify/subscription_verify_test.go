@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package events
+package verify
 
 import (
 	"encoding/json"
@@ -44,7 +44,7 @@ func TestSubscriptionVerify(t *testing.T) {
 	defer ts.Close()
 
 	p := VerifyParameters{
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		Event:          "subscribe",
 		ForwardAddress: ts.URL,
 		Secret:         "potatoes",
@@ -53,7 +53,7 @@ func TestSubscriptionVerify(t *testing.T) {
 	a.Nil(err)
 	a.Equal(res.IsChallengeValid, true)
 
-	p.Transport = TransportWebSub
+	p.Transport = models.TransportWebSub
 	res, err = VerifyWebhookSubscription(p)
 	a.Nil(err)
 	a.Equal(res.IsChallengeValid, true)
@@ -68,7 +68,7 @@ func TestSubscriptionVerify(t *testing.T) {
 
 	p = VerifyParameters{
 		ForwardAddress: ts.URL + "/badendpoint",
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		Event:          "subscribe",
 		Secret:         "potatoes",
 	}

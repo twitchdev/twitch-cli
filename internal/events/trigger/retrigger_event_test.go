@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package events
+package trigger
 
 import (
 	"encoding/json"
@@ -25,7 +25,7 @@ func TestRefireEvent(t *testing.T) {
 
 	params := *&TriggerParameters{
 		Event:          "gift",
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",

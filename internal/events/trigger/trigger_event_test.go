@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package events
+package trigger
 
 import (
 	"io/ioutil"
@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
@@ -23,7 +24,7 @@ func TestFire(t *testing.T) {
 
 	params := *&TriggerParameters{
 		Event:          "gift",
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -43,7 +44,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "cheer",
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -62,7 +63,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "follow",
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -81,7 +82,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "cheer",
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -100,7 +101,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "add-redemption",
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -119,7 +120,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "add-reward",
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -138,7 +139,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "transaction",
-		Transport:      TransportWebSub,
+		Transport:      models.TransportWebSub,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -157,7 +158,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "transaction",
-		Transport:      TransportEventSub,
+		Transport:      models.TransportEventSub,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -190,17 +191,4 @@ func TestFire(t *testing.T) {
 	}
 	res, err = Fire(params)
 	a.NotNil(err)
-}
-func TestValidTriggers(t *testing.T) {
-	a := util.SetupTestEnv(t)
-
-	t1 := ValidTriggers()
-	a.NotEmpty(t1)
-}
-
-func TestValidTransports(t *testing.T) {
-	a := util.SetupTestEnv(t)
-
-	t1 := ValidTransports()
-	a.NotEmpty(t1)
 }

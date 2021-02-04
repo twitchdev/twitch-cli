@@ -8,6 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/twitchdev/twitch-cli/internal/events"
+	"github.com/twitchdev/twitch-cli/internal/events/trigger"
+	"github.com/twitchdev/twitch-cli/internal/events/verify"
 )
 
 var (
@@ -111,7 +113,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 	}
 
 	for i := 0; i < count; i++ {
-		res, err := events.Fire(events.TriggerParameters{
+		res, err := trigger.Fire(trigger.TriggerParameters{
 			Event:          args[0],
 			Transport:      transport,
 			ForwardAddress: forwardAddress,
@@ -135,7 +137,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 }
 
 func retriggerCmdRun(cmd *cobra.Command, args []string) {
-	res, err := events.RefireEvent(eventID, events.TriggerParameters{
+	res, err := trigger.RefireEvent(eventID, trigger.TriggerParameters{
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
 	})
@@ -162,7 +164,7 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	_, err := events.VerifyWebhookSubscription(events.VerifyParameters{
+	_, err := verify.VerifyWebhookSubscription(verify.VerifyParameters{
 		Event:          args[0],
 		Transport:      transport,
 		ForwardAddress: forwardAddress,
