@@ -28,7 +28,7 @@ var triggerMapping = map[string]map[string]string{
 
 type Event struct{}
 
-func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventRespose, error) {
+func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
 
@@ -61,7 +61,7 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 
 		event, err = json.Marshal(body)
 		if err != nil {
-			return events.MockEventRespose{}, err
+			return events.MockEventResponse{}, err
 		}
 
 	case models.TransportWebSub:
@@ -78,14 +78,14 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 		}
 		event, err = json.Marshal(body)
 		if err != nil {
-			return events.MockEventRespose{}, err
+			return events.MockEventResponse{}, err
 		}
 
 	default:
-		return events.MockEventRespose{}, nil
+		return events.MockEventResponse{}, nil
 	}
 
-	return events.MockEventRespose{
+	return events.MockEventResponse{
 		ID:       p.ID,
 		JSON:     event,
 		FromUser: p.FromUserID,

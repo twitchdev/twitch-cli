@@ -27,7 +27,7 @@ var triggerMapping = map[string]map[string]string{
 
 type Event struct{}
 
-func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventRespose, error) {
+func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
 
@@ -72,16 +72,16 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 		event, err = json.Marshal(body)
 		if err != nil {
-			return events.MockEventRespose{}, err
+			return events.MockEventResponse{}, err
 		}
 
 	case models.TransportWebSub:
-		return events.MockEventRespose{}, errors.New("Websub is unsupported for cheer events")
+		return events.MockEventResponse{}, errors.New("Websub is unsupported for cheer events")
 	default:
-		return events.MockEventRespose{}, nil
+		return events.MockEventResponse{}, nil
 	}
 
-	return events.MockEventRespose{
+	return events.MockEventResponse{
 		ID:       params.ID,
 		JSON:     event,
 		FromUser: params.FromUserID,

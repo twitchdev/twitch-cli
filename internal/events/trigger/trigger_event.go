@@ -38,7 +38,7 @@ type TriggerResponse struct {
 
 // Fire emits an event using the TriggerParameters defined above.
 func Fire(p TriggerParameters) (string, error) {
-	var resp events.MockEventRespose
+	var resp events.MockEventResponse
 	var err error
 
 	if p.ToUser == "" {

@@ -27,7 +27,7 @@ var triggerMapping = map[string]map[string]string{
 
 type Event struct{}
 
-func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventRespose, error) {
+func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
 
@@ -36,7 +36,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 	switch params.Transport {
 	case models.TransportEventSub:
-		return events.MockEventRespose{}, errors.New("Extension transactions are unsupported on Eventsub")
+		return events.MockEventResponse{}, errors.New("Extension transactions are unsupported on Eventsub")
 	case models.TransportWebSub:
 		body := *&models.TransactionWebSubResponse{
 			Data: []models.TransactionWebsubEvent{
@@ -65,14 +65,14 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		}
 		event, err = json.Marshal(body)
 		if err != nil {
-			return events.MockEventRespose{}, err
+			return events.MockEventResponse{}, err
 		}
 
 	default:
-		return events.MockEventRespose{}, nil
+		return events.MockEventResponse{}, nil
 	}
 
-	return events.MockEventRespose{
+	return events.MockEventResponse{
 		ID:       params.ID,
 		JSON:     event,
 		FromUser: params.FromUserID,

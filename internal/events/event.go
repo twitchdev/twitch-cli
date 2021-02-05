@@ -19,7 +19,7 @@ type MockEventParameters struct {
 	Cost         int64
 }
 
-type MockEventRespose struct {
+type MockEventResponse struct {
 	ID        string
 	JSON      []byte
 	FromUser  string
@@ -32,7 +32,7 @@ type MockEventRespose struct {
 type MockEvent interface {
 
 	// Returns the Mock Response for the given transport
-	GenerateEvent(p MockEventParameters) (MockEventRespose, error)
+	GenerateEvent(p MockEventParameters) (MockEventResponse, error)
 
 	// Returns the trigger for the event (e.g. cheer for cheer events, or add-reward for channel points add rewards)
 	ValidTrigger(trigger string) bool
