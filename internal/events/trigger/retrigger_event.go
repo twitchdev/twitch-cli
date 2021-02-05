@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package events
+package trigger
 
 import (
 	"fmt"
@@ -17,13 +17,13 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 	p.Transport = res.Transport
 
 	if p.ForwardAddress != "" {
-		resp, err := forwardEvent(ForwardParamters{
+		resp, err := ForwardEvent(ForwardParamters{
 			ID:             id,
 			Transport:      res.Transport,
 			ForwardAddress: p.ForwardAddress,
 			Secret:         p.Secret,
 			JSON:           []byte(res.JSON),
-			Event:          triggerTypeMap[res.Transport][res.Event],
+			Event:          res.Event,
 		})
 		defer resp.Body.Close()
 

@@ -2,48 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package events
 
-var triggerTypeMap = map[string]map[string]string{
-	"eventsub": {
-		"cheer":             "channel.cheer",
-		"subscribe":         "channel.subscribe",
-		"unsubscribe":       "channel.unsubscribe",
-		"gift":              "channel.subscribe",
-		"follow":            "channel.follow",
-		"transaction":       "",
-		"add-redemption":    "channel.channel_points_custom_reward_redemption.add",
-		"update-redemption": "channel.channel_points_custom_reward_redemption.update",
-		"add-reward":        "channel.channel_points_custom_reward.add",
-		"update-reward":     "channel.channel_points_custom_reward.update",
-		"remove-reward":     "channel.channel_points_custom_reward.remove",
-	},
-	"websub": {
-		"cheer":             "",
-		"subscribe":         "subscribe",
-		"unsubscribe":       "subscribe",
-		"gift":              "subscribe",
-		"follow":            "follow",
-		"transaction":       "transaction",
-		"add-redemption":    "",
-		"update-redemption": "",
-		"add-reward":        "",
-		"update-reward":     "",
-		"remove-reward":     "",
-	},
-	"websockets": {
-		"cheer":             "channel.cheer",
-		"subscribe":         "channel.subscribe",
-		"unsubscribe":       "channel.unsubscribe",
-		"gift":              "channel.subscribe",
-		"follow":            "channel.follow",
-		"transaction":       "",
-		"add-redemption":    "channel.channel_points_custom_reward_redemption.add",
-		"update-redemption": "channel.channel_points_custom_reward_redemption.update",
-		"add-reward":        "channel.channel_points_custom_reward.add",
-		"update-reward":     "channel.channel_points_custom_reward.update",
-		"remove-reward":     "channel.channel_points_custom_reward.remove",
-	},
-}
-
 var triggerSupported = map[string]bool{
 	"subscribe":         true,
 	"unsubscribe":       true,

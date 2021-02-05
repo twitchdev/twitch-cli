@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package events
+package trigger
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/request"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
@@ -30,7 +31,7 @@ type header struct {
 }
 
 var notificationHeaders = map[string][]header{
-	TransportEventSub: {
+	models.TransportEventSub: {
 		{
 			HeaderName:  `Twitch-Eventsub-Message-Retry`,
 			HeaderValue: `0`,
@@ -44,7 +45,7 @@ var notificationHeaders = map[string][]header{
 			HeaderValue: `test`,
 		},
 	},
-	TransportWebSub: {
+	models.TransportWebSub: {
 		{
 			HeaderName:  `Twitch-Notification-Timestamp`,
 			HeaderValue: util.GetTimestamp().Format(time.RFC3339Nano),
@@ -56,7 +57,7 @@ var notificationHeaders = map[string][]header{
 	},
 }
 
-func forwardEvent(p ForwardParamters) (*http.Response, error) {
+func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 	method := http.MethodPost
 	if p.Method != "" {
 		method = p.Method
@@ -73,10 +74,10 @@ func forwardEvent(p ForwardParamters) (*http.Response, error) {
 	}
 
 	switch p.Transport {
-	case TransportEventSub:
+	case models.TransportEventSub:
 		req.Header.Set("Twitch-Eventsub-Message-Id", p.ID)
 		req.Header.Set("Twitch-Eventsub-Subscription-Type", p.Event)
-	case TransportWebSub:
+	case models.TransportWebSub:
 		req.Header.Set("Twitch-Notification-Id", p.ID)
 	}
 
@@ -100,13 +101,13 @@ func getSignatureHeader(req *http.Request, id string, secret string, transport s
 	mac := hmac.New(sha256.New, []byte(secret))
 	ts := util.GetTimestamp()
 	switch transport {
-	case TransportEventSub:
+	case models.TransportEventSub:
 		req.Header.Set("Twitch-Eventsub-Message-Timestamp", ts.Format(time.RFC3339Nano))
 		prefix := ts.AppendFormat([]byte(id), time.RFC3339Nano)
 		mac.Write(prefix)
 		mac.Write(payload)
 		req.Header.Set("Twitch-Eventsub-Message-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))
-	case TransportWebSub:
+	case models.TransportWebSub:
 		mac.Write(payload)
 		req.Header.Set("X-Hub-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))
 	}

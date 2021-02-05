@@ -1,10 +1,9 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package events
+package verify
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/twitchdev/twitch-cli/internal/events/trigger"
+	"github.com/twitchdev/twitch-cli/internal/events/types"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
@@ -32,18 +33,15 @@ type VerifyResponse struct {
 func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	r := VerifyResponse{}
 
-	if len(triggerTypeMap[p.Transport]) == 0 {
-		return VerifyResponse{}, errors.New("Invalid transport")
-	}
-
-	if triggerTypeMap[p.Transport][p.Event] == "" {
-		return VerifyResponse{}, errors.New("Event unsupported for given transport")
-	}
-
-	event := triggerTypeMap[p.Transport][p.Event]
 	challenge := util.RandomGUID()
 
-	body, err := generateWebhookSubscriptionBody(p.Transport, event, challenge, p.ForwardAddress)
+	event, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
+
+	if err != nil {
+		return VerifyResponse{}, err
+	}
+
+	body, err := generateWebhookSubscriptionBody(p.Transport, event.GetTopic(p.Transport, p.Event), challenge, p.ForwardAddress)
 	if err != nil {
 		return VerifyResponse{}, err
 	}
@@ -57,17 +55,17 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 			return VerifyResponse{}, err
 		}
 
-		if p.Transport == TransportWebSub {
+		if p.Transport == models.TransportWebSub {
 			q := u.Query()
 			q.Add("hub.challenge", challenge)
 			// this isn't per spec, however for the purposes of verifying whether a service is responding properly, it'll do
-			q.Add("hub.topic", event)
+			q.Add("hub.topic", event.GetTopic(p.Transport, p.Event))
 			q.Add("hub.mode", "subscribe")
 			u.RawQuery = q.Encode()
 			requestMethod = http.MethodGet
 		}
 
-		resp, err := forwardEvent(ForwardParamters{
+		resp, err := trigger.ForwardEvent(trigger.ForwardParamters{
 			ID:             body.ID,
 			JSON:           body.JSON,
 			Transport:      p.Transport,
@@ -106,13 +104,13 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	return r, nil
 }
 
-func generateWebhookSubscriptionBody(transport string, event string, challenge string, callback string) (TriggerResponse, error) {
+func generateWebhookSubscriptionBody(transport string, event string, challenge string, callback string) (trigger.TriggerResponse, error) {
 	var res []byte
 	var err error
 	id := util.RandomGUID()
 	ts := util.GetTimestamp().Format(time.RFC3339Nano)
 	switch transport {
-	case TransportEventSub:
+	case models.TransportEventSub:
 		body := models.EventsubSubscriptionVerification{
 			Challenge: challenge,
 			Subscription: models.EventsubSubscription{
@@ -132,14 +130,14 @@ func generateWebhookSubscriptionBody(transport string, event string, challenge s
 		}
 		res, err = json.Marshal(body)
 		if err != nil {
-			return TriggerResponse{}, err
+			return trigger.TriggerResponse{}, err
 		}
-	case TransportWebSub:
+	case models.TransportWebSub:
 
 	default:
 		res = []byte("")
 	}
-	return TriggerResponse{
+	return trigger.TriggerResponse{
 		ID:        id,
 		JSON:      res,
 		Timestamp: ts,
