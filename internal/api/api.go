@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -63,6 +64,14 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			fmt.Printf("Error pretty-printing body: %v", err)
 			return
 		}
+
+		// since Command Prompt/Powershell don't support coloring, will pretty print without colors
+		if runtime.GOOS == "windows" {
+			s, _ := json.MarshalIndent(obj, "", "  ")
+			fmt.Println(string(s))
+			return
+		}
+
 		f := colorjson.NewFormatter()
 		f.Indent = 2
 		f.KeyColor = color.New(color.FgBlue).Add(color.Bold)
