@@ -54,7 +54,7 @@ scoop:
     name: scoop-bucket
   homepage: https://github.com/twitchdev/twitch-cli
   description: CLI for Twitch's developer offerings
-  license: Apache 2.0
+  license: Apache-2.0
 brews:
   -
     tap:
@@ -67,7 +67,7 @@ brews:
       bin.install "twitch"
     test: |
       system "#{bin}/twitch -v"
-    license: Apache 2.0
+    license: Apache-2.0
 archives:
   - replacements:
       darwin: Darwin

@@ -26,32 +26,40 @@ var configureCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(configureCmd)
+
+	configureCmd.Flags().StringVarP(&clientID, "client-id", "i", "", "Client ID to use.")
+	configureCmd.Flags().StringVarP(&clientSecret, "client-secret", "s", "", "Client Secret to use.")
 }
 
 func configureCmdRun(cmd *cobra.Command, args []string) {
-	clientIDPrompt := promptui.Prompt{
-		Label: "Client ID",
-		Validate: func(s string) error {
-			if len(s) == 30 || len(s) == 31 {
-				return nil
-			}
-			return errors.New("Invalid length for Client ID")
-		},
+	var err error
+	if clientID == "" {
+		clientIDPrompt := promptui.Prompt{
+			Label: "Client ID",
+			Validate: func(s string) error {
+				if len(s) == 30 || len(s) == 31 {
+					return nil
+				}
+				return errors.New("Invalid length for Client ID")
+			},
+		}
+
+		clientID, err = clientIDPrompt.Run()
 	}
 
-	clientID, err := clientIDPrompt.Run()
+	if clientSecret == "" {
+		clientSecretPrompt := promptui.Prompt{
+			Label: "Client Secret",
+			Validate: func(s string) error {
+				if len(s) == 30 || len(s) == 31 {
+					return nil
+				}
+				return errors.New("Invalid length for Client Secret")
+			},
+		}
 
-	clientSecretPrompt := promptui.Prompt{
-		Label: "Client Secret",
-		Validate: func(s string) error {
-			if len(s) == 30 || len(s) == 31 {
-				return nil
-			}
-			return errors.New("Invalid length for Client Secret")
-		},
+		clientSecret, err = clientSecretPrompt.Run()
 	}
-
-	clientSecret, err := clientSecretPrompt.Run()
 
 	if clientID == "" && clientSecret == "" {
 		fmt.Println("Must specify either the Client ID or Secret")
