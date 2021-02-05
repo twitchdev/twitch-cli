@@ -4,13 +4,19 @@ Allows the user to set basic information required for CLI usage via interactive 
 
 This should be the first step if the intent is to use either of those functionalities.
 
+If you'd prefer to not use the interactive shell, you can pass the settings via the below flags.
+
 **Args**
 
 None.
 
 **Flags**
 
-None
+| Flag              | Shorthand | Description                       | Example                    | Required? (Y/N) |
+|-------------------|-----------|-----------------------------------|----------------------------|-----------------|
+| `--client-id`     | `-i`      | Client ID to use for the CLI.     | `configure -i test_client` | N               |
+| `--client-secret` | `-s`      | Client Secret to use for the CLI. | `configure -s test_secret` | N               |
+
 
 **Examples**
 
