@@ -20,7 +20,7 @@ type TriggerParameters struct {
 	ToUser         string
 	GiftUser       string
 	Status         string
-	ItemId         string
+	ItemID         string
 	Cost           int64
 	ForwardAddress string
 	Secret         string
@@ -93,12 +93,12 @@ func Fire(p TriggerParameters) (string, error) {
 			Secret:         p.Secret,
 			ForwardAddress: p.ForwardAddress,
 			Event:          p.Event,
+			Type:           EventSubMessageTypeNotification,
 		})
-		defer resp.Body.Close()
-
 		if err != nil {
 			return "", err
 		}
+		defer resp.Body.Close()
 
 		println(fmt.Sprintf(`[%v] Request Sent`, resp.StatusCode))
 	}

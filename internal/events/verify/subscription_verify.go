@@ -67,11 +67,13 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 
 		resp, err := trigger.ForwardEvent(trigger.ForwardParamters{
 			ID:             body.ID,
+			Event:          event.GetTopic(p.Transport, p.Event),
 			JSON:           body.JSON,
 			Transport:      p.Transport,
 			Secret:         p.Secret,
 			Method:         requestMethod,
 			ForwardAddress: u.String(),
+			Type:           trigger.EventSubMessageTypeVerification,
 		})
 		if err != nil {
 			return VerifyResponse{}, err
