@@ -138,7 +138,7 @@ func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("API responded with an error while revoking token: %v", resp.Body)
+		log.Printf("API responded with an error while revoking token: %v", string(resp.Body))
 		return LoginResponse{}, errors.New("API responded with an error while revoking token")
 	}
 
