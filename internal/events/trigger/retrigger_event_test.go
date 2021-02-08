@@ -31,7 +31,7 @@ func TestRefireEvent(t *testing.T) {
 		ToUser:         "",
 		GiftUser:       "",
 		Status:         "",
-		ItemId:         "",
+		ItemID:         "",
 		Cost:           0,
 		ForwardAddress: ts.URL,
 		Secret:         "potato",

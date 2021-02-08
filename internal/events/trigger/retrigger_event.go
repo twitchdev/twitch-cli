@@ -24,6 +24,7 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 			Secret:         p.Secret,
 			JSON:           []byte(res.JSON),
 			Event:          res.Event,
+			Type:           EventSubMessageTypeNotification,
 		})
 		defer resp.Body.Close()
 

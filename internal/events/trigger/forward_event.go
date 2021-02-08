@@ -23,6 +23,7 @@ type ForwardParamters struct {
 	Secret         string
 	Event          string
 	Method         string
+	Type           string
 }
 
 type header struct {
@@ -30,15 +31,16 @@ type header struct {
 	HeaderValue string
 }
 
+const (
+	EventSubMessageTypeNotification = "notification"
+	EventSubMessageTypeVerification = "webhook_callback_verification"
+)
+
 var notificationHeaders = map[string][]header{
 	models.TransportEventSub: {
 		{
 			HeaderName:  `Twitch-Eventsub-Message-Retry`,
 			HeaderValue: `0`,
-		},
-		{
-			HeaderName:  `Twitch-Eventsub-Message-Type`,
-			HeaderValue: `notification`,
 		},
 		{
 			HeaderName:  `Twitch-Eventsub-Subscription-Version`,
@@ -77,6 +79,12 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 	case models.TransportEventSub:
 		req.Header.Set("Twitch-Eventsub-Message-Id", p.ID)
 		req.Header.Set("Twitch-Eventsub-Subscription-Type", p.Event)
+		switch p.Type {
+		case EventSubMessageTypeNotification:
+			req.Header.Add("Twitch-Eventsub-Message-Type", EventSubMessageTypeNotification)
+		case EventSubMessageTypeVerification:
+			req.Header.Add("Twitch-Eventsub-Message-Type", EventSubMessageTypeVerification)
+		}
 	case models.TransportWebSub:
 		req.Header.Set("Twitch-Notification-Id", p.ID)
 	}
@@ -89,7 +97,6 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 		Timeout: time.Second * 10,
 	}
 	resp, err := client.Do(req)
-
 	if err != nil {
 		return resp, err
 	}
