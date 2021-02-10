@@ -71,6 +71,11 @@ func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 		log.Fatal(err.Error())
 	}
 
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("API responded with an error while generating token: %v", string(resp.Body))
+		return LoginResponse{}, errors.New("API responded with an error while revoking token")
+	}
+
 	r, err := handleLoginResponse(resp.Body)
 	if err != nil {
 		log.Printf("Error handling login: %v", err)
@@ -95,6 +100,7 @@ func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 
 	twitchAuthorizeURL += "&state=" + state
 
+	fmt.Println("Opening browser. Press Ctrl+C to cancel...")
 	openBrowser(twitchAuthorizeURL)
 
 	ur, err := userAuthServer()
@@ -132,7 +138,7 @@ func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("API responded with an error while revoking token: %v", resp.Body)
+		log.Printf("API responded with an error while revoking token: %v", string(resp.Body))
 		return LoginResponse{}, errors.New("API responded with an error while revoking token")
 	}
 
@@ -147,7 +153,7 @@ func RefreshUserToken(p RefreshParameters) (LoginResponse, error) {
 		return LoginResponse{}, err
 	}
 
-	if resp.StatusCode == http.StatusBadRequest {
+	if resp.StatusCode != http.StatusOK {
 		return LoginResponse{}, errors.New("Error with client while refreshing. Please rerun twitch configure")
 	}
 
