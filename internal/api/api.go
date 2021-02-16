@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"runtime"
 	"sort"
@@ -55,6 +56,11 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	})
 	if err != nil {
 		fmt.Printf("Error reading body: %v", err)
+		return
+	}
+
+	if resp.StatusCode == http.StatusNoContent {
+		fmt.Println("Endpoint responded with status 204")
 		return
 	}
 
