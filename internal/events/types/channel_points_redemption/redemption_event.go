@@ -22,7 +22,7 @@ var triggerSupported = []string{"add-redemption", "update-redemption"}
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
 		"add-redemption":    "channel.channel_points_custom_reward_redemption.add",
-		"update-redemption": "tchannel.channel_points_custom_reward_redemption.update",
+		"update-redemption": "channel.channel_points_custom_reward_redemption.update",
 	},
 }
 
