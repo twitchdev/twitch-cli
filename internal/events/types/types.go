@@ -6,21 +6,25 @@ import (
 	"errors"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
+	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_revoke"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_redemption"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_reward"
 	"github.com/twitchdev/twitch-cli/internal/events/types/cheer"
 	"github.com/twitchdev/twitch-cli/internal/events/types/extension_transaction"
 	"github.com/twitchdev/twitch-cli/internal/events/types/follow"
+	"github.com/twitchdev/twitch-cli/internal/events/types/raid"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscribe"
 )
 
 func All() []events.MockEvent {
 	return []events.MockEvent{
+		authorization_revoke.Event{},
 		channel_points_redemption.Event{},
 		channel_points_reward.Event{},
 		cheer.Event{},
 		extension_transaction.Event{},
 		follow.Event{},
+		raid.Event{},
 		subscribe.Event{},
 	}
 }

@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package event_name
+package raid
 
 import (
 	"encoding/json"
@@ -21,7 +21,7 @@ func TestEventSub(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
-		Trigger:    "subscribe",
+		Trigger:    "raid",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -41,15 +41,11 @@ func TestWebSub(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportWebSub,
-		Trigger:    "unsubscribe",
+		Trigger:    "raid",
 	}
 
-	r, err := Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	var body models.SubWebSubResponse // replace with actual value
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
+	_, err := Event{}.GenerateEvent(params)
+	a.NotNil(err)
 
 	// write tests here for websub
 }
@@ -60,7 +56,7 @@ func TestFakeTransport(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
-		Trigger:    "unsubscribe",
+		Trigger:    "raid",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -70,10 +66,10 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("trigger_keyword")
+	r := Event{}.ValidTrigger("raid")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("notgift")
+	r = Event{}.ValidTrigger("not_raid")
 	a.Equal(false, r)
 }
 

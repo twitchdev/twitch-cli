@@ -30,3 +30,19 @@ func RandomGUID() string {
 
 	return uuid
 }
+
+// RandomClientID generates a fake client ID of length 30
+func RandomClientID() string {
+	b := make([]byte, 30)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)[:30]
+}
+
+// RandomViewerCount generates a fake viewercount between 0->10,000,000
+func RandomViewerCount() int64 {
+	viewer, err := rand.Int(rand.Reader, big.NewInt(1*10*100*100*100))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return viewer.Int64()
+}

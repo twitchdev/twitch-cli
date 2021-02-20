@@ -1,27 +1,27 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package event_name
+package raid
 
 import (
 	"encoding/json"
+	"errors"
+	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
+	models.TransportWebSub:   false,
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"trigger_keyword"}
+var triggerSupported = []string{"raid"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"trigger_keyword": "topic_name_ws",
-	},
 	models.TransportEventSub: {
-		"trigger_keyword": "topic_name_es",
+		"raid": "channel.raid",
 	},
 }
 
@@ -33,19 +33,37 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 	switch params.Transport {
 	case models.TransportEventSub:
-		body := &models.EventsubResponse{
-			// make the eventsub response (if supported)
+		body := &models.RaidEventSubResponse{
+			Subscription: models.EventsubSubscription{
+				ID:      params.ID,
+				Status:  "enabled",
+				Type:    triggerMapping[params.Transport][params.Trigger],
+				Version: "beta",
+				Condition: models.EventsubCondition{
+					ToBroadcasterUserID: params.ToUserID,
+				},
+				Transport: models.EventsubTransport{
+					Method:   "webhook",
+					Callback: "null",
+				},
+				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+			},
+			Event: models.RaidEvent{
+				ToBroadcasterUserID:      params.ToUserID,
+				ToBroadcasterUserLogin:   params.ToUserName,
+				ToBroadcasterUserName:    params.ToUserName,
+				FromBroadcasterUserID:    params.FromUserID,
+				FromBroadcasterUserLogin: params.FromUserName,
+				FromBroadcasterUserName:  params.FromUserName,
+				Viewers:                  util.RandomViewerCount(),
+			},
 		}
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
 	case models.TransportWebSub:
-		body := models.FollowWebSubResponse{} // replace with actual model in internal/models
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
+		return events.MockEventResponse{}, errors.New("Raids are unsupported for websub")
 	default:
 		return events.MockEventResponse{}, nil
 	}

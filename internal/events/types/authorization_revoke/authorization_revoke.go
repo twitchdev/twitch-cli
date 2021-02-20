@@ -1,27 +1,28 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package event_name
+package authorization_revoke
 
 import (
 	"encoding/json"
+	"errors"
+	"time"
 
+	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
+	models.TransportWebSub:   false,
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"trigger_keyword"}
+var triggerSupported = []string{"revoke"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"trigger_keyword": "topic_name_ws",
-	},
 	models.TransportEventSub: {
-		"trigger_keyword": "topic_name_es",
+		"trigger_keyword": "revoke",
 	},
 }
 
@@ -30,22 +31,42 @@ type Event struct{}
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
+	clientID := viper.GetString("ClientID")
 
+	// if not configured, generate a random one
+	if clientID == "" {
+		clientID = util.RandomClientID()
+	}
 	switch params.Transport {
 	case models.TransportEventSub:
-		body := &models.EventsubResponse{
-			// make the eventsub response (if supported)
+		body := &models.AuthorizationRevokeEventSubResponse{
+			Subscription: models.EventsubSubscription{
+				ID:      params.ID,
+				Status:  "enabled",
+				Type:    triggerMapping[params.Transport][params.Trigger],
+				Version: "1",
+				Condition: models.EventsubCondition{
+					ClientID: clientID,
+				},
+				Transport: models.EventsubTransport{
+					Method:   "webhook",
+					Callback: "null",
+				},
+				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+			},
+			Event: models.AuthorizationRevokeEvent{
+				ClientID:  clientID,
+				UserID:    params.FromUserID,
+				UserLogin: params.FromUserName,
+				UserName:  params.FromUserName,
+			},
 		}
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
 	case models.TransportWebSub:
-		body := models.FollowWebSubResponse{} // replace with actual model in internal/models
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
+		return events.MockEventResponse{}, errors.New("Websub is unsupported for authorization revoke events")
 	default:
 		return events.MockEventResponse{}, nil
 	}
