@@ -1,11 +1,12 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package event_name
+package authorization_revoke
 
 import (
 	"encoding/json"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
@@ -17,6 +18,7 @@ var toUser = "4567"
 func TestEventSub(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
+	viper.Set("ClientID", "1234")
 	params := *&events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
@@ -27,13 +29,14 @@ func TestEventSub(t *testing.T) {
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.SubEventSubResponse // replace with actual value
+	var body models.AuthorizationRevokeEventSubResponse // replace with actual value
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 
-	// write actual tests here (making sure you set appropriate values and the like) for eventsub
+	a.NotEmpty(body.Event.ClientID)
+	a.Equal(body.Event.ClientID, body.Subscription.Condition.ClientID)
+	a.Equal("1234", body.Event.ClientID)
 }
-
 func TestWebSub(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
@@ -41,15 +44,11 @@ func TestWebSub(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportWebSub,
-		Trigger:    "unsubscribe",
+		Trigger:    "revoke",
 	}
 
-	r, err := Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	var body models.SubWebSubResponse // replace with actual value
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
+	_, err := Event{}.GenerateEvent(params)
+	a.NotNil(err)
 
 	// write tests here for websub
 }
@@ -70,10 +69,10 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("trigger_keyword")
+	r := Event{}.ValidTrigger("revoke")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("notgift")
+	r = Event{}.ValidTrigger("fake_revoke")
 	a.Equal(false, r)
 }
 
@@ -89,6 +88,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "trigger_keyword")
+	r := Event{}.GetTopic(models.TransportEventSub, "revoke")
 	a.NotNil(r)
 }

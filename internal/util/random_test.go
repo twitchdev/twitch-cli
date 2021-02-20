@@ -24,3 +24,16 @@ func TestRandomGUID(t *testing.T) {
 	a.NotEqual(0, len(guid), "RandomGUID() returned string with a length of 0")
 	a.Equal(true, r.MatchString(guid), "RandomGUID() returned a string with value %v, which does not meet the GUID pattern", guid)
 }
+
+func TestRandomClientID(t *testing.T) {
+	a := assert.New(t)
+	clientID := RandomClientID()
+
+	a.Equal(30, len(clientID))
+}
+func TestRandomViewerCount(t *testing.T) {
+	a := assert.New(t)
+	viewers := RandomViewerCount()
+
+	a.NotEmpty(viewers)
+}
