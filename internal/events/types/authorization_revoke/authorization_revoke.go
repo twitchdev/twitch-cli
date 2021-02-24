@@ -22,7 +22,7 @@ var triggerSupported = []string{"revoke"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
-		"trigger_keyword": "revoke",
+		"revoke": "user.authorization.revoke",
 	},
 }
 
