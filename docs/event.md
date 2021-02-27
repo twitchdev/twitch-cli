@@ -30,6 +30,8 @@ Used to either create or send mock events for use with local webhooks testing.
 | `update-redemption` | Channel Points EventSub event for a redemption being updated.                                              |
 | `raid`              | Channel Raid event with a random viewer count.                                                             |
 | `revoke`            | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly. |
+| `streamup`          | Only usable with the `eventsub` transport, a stream online event.                                          |
+| `streamdown`        | Only usable with the `eventsub` transport, a stream offline event.                                         |
 
 **Flags**
 
