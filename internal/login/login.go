@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os/exec"
 	"runtime"
 	"time"
@@ -64,9 +65,16 @@ const RefreshTokenURL = "https://id.twitch.tv/oauth2/token?grant_type=refresh_to
 const RevokeTokenURL = "https://id.twitch.tv/oauth2/revoke"
 
 func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
-	twitchClientCredentialsURL := fmt.Sprintf(`%s&client_id=%s&client_secret=%s`, p.URL, p.ClientID, p.ClientSecret)
+	u, err := url.Parse(p.URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	q := u.Query()
+	q.Set("client_id", p.ClientID)
+	q.Set("client_secret", p.ClientSecret)
+	u.RawQuery = q.Encode()
 
-	resp, err := loginRequest(http.MethodPost, twitchClientCredentialsURL, nil)
+	resp, err := loginRequest(http.MethodPost, u.String(), nil)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -87,10 +95,15 @@ func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 }
 
 func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
-	twitchAuthorizeURL := fmt.Sprintf(`%s&client_id=%s&redirect_uri=%s&force_verify=true`, p.AuthorizeURL, p.ClientID, p.RedirectURL)
-
+	u, err := url.Parse(p.AuthorizeURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	q := u.Query()
+	q.Set("client_id", p.ClientID)
+	q.Set("redirect_uri", p.RedirectURL)
 	if p.Scopes != "" {
-		twitchAuthorizeURL += "&scope=" + p.Scopes
+		q.Set("scope", p.Scopes)
 	}
 
 	state, err := generateState()
@@ -98,10 +111,11 @@ func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 		log.Fatal(err.Error())
 	}
 
-	twitchAuthorizeURL += "&state=" + state
+	q.Set("state", state)
+	u.RawQuery = q.Encode()
 
 	fmt.Println("Opening browser. Press Ctrl+C to cancel...")
-	openBrowser(twitchAuthorizeURL)
+	openBrowser(u.String())
 
 	ur, err := userAuthServer()
 	if err != nil {
@@ -112,8 +126,15 @@ func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 		log.Fatal("state mismatch")
 	}
 
-	twitchUserTokenURL := fmt.Sprintf(`%s&client_id=%s&client_secret=%s&redirect_uri=%s&code=%s`, p.URL, p.ClientID, p.ClientSecret, p.RedirectURL, ur.Code)
-	resp, err := loginRequest(http.MethodPost, twitchUserTokenURL, nil)
+	u2, err := url.Parse(p.URL)
+	q = u2.Query()
+	q.Set("client_id", p.ClientID)
+	q.Set("client_secret", p.ClientSecret)
+	q.Set("redirect_uri", p.RedirectURL)
+	q.Set("code", ur.Code)
+	u2.RawQuery = q.Encode()
+
+	resp, err := loginRequest(http.MethodPost, u2.String(), nil)
 	if err != nil {
 		log.Fatalf("Error reading body: %v", err)
 	}
@@ -129,9 +150,16 @@ func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 }
 
 func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
-	twitchClientCredentialsURL := fmt.Sprintf(`%s?client_id=%s&token=%s`, p.URL, p.ClientID, p.Token)
+	u, err := url.Parse(p.URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	q := u.Query()
+	q.Set("client_id", p.ClientID)
+	q.Set("token", p.Token)
+	u.RawQuery = q.Encode()
 
-	resp, err := loginRequest(http.MethodPost, twitchClientCredentialsURL, nil)
+	resp, err := loginRequest(http.MethodPost, u.String(), nil)
 	if err != nil {
 		log.Printf(err.Error())
 		return LoginResponse{}, err
@@ -147,8 +175,17 @@ func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 }
 
 func RefreshUserToken(p RefreshParameters) (LoginResponse, error) {
-	twitchRefreshTokenURL := fmt.Sprintf(`%s&client_id=%s&client_secret=%s&redirect_uri=&refresh_token=%s`, p.URL, p.ClientID, p.ClientSecret, p.RefreshToken)
-	resp, err := loginRequest(http.MethodPost, twitchRefreshTokenURL, nil)
+	u, err := url.Parse(p.URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	q := u.Query()
+	q.Set("client_id", p.ClientID)
+	q.Set("client_secret", p.ClientSecret)
+	q.Set("refresh_token", p.RefreshToken)
+	u.RawQuery = q.Encode()
+
+	resp, err := loginRequest(http.MethodPost, u.String(), nil)
 	if err != nil {
 		return LoginResponse{}, err
 	}

@@ -138,7 +138,6 @@ func GetClientInformation() (clientInformation, error) {
 		if err != nil {
 			return clientInformation{}, err
 		}
-		fmt.Printf("%v", r)
 		token = r.Response.AccessToken
 	}
 
