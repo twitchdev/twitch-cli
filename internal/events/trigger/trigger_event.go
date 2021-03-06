@@ -60,6 +60,7 @@ func Fire(p TriggerParameters) (string, error) {
 		IsAnonymous:  p.IsAnonymous,
 		Cost:         p.Cost,
 		Status:       p.Status,
+		ItemID:       p.ItemID,
 	}
 
 	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
