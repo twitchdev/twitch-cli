@@ -12,6 +12,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/cheer"
 	"github.com/twitchdev/twitch-cli/internal/events/types/extension_transaction"
 	"github.com/twitchdev/twitch-cli/internal/events/types/follow"
+	"github.com/twitchdev/twitch-cli/internal/events/types/moderator_change"
 	"github.com/twitchdev/twitch-cli/internal/events/types/raid"
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamdown"
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamup"
@@ -30,6 +31,7 @@ func All() []events.MockEvent {
 		subscribe.Event{},
 		streamup.Event{},
 		streamdown.Event{},
+		moderator_change.Event{},
 	}
 }
 

@@ -32,6 +32,8 @@ Used to either create or send mock events for use with local webhooks testing.
 | `revoke`            | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly. |
 | `streamup`          | Only usable with the `eventsub` transport, a stream online event.                                          |
 | `streamdown`        | Only usable with the `eventsub` transport, a stream offline event.                                         |
+| `add-moderator`     | Channel moderator add event.                                                                               |
+| `remove-moderator`  | Channel moderator removal event.                                                                           |
 
 **Flags**
 
@@ -113,6 +115,8 @@ Allows you to test if your webserver responds to subscription requests properly.
 | `revoke`            | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly. |
 | `streamup`          | Only usable with the `eventsub` transport, a stream online event.                                          |
 | `streamdown`        | Only usable with the `eventsub` transport, a stream offline event.                                         |
+| `add-moderator`     | Channel moderator add event.                                                                               |
+| `remove-moderator`  | Channel moderator removal event.                                                                           |
 
 **Flags**
 
