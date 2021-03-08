@@ -29,10 +29,11 @@ Allows the user to make GET calls to endpoints on Helix. Requires a logged in to
 
 **Flags**
 
-| Flag             | Shorthand | Description                                                                                                   | Example              | Required? (Y/N) |
-|------------------|-----------|---------------------------------------------------------------------------------------------------------------|----------------------|-----------------|
-| `--query-param`  | `-q`      | Query parameters for the endpoint in `key=value` format. Multiple can be entered to give multiple parameters. | `get -q login=ninja` | N               |
-| `--unformatted`  | `-u`      | Whether to return unformatted responses. Default is `false`.                                                  | `get -u`             | N               |
+| Flag             | Shorthand | Description                                                                                                                                                         | Example              | Required? (Y/N) |
+|------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------|-----------------|
+| `--query-param`  | `-q`      | Query parameters for the endpoint in `key=value` format. Multiple can be entered to give multiple parameters.                                                       | `get -q login=ninja` | N               |
+| `--unformatted`  | `-u`      | Whether to return unformatted responses. Default is `false`.                                                                                                        | `get -u`             | N               |
+| `--autopaginate` | `-P`      | Whether to autopaginate the response from Twitch **WARNING** This flag can cause extremely large payloads and cause issues with some terminals. Default is `false`. | `get -P`             | N               |
 
 **Examples**
 
