@@ -13,6 +13,8 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/extension_transaction"
 	"github.com/twitchdev/twitch-cli/internal/events/types/follow"
 	"github.com/twitchdev/twitch-cli/internal/events/types/raid"
+	"github.com/twitchdev/twitch-cli/internal/events/types/streamdown"
+	"github.com/twitchdev/twitch-cli/internal/events/types/streamup"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscribe"
 )
 
@@ -26,6 +28,8 @@ func All() []events.MockEvent {
 		follow.Event{},
 		raid.Event{},
 		subscribe.Event{},
+		streamup.Event{},
+		streamdown.Event{},
 	}
 }
 
