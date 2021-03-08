@@ -14,6 +14,28 @@ import (
 var fromUser = "1234"
 var toUser = "4567"
 
+func TestEventSub(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
+	params := *&events.MockEventParameters{
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportEventSub,
+		Trigger:    "add-moderator",
+	}
+
+	r, err := Event{}.GenerateEvent(params)
+	a.Nil(err)
+
+	var body models.ModeratorChangeEventSubResponse
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	a.Equal("channel.moderator.add", body.Subscription.Type, "Expected event type %v, got %v", "channel.moderator.add", body.Subscription.Type)
+	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
+	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
+}
+
 func TestWebSub(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
@@ -75,7 +97,7 @@ func TestValidTransport(t *testing.T) {
 	a.Equal(true, r)
 
 	r = Event{}.ValidTransport(models.TransportEventSub)
-	a.Equal(false, r)
+	a.Equal(true, r)
 }
 
 func TestGetTopic(t *testing.T) {
