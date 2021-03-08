@@ -53,18 +53,12 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			Event: models.StreamUpEventSubEvent{
 				ID:                   util.RandomUserID(),
 				BroadcasterUserID:    params.ToUserID,
-				BroadcasterUserLogin: params.ToUserID,
+				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
 				Type:                 "live",
 				StartedAt:            util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 		}
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
-	case models.TransportWebSub:
-		body := models.FollowWebSubResponse{} // replace with actual model in internal/models
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
