@@ -5,7 +5,6 @@ package moderator_change
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
@@ -15,7 +14,7 @@ import (
 
 var transportsSupported = map[string]bool{
 	models.TransportWebSub:   true,
-	models.TransportEventSub: false,
+	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"add-moderator", "remove-moderator"}
@@ -24,6 +23,10 @@ var triggerMapping = map[string]map[string]string{
 	models.TransportWebSub: {
 		"add-moderator":    "moderation.moderator.add",
 		"remove-moderator": "moderation.moderator.remove",
+	},
+	models.TransportEventSub: {
+		"add-moderator":    "channel.moderator.add",
+		"remove-moderator": "channel.moderator.remove",
 	},
 }
 
@@ -35,7 +38,35 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 	switch params.Transport {
 	case models.TransportEventSub:
-		return events.MockEventResponse{}, errors.New("Moderator change events are currently in beta on EventSub")
+		body := *&models.EventsubResponse{
+			Subscription: models.EventsubSubscription{
+				ID:      params.ID,
+				Status:  "enabled",
+				Type:    triggerMapping[params.Transport][params.Trigger],
+				Version: "beta",
+				Condition: models.EventsubCondition{
+					BroadcasterUserID: params.ToUserID,
+				},
+				Transport: models.EventsubTransport{
+					Method:   "webhook",
+					Callback: "null",
+				},
+				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+			},
+			Event: models.ModeratorChangeEventSubEvent{
+				UserID:               params.FromUserID,
+				UserLogin:            params.FromUserName,
+				UserName:             params.FromUserName,
+				BroadcasterUserID:    params.ToUserID,
+				BroadcasterUserLogin: params.ToUserName,
+				BroadcasterUserName:  params.ToUserName,
+			},
+		}
+
+		event, err = json.Marshal(body)
+		if err != nil {
+			return events.MockEventResponse{}, err
+		}
 	case models.TransportWebSub:
 		body := *&models.ModeratorChangeWebSubResponse{
 			Data: []models.ModeratorChangeWebSubEvent{
