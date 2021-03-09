@@ -17,6 +17,7 @@ type MockEventParameters struct {
 	Status       string
 	ItemID       string
 	Cost         int64
+	StreamTitle  string
 }
 
 type MockEventResponse struct {
