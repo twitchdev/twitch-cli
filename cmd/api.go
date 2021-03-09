@@ -73,7 +73,7 @@ func init() {
 
 	apiCmd.PersistentFlags().BoolVarP(&prettyPrint, "unformatted", "u", false, "Whether to have API requests come back unformatted/non-prettyprinted. Default is false.")
 
-	apiCmd.PersistentFlags().BoolVarP(&autoPaginate, "autopaginate", "P", false, "Whether to have API requests automatically paginate. Default is false.")
+	getCmd.PersistentFlags().BoolVarP(&autoPaginate, "autopaginate", "P", false, "Whether to have API requests automatically paginate. Default is false.")
 
 }
 
