@@ -6,10 +6,10 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/request"
+	"golang.org/x/time/rate"
 )
 
 type apiRequestParameters struct {
@@ -26,14 +26,14 @@ func apiRequest(method string, url string, payload []byte, p apiRequestParameter
 
 	req.Header.Set("Client-ID", p.ClientID)
 	req.Header.Set("Content-Type", "application/json")
+	rl := rate.NewLimiter(rate.Every(time.Minute), 800)
+
+	client := NewClient(rl)
 
 	if p.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+p.Token)
 	}
 
-	client := &http.Client{
-		Timeout: time.Second * 10,
-	}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("Error reading body: %v", err)

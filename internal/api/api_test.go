@@ -39,8 +39,8 @@ func TestNewRequest(t *testing.T) {
 	viper.Set("accesstoken", "4567")
 	viper.Set("refreshtoken", "123")
 
-	NewRequest("POST", "", []string{"test=1", "test=2"}, nil, true)
-	NewRequest("POST", "", []string{"test=1", "test=2"}, nil, false)
+	NewRequest("POST", "", []string{"test=1", "test=2"}, nil, true, false)
+	NewRequest("POST", "", []string{"test=1", "test=2"}, nil, false, true)
 }
 
 func TestValidOptions(t *testing.T) {

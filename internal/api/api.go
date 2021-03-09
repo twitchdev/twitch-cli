@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/login"
+	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
 
 	"github.com/TylerBrock/colorjson"
@@ -29,7 +30,11 @@ type clientInformation struct {
 }
 
 // NewRequest is used to request data from the Twitch API using a HTTP GET request- this function is a wrapper for the apiRequest function that handles the network call
-func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool) {
+func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool, autopaginate bool) {
+	var data models.APIResponse
+	var err error
+	var cursor string
+
 	client, err := GetClientInformation()
 
 	if viper.GetString("BASE_URL") != "" {
@@ -40,37 +45,94 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		fmt.Println("Error fetching client information", err.Error())
 	}
 
-	Parameters := url.Values{}
+	for {
+		var apiResponse models.APIResponse
 
-	if queryParameters != nil {
-		path += "?"
+		u, err := url.Parse(baseURL + path)
+		if err != nil {
+			fmt.Printf("Error getting url: %v", err)
+			return
+		}
+
+		q := u.Query()
 		for _, param := range queryParameters {
 			value := strings.Split(param, "=")
-			Parameters.Add(value[0], value[1])
+			q.Add(value[0], value[1])
 		}
-		path += Parameters.Encode()
-	}
-	resp, err := apiRequest(strings.ToUpper(method), baseURL+path, body, apiRequestParameters{
-		ClientID: client.ClientID,
-		Token:    client.Token,
-	})
-	if err != nil {
-		fmt.Printf("Error reading body: %v", err)
-		return
+
+		if cursor != "" {
+			q.Set("after", cursor)
+		}
+
+		if autopaginate == true {
+			first := "100"
+			// since channel points custom rewards endpoints only support 50, capping that here
+			if strings.Contains(u.String(), "custom_rewards") {
+				first = "50"
+			}
+
+			q.Set("first", first)
+		}
+
+		u.RawQuery = q.Encode()
+
+		resp, err := apiRequest(strings.ToUpper(method), u.String(), body, apiRequestParameters{
+			ClientID: client.ClientID,
+			Token:    client.Token,
+		})
+		if err != nil {
+			fmt.Printf("Error reading body: %v", err)
+			return
+		}
+
+		if resp.StatusCode == http.StatusNoContent {
+			fmt.Println("Endpoint responded with status 204")
+			return
+		}
+
+		err = json.Unmarshal(resp.Body, &apiResponse)
+		if err != nil {
+			fmt.Printf("Error unmarshalling body: %v", err)
+			return
+		}
+
+		if resp.StatusCode > 299 || resp.StatusCode < 200 {
+			data = apiResponse
+			break
+		}
+
+		data.Data = append(data.Data, apiResponse.Data...)
+
+		if autopaginate == false {
+			data.Pagination.Cursor = apiResponse.Pagination.Cursor
+			break
+		}
+
+		if apiResponse.Pagination.Cursor == "" {
+			break
+		}
+
+		if apiResponse.Pagination.Cursor == cursor {
+			break
+		}
+		cursor = apiResponse.Pagination.Cursor
+
 	}
 
-	if resp.StatusCode == http.StatusNoContent {
-		fmt.Println("Endpoint responded with status 204")
+	// handle json marshalling better; returns empty slice vs. null
+	if len(data.Data) == 0 && data.Error == "" {
+		data.Data = make([]interface{}, 0)
+	}
+
+	d, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("Error marshalling json: %v", err)
 		return
 	}
 
 	if prettyPrint == true {
 		var obj map[string]interface{}
-		if err := json.Unmarshal(resp.Body, &obj); err != nil {
-			fmt.Printf("Error pretty-printing body: %v", err)
-			return
-		}
-
+		json.Unmarshal(d, &obj)
 		// since Command Prompt/Powershell don't support coloring, will pretty print without colors
 		if runtime.GOOS == "windows" {
 			s, _ := json.MarshalIndent(obj, "", "  ")
@@ -81,12 +143,16 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		f := colorjson.NewFormatter()
 		f.Indent = 2
 		f.KeyColor = color.New(color.FgBlue).Add(color.Bold)
-		s, _ := f.Marshal(obj)
-
+		s, err := f.Marshal(obj)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
 		fmt.Println(string(s))
 		return
 	}
-	fmt.Println(string(resp.Body))
+
+	fmt.Println(string(d))
 	return
 }
 

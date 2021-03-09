@@ -16,6 +16,7 @@ import (
 var queryParameters []string
 var body string
 var prettyPrint bool
+var autoPaginate bool
 
 var apiCmd = &cobra.Command{
 	Use:   "api",
@@ -71,6 +72,9 @@ func init() {
 	apiCmd.PersistentFlags().MarkHidden("pretty-print")
 
 	apiCmd.PersistentFlags().BoolVarP(&prettyPrint, "unformatted", "u", false, "Whether to have API requests come back unformatted/non-prettyprinted. Default is false.")
+
+	getCmd.PersistentFlags().BoolVarP(&autoPaginate, "autopaginate", "P", false, "Whether to have API requests automatically paginate. Default is false.")
+
 }
 
 func cmdRun(cmd *cobra.Command, args []string) {
@@ -78,13 +82,13 @@ func cmdRun(cmd *cobra.Command, args []string) {
 		cmd.Help()
 		return
 	} else if len(args) == 1 && args[0][:1] == "/" {
-		api.NewRequest(cmd.Name(), args[0], queryParameters, []byte(body), !prettyPrint)
+		api.NewRequest(cmd.Name(), args[0], queryParameters, []byte(body), !prettyPrint, autoPaginate)
 		return
 	}
 	if body != "" && body[:1] == "@" {
 		body = getBodyFromFile(body[1:])
 	}
-	api.NewRequest(cmd.Name(), "/"+strings.Join(args[:], "/"), queryParameters, []byte(body), !prettyPrint)
+	api.NewRequest(cmd.Name(), "/"+strings.Join(args[:], "/"), queryParameters, []byte(body), !prettyPrint, autoPaginate)
 }
 
 func getBodyFromFile(filename string) string {
