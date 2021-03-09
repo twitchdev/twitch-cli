@@ -3,7 +3,7 @@
 package models
 
 type APIResponse struct {
-	Data       []interface{} `json:"data"`
+	Data       []interface{} `json:"data,omitempty"`
 	Pagination struct {
 		Cursor string `json:"cursor,omitempty"`
 	} `json:"pagination,omitempty"`

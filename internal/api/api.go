@@ -65,7 +65,13 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		}
 
 		if autopaginate == true {
-			q.Set("first", "100")
+			first := "100"
+			// since channel points custom rewards endpoints only support 50, capping that here
+			if strings.Contains(u.String(), "custom_rewards") {
+				first = "50"
+			}
+
+			q.Set("first", first)
 		}
 
 		u.RawQuery = q.Encode()
@@ -114,7 +120,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	}
 
 	// handle json marshalling better; returns empty slice vs. null
-	if len(data.Data) == 0 {
+	if len(data.Data) == 0 && data.Error == "" {
 		data.Data = make([]interface{}, 0)
 	}
 
