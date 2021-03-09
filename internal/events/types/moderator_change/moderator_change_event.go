@@ -1,6 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package subscribe
+
+package moderator_change
 
 import (
 	"encoding/json"
@@ -16,18 +17,16 @@ var transportsSupported = map[string]bool{
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"subscribe", "gift", "unsubscribe"}
+var triggerSupported = []string{"add-moderator", "remove-moderator"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportWebSub: {
-		"subscribe":   "subscriptions.subscribe",
-		"unsubscribe": "subscriptions.unsubscribe",
-		"gift":        "subscriptions.subscribe",
+		"add-moderator":    "moderation.moderator.add",
+		"remove-moderator": "moderation.moderator.remove",
 	},
 	models.TransportEventSub: {
-		"subscribe":   "channel.subscribe",
-		"unsubscribe": "channel.unsubscribe",
-		"gift":        "channel.subscribe",
+		"add-moderator":    "channel.moderator.add",
+		"remove-moderator": "channel.moderator.remove",
 	},
 }
 
@@ -36,22 +35,6 @@ type Event struct{}
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
-	var giftUserID string
-	var giftUserName string
-
-	if params.Trigger == "gift" {
-		params.IsGift = true
-	}
-
-	if params.IsGift == true {
-		giftUserID = util.RandomUserID()
-		giftUserName = "testGifter"
-	}
-
-	if params.IsAnonymous == true {
-		giftUserID = "274598607"
-		giftUserName = "ananonymousgifter"
-	}
 
 	switch params.Transport {
 	case models.TransportEventSub:
@@ -60,7 +43,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				ID:      params.ID,
 				Status:  "enabled",
 				Type:    triggerMapping[params.Transport][params.Trigger],
-				Version: "1",
+				Version: "beta",
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: params.ToUserID,
 				},
@@ -70,15 +53,13 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				},
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
-			Event: models.SubEventSubEvent{
+			Event: models.ModeratorChangeEventSubEvent{
 				UserID:               params.FromUserID,
 				UserLogin:            params.FromUserName,
 				UserName:             params.FromUserName,
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
-				Tier:                 "1000",
-				IsGift:               params.IsGift,
 			},
 		}
 
@@ -87,31 +68,27 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			return events.MockEventResponse{}, err
 		}
 	case models.TransportWebSub:
-		body := *&models.SubWebSubResponse{
-			Data: []models.SubWebSubResponseData{
+		body := *&models.ModeratorChangeWebSubResponse{
+			Data: []models.ModeratorChangeWebSubEvent{
 				{
 					ID:             params.ID,
 					EventType:      triggerMapping[params.Transport][params.Trigger],
 					EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
-					Version:        "1.0",
-					EventData: models.SubWebSubEventData{
+					Version:        "v1",
+					EventData: models.ModeratorChangeEventData{
 						BroadcasterID:   params.ToUserID,
 						BroadcasterName: params.ToUserName,
 						UserID:          params.FromUserID,
-						UserName:        params.FromUserID,
-						Tier:            "1000",
-						PlanName:        "Tier 1 Test Sub",
-						IsGift:          params.IsGift,
-						GifterID:        giftUserID,
-						GifterName:      giftUserName,
+						UserName:        params.FromUserName,
 					},
 				},
-			}}
-
+			},
+		}
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
+
 	default:
 		return events.MockEventResponse{}, nil
 	}
@@ -136,7 +113,6 @@ func (e Event) ValidTrigger(t string) bool {
 	}
 	return false
 }
-
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
 }
