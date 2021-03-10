@@ -58,7 +58,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			},
 			Event: models.ChannelUpdateEventSubEvent{
 				BroadcasterUserID:    params.ToUserID,
-				BroadcasterUserLogin: params.ToUserID,
+				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
 				StreamTitle:          params.StreamTitle,
 				StreamLanguage:       "en",
@@ -75,9 +75,9 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		body := models.StreamChangeWebSubResponse{
 			Data: []models.StreamChangeWebSubResponseData{
 				{
-					WebsubID:             params.FromUserID,
+					WebsubID:             params.ID,
 					BroadcasterUserID:    params.ToUserID,
-					BroadcasterUserLogin: params.ToUserID,
+					BroadcasterUserLogin: params.ToUserName,
 					BroadcasterUserName:  params.ToUserName,
 					StreamCategoryID:     "509658",
 					StreamCategoryName:   "Just Chatting",
@@ -87,7 +87,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					StreamStartedAt:      util.GetTimestamp().Format(time.RFC3339),
 					StreamLanguage:       "en",
 					StreamThumbnailURL:   "https://static-cdn.jtvnw.net/previews-ttv/live_twitch_user-{width}x{height}.jpg",
-					TagIDs:				  make([]string, 0),
+					TagIDs:               make([]string, 0),
 				},
 			},
 		}
