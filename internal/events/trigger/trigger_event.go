@@ -26,7 +26,7 @@ type TriggerParameters struct {
 	Secret         string
 	Verbose        bool
 	Count          int
-	StreamTitle	   string
+	StreamTitle    string
 }
 
 type TriggerResponse struct {
