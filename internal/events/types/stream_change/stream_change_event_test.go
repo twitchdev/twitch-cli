@@ -36,10 +36,10 @@ func TestEventSub(t *testing.T) {
 
 	// test for changing a title
 	params = events.MockEventParameters{
-		FromUserID:  fromUser,
-		ToUserID:    toUser,
-		Transport:   models.TransportEventSub,
-		Trigger:     "stream_change",
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportEventSub,
+		Trigger:    "stream_change",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
@@ -58,10 +58,10 @@ func TestWebSubStreamChange(t *testing.T) {
 	newStreamTitle := "Awesome new title!"
 
 	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "stream_change",
+		FromUserID:  fromUser,
+		ToUserID:    toUser,
+		Transport:   models.TransportWebSub,
+		Trigger:     "stream_change",
 		StreamTitle: newStreamTitle,
 	}
 

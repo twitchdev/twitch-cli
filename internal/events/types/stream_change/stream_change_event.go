@@ -5,10 +5,11 @@ package stream_change
 import (
 	"encoding/json"
 
+	"time"
+
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
-	"time"
 )
 
 var transportsSupported = map[string]bool{
@@ -37,7 +38,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		params.StreamTitle = "Default Title!"
 	}
 
-	switch params.Transport{
+	switch params.Transport {
 	case models.TransportEventSub:
 		body := &models.EventsubResponse{
 			// make the eventsub response (if supported)
@@ -56,14 +57,14 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 			Event: models.ChannelUpdateEventSubEvent{
-				BroadcasterUserID:               params.ToUserID,
-				BroadcasterUserLogin:            params.ToUserID,
-				BroadcasterUserName:             params.ToUserName,
-				StreamTitle:    params.StreamTitle,
-				StreamLanguage: "en",
-				StreamCategoryID:  "509658",
-				StreamCategoryName:  "Just Chatting",
-				IsMature:  "true",
+				BroadcasterUserID:    params.ToUserID,
+				BroadcasterUserLogin: params.ToUserID,
+				BroadcasterUserName:  params.ToUserName,
+				StreamTitle:          params.StreamTitle,
+				StreamLanguage:       "en",
+				StreamCategoryID:     "509658",
+				StreamCategoryName:   "Just Chatting",
+				IsMature:             "true",
 			},
 		}
 		event, err = json.Marshal(body)
@@ -74,18 +75,18 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		body := models.StreamChangeWebSubResponse{
 			Data: []models.StreamChangeWebSubResponseData{
 				{
-					WebsubID:     params.FromUserID,
-					BroadcasterUserID:   params.ToUserID,
-					BroadcasterUserLogin:       params.ToUserID,
-					BroadcasterUserName:     params.ToUserName,
-					StreamCategoryID: "509658",
+					WebsubID:             params.FromUserID,
+					BroadcasterUserID:    params.ToUserID,
+					BroadcasterUserLogin: params.ToUserID,
+					BroadcasterUserName:  params.ToUserName,
+					StreamCategoryID:     "509658",
 					StreamCategoryName:   "Just Chatting",
-					StreamType:       "live",
-					StreamTitle:     params.StreamTitle,
-					StreamViewerCount: 9848,
-					StreamStartedAt:   util.GetTimestamp().Format(time.RFC3339),
+					StreamType:           "live",
+					StreamTitle:          params.StreamTitle,
+					StreamViewerCount:    9848,
+					StreamStartedAt:      util.GetTimestamp().Format(time.RFC3339),
 					StreamLanguage:       "en",
-					StreamThumbnailURL:     "https://static-cdn.jtvnw.net/previews-ttv/live_user_lirik-{width}x{height}.jpg",
+					StreamThumbnailURL:   "https://static-cdn.jtvnw.net/previews-ttv/live_user_lirik-{width}x{height}.jpg",
 				},
 			},
 		}
