@@ -21,7 +21,7 @@ func TestEventSub(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
-		Trigger:    "stream_change",
+		Trigger:    "stream-change",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -49,19 +49,19 @@ func TestEventSub(t *testing.T) {
 	a.Nil(err)
 
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected Stream Channel %v, got %v", toUser, body.Event.BroadcasterUserID)
-	a.Equal("Default Title!", body.Event.StreamTitle, "Expected new stream title, got %v", body.Event.StreamTitle)
+	a.Equal("Example title from the CLI!", body.Event.StreamTitle, "Expected new stream title, got %v", body.Event.StreamTitle)
 }
 
 func TestWebSubStreamChange(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
-	newStreamTitle := "Awesome new title!"
+	newStreamTitle := "Awesome new title from the CLI!"
 
 	params := *&events.MockEventParameters{
 		FromUserID:  fromUser,
 		ToUserID:    toUser,
 		Transport:   models.TransportWebSub,
-		Trigger:     "stream_change",
+		Trigger:     "stream-change",
 		StreamTitle: newStreamTitle,
 	}
 
@@ -83,7 +83,7 @@ func TestFakeTransport(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
-		Trigger:    "stream_change",
+		Trigger:    "stream-change",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -93,7 +93,7 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("stream_change")
+	r := Event{}.ValidTrigger("stream-change")
 	a.Equal(true, r)
 
 	r = Event{}.ValidTrigger("not_trigger_keyword")
@@ -112,6 +112,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "stream_change")
+	r := Event{}.GetTopic(models.TransportEventSub, "stream-change")
 	a.NotNil(r)
 }

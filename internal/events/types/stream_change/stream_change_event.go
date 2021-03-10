@@ -17,7 +17,7 @@ var transportsSupported = map[string]bool{
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"stream_change"}
+var triggerSupported = []string{"stream-change"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportWebSub: {
@@ -35,7 +35,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var err error
 
 	if params.StreamTitle == "" {
-		params.StreamTitle = "Default Title!"
+		params.StreamTitle = "Example title from the CLI!"
 	}
 
 	switch params.Transport {
@@ -86,7 +86,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					StreamViewerCount:    9848,
 					StreamStartedAt:      util.GetTimestamp().Format(time.RFC3339),
 					StreamLanguage:       "en",
-					StreamThumbnailURL:   "https://static-cdn.jtvnw.net/previews-ttv/live_user_lirik-{width}x{height}.jpg",
+					StreamThumbnailURL:   "https://static-cdn.jtvnw.net/previews-ttv/live_twitch_user-{width}x{height}.jpg",
+					TagIDs:				  make([]string, 0),
 				},
 			},
 		}
