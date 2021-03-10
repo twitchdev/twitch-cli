@@ -26,6 +26,7 @@ var (
 	itemID         string
 	cost           int64
 	count          int
+	streamTitle	   string
 )
 
 var eventCmd = &cobra.Command{
@@ -83,6 +84,7 @@ func init() {
 	triggerCmd.Flags().StringVarP(&status, "status", "S", "", "Status of the event object, currently applies to channel points redemptions.")
 	triggerCmd.Flags().StringVarP(&itemID, "item-id", "i", "", "Manually set the ID of the event payload item (for example the reward ID in redemption events).")
 	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of bits or channel points redeemed/used in the event.")
+	triggerCmd.Flags().StringVarP(&streamTitle, "description", "d", "", "Title the stream should be updated with.")
 
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
@@ -125,6 +127,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 			Status:         status,
 			ItemID:         itemID,
 			Cost:           cost,
+			StreamTitle:	streamTitle,
 		})
 
 		if err != nil {
