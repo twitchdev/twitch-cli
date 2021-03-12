@@ -12,7 +12,7 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   false,
+	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 
@@ -32,6 +32,10 @@ type Event struct{}
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
+
+	if params.StreamTitle == "" {
+		params.StreamTitle = "Example title from the CLI!"
+	}
 
 	switch params.Transport {
 	case models.TransportEventSub:
@@ -59,6 +63,30 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				StartedAt:            util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 		}
+		event, err = json.Marshal(body)
+		if err != nil {
+			return events.MockEventResponse{}, err
+		}
+	case models.TransportWebSub:
+		body := models.StreamUpWebSubResponse{
+			Data: []models.StreamUpWebSubResponseData{
+				{
+			ID: params.ID,
+			UserID: params.ToUserID,
+			UserLogin: params.ToUserName,
+			UserName: params.ToUserName,
+			GameID: "509658",
+			Type: "live",
+			Title: params.StreamTitle,
+			ViewerCount: 1337,
+			StartedAt: util.GetTimestamp().Format(time.RFC3339),
+			Language: "en",
+			ThumbnailURL: "https://static-cdn.jtvnw.net/ttv-static/404_preview-440x248.jpg",
+			TagIDs: make([]string, 0),
+			},
+		},
+		}
+
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err

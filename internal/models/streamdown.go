@@ -12,3 +12,10 @@ type StreamDownEventSubEvent struct {
 	BroadcasterUserLogin string `json:"broadcaster_user_login"`
 	BroadcasterUserName  string `json:"broadcaster_user_name"`
 }
+
+type StreamDownWebSubResponse struct {
+	Data []StreamDownWebSubResponseData `json:"data"`
+}
+
+type StreamDownWebSubResponseData struct {
+}
