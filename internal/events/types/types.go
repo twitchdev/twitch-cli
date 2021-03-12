@@ -17,6 +17,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamdown"
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamup"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscribe"
+	"github.com/twitchdev/twitch-cli/internal/events/types/ban"
 )
 
 func All() []events.MockEvent {
@@ -32,6 +33,7 @@ func All() []events.MockEvent {
 		streamup.Event{},
 		streamdown.Event{},
 		moderator_change.Event{},
+		ban.Event{},
 	}
 }
 
