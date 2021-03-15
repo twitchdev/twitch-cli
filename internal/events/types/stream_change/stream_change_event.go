@@ -1,9 +1,10 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package streamdown
+package stream_change
 
 import (
 	"encoding/json"
+
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
@@ -16,14 +17,14 @@ var transportsSupported = map[string]bool{
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"streamdown"}
+var triggerSupported = []string{"stream-change"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportWebSub: {
-		"streamdown": "channel.update",
+		"stream_change": "streams",
 	},
 	models.TransportEventSub: {
-		"streamdown": "stream.offline",
+		"stream_change": "channel.update",
 	},
 }
 
@@ -33,13 +34,18 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var event []byte
 	var err error
 
+	if params.StreamTitle == "" {
+		params.StreamTitle = "Example title from the CLI!"
+	}
+
 	switch params.Transport {
 	case models.TransportEventSub:
 		body := &models.EventsubResponse{
+			// make the eventsub response (if supported)
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  "enabled",
-				Type:    triggerMapping[params.Transport][params.Trigger],
+				Type:    "channel.update",
 				Version: "1",
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: params.ToUserID,
@@ -50,10 +56,15 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				},
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
-			Event: models.StreamDownEventSubEvent{
+			Event: models.ChannelUpdateEventSubEvent{
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
+				StreamTitle:          params.StreamTitle,
+				StreamLanguage:       "en",
+				StreamCategoryID:     "509658",
+				StreamCategoryName:   "Just Chatting",
+				IsMature:             "true",
 			},
 		}
 		event, err = json.Marshal(body)
@@ -61,10 +72,25 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			return events.MockEventResponse{}, err
 		}
 	case models.TransportWebSub:
-		body := *&models.StreamDownWebSubResponse{
-			Data: []models.StreamDownWebSubResponseData{	
-			}}
-
+		body := models.StreamChangeWebSubResponse{
+			Data: []models.StreamChangeWebSubResponseData{
+				{
+					WebsubID:             params.ID,
+					BroadcasterUserID:    params.ToUserID,
+					BroadcasterUserLogin: params.ToUserName,
+					BroadcasterUserName:  params.ToUserName,
+					StreamCategoryID:     "509658",
+					StreamCategoryName:   "Just Chatting",
+					StreamType:           "live",
+					StreamTitle:          params.StreamTitle,
+					StreamViewerCount:    9848,
+					StreamStartedAt:      util.GetTimestamp().Format(time.RFC3339),
+					StreamLanguage:       "en",
+					StreamThumbnailURL:   "https://static-cdn.jtvnw.net/previews-ttv/live_twitch_user-{width}x{height}.jpg",
+					TagIDs:               make([]string, 0),
+				},
+			},
+		}
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
@@ -93,6 +119,7 @@ func (e Event) ValidTrigger(t string) bool {
 	}
 	return false
 }
+
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
 }

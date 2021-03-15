@@ -30,8 +30,9 @@ Used to either create or send mock events for use with local webhooks testing.
 | `update-redemption` | Channel Points EventSub event for a redemption being updated.                                              |
 | `raid`              | Channel Raid event with a random viewer count.                                                             |
 | `revoke`            | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly. |
-| `streamup`          | Only usable with the `eventsub` transport, a stream online event.                                          |
-| `streamdown`        | Only usable with the `eventsub` transport, a stream offline event.                                         |
+| `stream-change`     | Stream Changed event.                                                                                      |
+| `streamup`          | Stream online event.                                          |
+| `streamdown`        | Sstream offline event.                                         |
 | `add-moderator`     | Channel moderator add event.                                                                               |
 | `remove-moderator`  | Channel moderator removal event.                                                                           |
 | `ban`       		  | Channel ban event.                                                                           			   |
@@ -53,6 +54,7 @@ Used to either create or send mock events for use with local webhooks testing.
 | `--status`          | `-S`      | Status of the event object, currently applies to channel points redemptions.                                               | `-S fulfilled`                            | N               |
 | `--item-id`         | `-i`      | Manually set the ID of the event payload item (for example the reward ID in redemption events).                            | `-i 032e4a6c-4aef-11eb-a9f5-1f703d1f0b92` | N               |
 | `--cost`            | `-C`      | Amount of bits or channel points redeemed/used in the event.                                                               | `-C 250`                                  | N               |
+| `--description`            | `-d`      | Title the stream should be updated/started with.                                                                            | `-d Awesome new title!`                                  | N               |
 
 **Examples**
 
@@ -116,8 +118,9 @@ Allows you to test if your webserver responds to subscription requests properly.
 | `update-redemption` | Channel Points EventSub event for a redemption being updated.                                              |
 | `raid`              | Channel Raid event with a random viewer count.                                                             |
 | `revoke`            | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly. |
-| `streamup`          | Only usable with the `eventsub` transport, a stream online event.                                          |
-| `streamdown`        | Only usable with the `eventsub` transport, a stream offline event.                                         |
+| `stream_change`     | Stream changed event.                                                                                      |
+| `streamup`          | Stream online event.                                          |
+| `streamdown`        | Stream offline event.                                         |
 | `add-moderator`     | Channel moderator add event.                                                                               |
 | `remove-moderator`  | Channel moderator removal event.                                                                           |
 | `ban`       		  | Channel ban event.                                                                           			   |
