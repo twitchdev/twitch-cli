@@ -16,6 +16,8 @@ var triggerSupported = map[string]bool{
 	"remove-reward":     true,
 	"add-moderator":     true,
 	"remove-moderator":  true,
+	"ban":				 true,
+	"unban": 			 true,
 }
 
 var transportSupported = map[string]bool{
