@@ -36,10 +36,10 @@ func TestEventSubBan(t *testing.T) {
 
 	// test for unban
 	params = events.MockEventParameters{
-		FromUserID:  fromUser,
-		ToUserID:    toUser,
-		Transport:   models.TransportEventSub,
-		Trigger:     "unban",
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportEventSub,
+		Trigger:    "unban",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
@@ -72,12 +72,11 @@ func TestWebSubBan(t *testing.T) {
 	a.Equal(toUser, body.Data[0].EventData.BroadcasterID, "Expected to user %v, got %v", toUser, body.Data[0].EventData.BroadcasterID)
 	a.Equal(fromUser, body.Data[0].EventData.UserID, "Expected from user %v, got %v", fromUser, body.Data[0].EventData.UserID)
 
-
 	params = *&events.MockEventParameters{
-		FromUserID:  fromUser,
-		ToUserID:    toUser,
-		Transport:   models.TransportWebSub,
-		Trigger:     "unban",
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportWebSub,
+		Trigger:    "unban",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
@@ -113,6 +112,9 @@ func TestValidTrigger(t *testing.T) {
 	a.Equal(true, r)
 
 	r = Event{}.ValidTrigger("unban")
+	a.Equal(true, r)
+
+	r = Event{}.ValidTrigger("notban")
 	a.Equal(false, r)
 }
 
