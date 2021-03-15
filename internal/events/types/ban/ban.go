@@ -16,15 +16,15 @@ var transportsSupported = map[string]bool{
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"ban"}
+var triggerSupported = []string{"ban", "unban"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportWebSub: {
 		"ban":   "moderation.user.ban",
-		"unban": "moderation.user.ban",
+		"unban": "moderation.user.unban",
 	},
 	models.TransportEventSub: {
-		"ban": "channel.ban",
+		"ban":   "channel.ban",
 		"unban": "channel.unban",
 	},
 }
@@ -34,15 +34,6 @@ type Event struct{}
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
-
-	if params.IsAnonymous == true {
-		params.FromUserID = ""
-		params.FromUserName = ""
-	}
-
-	if params.Cost <= 0 {
-		params.Cost = 100
-	}
 
 	switch params.Transport {
 	case models.TransportEventSub:
@@ -68,12 +59,12 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
-				ModeratorUserId:      params.ModeratorUserID,
-				ModeratorUserLogin:   params.ModeratorUserName,
-				ModeratorUserName:    params.ModeratorUserName,
+				ModeratorUserId:      util.RandomUserID(),
+				ModeratorUserLogin:   "CLIModerator",
+				ModeratorUserName:    "CLIModerator",
 				Reason:               "This is a test event",
-				EndsAt: 			  util.GetTimestamp().Format(time.RFC3339Nano),
-				IsPermanent: 		  params.IsPermanent,
+				EndsAt:               util.GetTimestamp().Format(time.RFC3339Nano),
+				IsPermanent:          params.IsPermanent,
 			},
 		}
 
@@ -91,10 +82,13 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
 					Version:        "v1",
 					EventData: models.BanWebSubEventData{
-						BroadcasterID:   params.ToUserID,
-						BroadcasterName: params.ToUserName,
-						UserID:          params.FromUserID,
-						UserName:        params.FromUserName,
+						BroadcasterID:        params.ToUserID,
+						BroadcasterUserLogin: params.ToUserName,
+						BroadcasterName:      params.ToUserName,
+						UserID:               params.FromUserID,
+						UserLogin:            params.FromUserName,
+						UserName:             params.FromUserName,
+						ExpiresAt:            util.GetTimestamp().Add(1 * time.Hour).Format(time.RFC3339),
 					},
 				},
 			}}
