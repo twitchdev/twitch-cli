@@ -37,7 +37,6 @@ func All() []events.MockEvent {
 		streamup.Event{},
 		streamdown.Event{},
 		moderator_change.Event{},
-		ban.Event{},
 		hype_train_begin.Event{},
 		hype_train_end.Event{},
 		hype_train_progress.Event{},
