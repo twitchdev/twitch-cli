@@ -34,6 +34,26 @@ func TestEventSub(t *testing.T) {
 	// write actual tests here (making sure you set appropriate values and the like) for eventsub
 }
 
+func TestWebSub(t *testing.T) {
+	a := util.SetupTestEnv(t)
+
+	params := *&events.MockEventParameters{
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportWebSub,
+		Trigger:    "unsubscribe",
+	}
+
+	r, err := Event{}.GenerateEvent(params)
+	a.Nil(err)
+
+	var body models.StreamUpWebSubResponse
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	// write tests here for websub
+}
+
 func TestFakeTransport(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
