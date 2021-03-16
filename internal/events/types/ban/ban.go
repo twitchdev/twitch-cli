@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package streamdown
+package ban
 
 import (
 	"encoding/json"
@@ -16,14 +16,16 @@ var transportsSupported = map[string]bool{
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"streamdown"}
+var triggerSupported = []string{"ban", "unban"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportWebSub: {
-		"streamdown": "channel.update",
+		"ban":   "moderation.user.ban",
+		"unban": "moderation.user.unban",
 	},
 	models.TransportEventSub: {
-		"streamdown": "stream.offline",
+		"ban":   "channel.ban",
+		"unban": "channel.unban",
 	},
 }
 
@@ -35,7 +37,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 	switch params.Transport {
 	case models.TransportEventSub:
-		body := &models.EventsubResponse{
+		body := *&models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  "enabled",
@@ -50,19 +52,45 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				},
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
-			Event: models.StreamDownEventSubEvent{
+			Event: models.BanEventSubEvent{
+				UserID:               params.FromUserID,
+				UserLogin:            params.FromUserName,
+				UserName:             params.FromUserName,
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
+				ModeratorUserId:      util.RandomUserID(),
+				ModeratorUserLogin:   "CLIModerator",
+				ModeratorUserName:    "CLIModerator",
+				Reason:               "This is a test event",
+				EndsAt:               util.GetTimestamp().Format(time.RFC3339Nano),
+				IsPermanent:          params.IsPermanent,
 			},
 		}
+
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
+
 	case models.TransportWebSub:
-		body := *&models.StreamDownWebSubResponse{
-			Data: []models.StreamDownWebSubResponseData{	
+		body := *&models.BanWebSubResponse{
+			Data: []models.BanWebSubResponseData{
+				{
+					ID:             params.ID,
+					EventType:      triggerMapping[params.Transport][params.Trigger],
+					EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
+					Version:        "v1",
+					EventData: models.BanWebSubEventData{
+						BroadcasterID:        params.ToUserID,
+						BroadcasterUserLogin: params.ToUserName,
+						BroadcasterName:      params.ToUserName,
+						UserID:               params.FromUserID,
+						UserLogin:            params.FromUserName,
+						UserName:             params.FromUserName,
+						ExpiresAt:            util.GetTimestamp().Add(1 * time.Hour).Format(time.RFC3339),
+					},
+				},
 			}}
 
 		event, err = json.Marshal(body)
@@ -93,6 +121,7 @@ func (e Event) ValidTrigger(t string) bool {
 	}
 	return false
 }
+
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
 }

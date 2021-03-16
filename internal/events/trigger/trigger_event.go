@@ -61,6 +61,7 @@ func Fire(p TriggerParameters) (string, error) {
 		IsAnonymous:  p.IsAnonymous,
 		Cost:         p.Cost,
 		Status:       p.Status,
+		ItemID:       p.ItemID,
 		StreamTitle:  p.StreamTitle,
 	}
 
