@@ -35,6 +35,8 @@ Used to either create or send mock events for use with local webhooks testing.
 | `streamdown`           | Only usable with the `eventsub` transport, a stream offline event.                                         |
 | `add-moderator`        | Channel moderator add event.                                                                               |
 | `remove-moderator`     | Channel moderator removal event.                                                                           |
+| `ban`                  | Channel ban event.                                                                                         |
+| `unban`                | Channel unban event.                                                                                       |
 | `hype-train-begin`     | Hype Train begins event.                                                                                   |
 | `hype-train-progress`  | Hype Train progress event.                                                                                 |
 | `hype-train-end`       | Hype Train ends event.                                                                                     |
@@ -123,6 +125,8 @@ Allows you to test if your webserver responds to subscription requests properly.
 | `streamdown`           | Only usable with the `eventsub` transport, a stream offline event.                                         |
 | `add-moderator`        | Channel moderator add event.                                                                               |
 | `remove-moderator`     | Channel moderator removal event.                                                                           |
+| `ban`                  | Channel ban event.                                                                                         |
+| `unban`                | Channel unban event.                                                                                       |
 | `hype-train-begin`     | Hype Train begins event.                                                                                   |
 | `hype-train-progress`  | Hype Train progress event.                                                                                 |
 | `hype-train-end`       | Hype Train ends event.                                                                                     |
