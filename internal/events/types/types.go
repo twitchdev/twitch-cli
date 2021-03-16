@@ -12,9 +12,6 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/cheer"
 	"github.com/twitchdev/twitch-cli/internal/events/types/extension_transaction"
 	"github.com/twitchdev/twitch-cli/internal/events/types/follow"
-	"github.com/twitchdev/twitch-cli/internal/events/types/hype_train_begin"
-	"github.com/twitchdev/twitch-cli/internal/events/types/hype_train_end"
-	"github.com/twitchdev/twitch-cli/internal/events/types/hype_train_progress"
 	"github.com/twitchdev/twitch-cli/internal/events/types/moderator_change"
 	"github.com/twitchdev/twitch-cli/internal/events/types/raid"
 	"github.com/twitchdev/twitch-cli/internal/events/types/stream_change"
@@ -37,9 +34,6 @@ func All() []events.MockEvent {
 		streamup.Event{},
 		streamdown.Event{},
 		moderator_change.Event{},
-		hype_train_begin.Event{},
-		hype_train_end.Event{},
-		hype_train_progress.Event{},
 	}
 }
 

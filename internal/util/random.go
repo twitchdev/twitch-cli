@@ -46,17 +46,3 @@ func RandomViewerCount() int64 {
 	}
 	return viewer.Int64()
 }
-
-// RandomViewerCount generates a fake viewercount between 0->10,000,000
-func RandomType() string {
-	someInt, err := rand.Int(rand.Reader, big.NewInt(1*10*100*100*100))
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	if (someInt.Int64()%2) == 0{
-		return "bits"
-	}else
-	{
-		return "subscription"
-	}
-}

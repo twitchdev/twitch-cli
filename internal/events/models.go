@@ -3,22 +3,19 @@
 package events
 
 var triggerSupported = map[string]bool{
-	"subscribe":         	true,
-	"unsubscribe":       	true,
-	"gift":              	true,
-	"cheer":             	true,
-	"transaction":       	true,
-	"follow":            	true,
-	"add-redemption":    	true,
-	"update-redemption": 	true,
-	"add-reward":        	true,
-	"update-reward":     	true,
-	"remove-reward":     	true,
-	"add-moderator":     	true,
-	"remove-moderator":  	true,
-	"hype-train-begin": 	true,
-	"hype-train-progress":  true,
-	"hype-train-end":       true,
+	"subscribe":         true,
+	"unsubscribe":       true,
+	"gift":              true,
+	"cheer":             true,
+	"transaction":       true,
+	"follow":            true,
+	"add-redemption":    true,
+	"update-redemption": true,
+	"add-reward":        true,
+	"update-reward":     true,
+	"remove-reward":     true,
+	"add-moderator":     true,
+	"remove-moderator":  true,
 }
 
 var transportSupported = map[string]bool{
