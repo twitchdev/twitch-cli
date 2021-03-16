@@ -68,8 +68,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Goal:             		localGoal,
 				TopContributions:    	localTC,
 				LastContribution: 		localLC,
-				StartedAtTimestamp:  	StartedAtTime.String(),
-				ExpiresAtTimestamp:  	ExpiresAtTime.String(),
+				StartedAtTimestamp:  	StartedAtTime.Format(time.RFC3339Nano),
+				ExpiresAtTimestamp:  	ExpiresAtTime.Format(time.RFC3339Nano),
 			},
 		}
 

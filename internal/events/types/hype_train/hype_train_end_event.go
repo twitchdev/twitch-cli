@@ -64,9 +64,9 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Level:               	 localLevel,
 				Total:             		 localTotal,
 				TopContributions:    	 localTC,
-				StartedAtTimestamp:  	 StartedAtTime.String(),
-				EndedAtTimestamp: 	 	 EndedAtTime.String(),
-				CooldownEndsAtTimestamp: CooldownAtTime.String(),
+				StartedAtTimestamp:  	 StartedAtTime.Format(time.RFC3339Nano),
+				EndedAtTimestamp: 	 	 EndedAtTime.Format(time.RFC3339Nano),
+				CooldownEndsAtTimestamp: CooldownAtTime.Format(time.RFC3339Nano),
 			},
 		}
 

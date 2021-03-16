@@ -35,24 +35,6 @@ func TestEventSub(t *testing.T) {
 
 }
 
-func TestWebSub(t *testing.T) {
-
-	// Hype_Train_begin does not have a websub part
-	// Remove?
-
-	a := util.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "hype-train-begin",
-	}
-
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
-
-	
-}
 func TestFakeTransport(t *testing.T) {
 	a := util.SetupTestEnv(t)
 

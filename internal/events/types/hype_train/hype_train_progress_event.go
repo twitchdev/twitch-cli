@@ -74,8 +74,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Goal:             		localGoal,
 				TopContributions:    	localTC,
 				LastContribution: 		localLC,
-				StartedAtTimestamp:  	StartedAtTime.String(),
-				ExpiresAtTimestamp:  	ExpiresAtTime.String(),
+				StartedAtTimestamp:  	StartedAtTime.Format(time.RFC3339Nano),
+				ExpiresAtTimestamp:  	ExpiresAtTime.Format(time.RFC3339Nano),
 			},
 		}
 
@@ -93,8 +93,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Version:        "1.0",
 					EventData: models.HypeTrainWebsubEventData{
 						BroadcasterID:  			 params.ToUserID,
-						CooldownEndTimestamp: 		 CooldownAtTime.String(),
-						ExpiresAtTimestamp:          ExpiresAtTime.String(),
+						CooldownEndTimestamp: 		 CooldownAtTime.Format(time.RFC3339),
+						ExpiresAtTimestamp:          ExpiresAtTime.Format(time.RFC3339),
 						Goal:       				 localGoal,
 						Id:   						 util.RandomGUID(),
 						LastContribution:  			 localLC,

@@ -47,7 +47,7 @@ func RandomViewerCount() int64 {
 	return viewer.Int64()
 }
 
-// RandomViewerCount generates a fake viewercount between 0->10,000,000
+// RandomType generates a fake type; Either bits or subscription, in roughly even distribution
 func RandomType() string {
 	someInt, err := rand.Int(rand.Reader, big.NewInt(1*10*100*100*100))
 	if err != nil {
