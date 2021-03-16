@@ -16,8 +16,6 @@ var triggerSupported = map[string]bool{
 	"remove-reward":     	true,
 	"add-moderator":     	true,
 	"remove-moderator":  	true,
-	"ban":					true,
-	"unban": 			 	true,
 	"hype-train-begin": 	true,
 	"hype-train-progress":  true,
 	"hype-train-end":       true,
