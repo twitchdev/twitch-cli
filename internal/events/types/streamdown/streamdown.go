@@ -12,7 +12,7 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
+	models.TransportWebSub:   false,
 	models.TransportEventSub: true,
 }
 
@@ -56,15 +56,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserName:  params.ToUserName,
 			},
 		}
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
-	case models.TransportWebSub:
-		body := *&models.StreamDownWebSubResponse{
-			Data: []models.StreamDownWebSubResponseData{	
-			}}
-
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err

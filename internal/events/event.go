@@ -17,7 +17,6 @@ type MockEventParameters struct {
 	Status       string
 	ItemID       string
 	Cost         int64
-	IsPermanent  bool
 	StreamTitle  string
 }
 
