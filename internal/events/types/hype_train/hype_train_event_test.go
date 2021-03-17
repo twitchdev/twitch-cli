@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package hype_train_progress
+package hype_train
 
 import (
 	"encoding/json"
@@ -20,6 +20,23 @@ func TestEventSub(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
+		Trigger:    "hype-train-begin",
+	}
+
+	r, err := Event{}.GenerateEvent(params)
+	a.Nil(err)
+
+	var body models.HypeTrainEventProgressSubResponse
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	a.Equal("channel.hype_train.begin", body.Subscription.Type, "Expected event type %v, got %v", "channel.hype_train.begin", body.Subscription.Type)
+	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
+
+	params := *&events.MockEventParameters{
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportEventSub,
 		Trigger:    "hype-train-progress",
 	}
 
@@ -31,6 +48,23 @@ func TestEventSub(t *testing.T) {
 	a.Nil(err)
 
 	a.Equal("channel.hype_train.progress", body.Subscription.Type, "Expected event type %v, got %v", "channel.hype_train.progress", body.Subscription.Type)
+	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
+
+	params := *&events.MockEventParameters{
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportEventSub,
+		Trigger:    "hype-train-end",
+	}
+
+	r, err := Event{}.GenerateEvent(params)
+	a.Nil(err)
+
+	var body models.HypeTrainEventProgressSubResponse
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	a.Equal("channel.hype_train.end", body.Subscription.Type, "Expected event type %v, got %v", "channel.hype_train.end", body.Subscription.Type)
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 	
 }
@@ -76,7 +110,13 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
+	r := Event{}.ValidTrigger("hype-train-begin")
+	a.Equal(true, r)
+
 	r := Event{}.ValidTrigger("hype-train-progress")
+	a.Equal(true, r)
+
+	r := Event{}.ValidTrigger("hype-train-end")
 	a.Equal(true, r)
 
 }
