@@ -19,16 +19,16 @@ type HypeTrainWebSubEvent struct {
 }
 
 type HypeTrainWebsubEventData struct {
-	BroadcasterID   			string				 	`json:"broadcaster_id,omitempty"`
-	CooldownEndTimestamp        string				 	`json:"cooldown_end_time,omitempty"`
-	ExpiresAtTimestamp	        string 				 	`json:"expires_at,omitempty"`
+	BroadcasterID   			string				 	`json:"broadcaster_id"`
+	CooldownEndTimestamp        string				 	`json:"cooldown_end_time"`
+	ExpiresAtTimestamp	        string 				 	`json:"expires_at"`
 	Goal       				    int64 				 	`json:"goal,omitempty"`
 	Id       				    string 				 	`json:"id,omitempty"`
 	LastContribution 			ContributionData 	 	`json:"last_contribution,omitempty"`
 	Level      				    int64 				 	`json:"level,omitempty"`
 	StartedAtTimestamp		    string 				 	`json:"started_at,omitempty"`
-	TopContributions 			[]ContributionData  	`json:"top_contributions,omitempty"`
-	Total      				    int64 				 	`json:"total,omitempty"`
+	TopContributions 			[]ContributionData  	`json:"top_contributions"`
+	Total      				    int64 				 	`json:"total"`
 }
 
 type HypeTrainWebSubResponse struct {
@@ -41,14 +41,14 @@ type HypeTrainEventSubResponse struct {
 }
 
 type HypeTrainEventSubEvent struct {
-	BroadcasterUserID    		string 					`json:"broadcaster_user_id,omitempty"`
-	BroadcasterUserLogin 		string 					`json:"broadcaster_user_login,omitempty"`
-	BroadcasterUserName  		string 					`json:"broadcaster_user_name,omitempty"`
+	BroadcasterUserID    		string 					`json:"broadcaster_user_id"`
+	BroadcasterUserLogin 		string 					`json:"broadcaster_user_login"`
+	BroadcasterUserName  		string 					`json:"broadcaster_user_name"`
 	Level   			 		int64 					`json:"level,omitempty"`
-	Total   			 		int64 					`json:"total,omitempty"`
+	Total   			 		int64 					`json:"total"`
 	Progress		     		int64 					`json:"progress,omitempty"`
 	Goal       			 		int64					`json:"goal,omitempty"`
-	TopContributions 	 		[]ContributionData  	`json:"top_contributions,omitempty"`
+	TopContributions 	 		[]ContributionData  	`json:"top_contributions"`
 	LastContribution 			ContributionData 		`json:"last_contribution,omitempty"`
 	StartedAtTimestamp		    string 					`json:"started_at,omitempty"`
 	ExpiresAtTimestamp	        string 					`json:"expires_at,omitempty"`
