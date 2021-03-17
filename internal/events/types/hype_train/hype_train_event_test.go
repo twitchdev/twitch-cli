@@ -17,7 +17,6 @@ func TestEventSub(t *testing.T) {
 	a := util.SetupTestEnv(t)
 
 	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
 		Trigger:    "hype-train-begin",
@@ -26,7 +25,7 @@ func TestEventSub(t *testing.T) {
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.HypeTrainEventProgressSubResponse
+	var body models.HypeTrainEventSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 
@@ -34,7 +33,6 @@ func TestEventSub(t *testing.T) {
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 
 	params = *&events.MockEventParameters{
-		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
 		Trigger:    "hype-train-progress",
@@ -51,7 +49,6 @@ func TestEventSub(t *testing.T) {
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 
 	params = *&events.MockEventParameters{
-		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
 		Trigger:    "hype-train-end",
