@@ -33,34 +33,34 @@ func TestEventSub(t *testing.T) {
 	a.Equal("channel.hype_train.begin", body.Subscription.Type, "Expected event type %v, got %v", "channel.hype_train.begin", body.Subscription.Type)
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 
-	params := *&events.MockEventParameters{
+	params = *&events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
 		Trigger:    "hype-train-progress",
 	}
 
-	r, err := Event{}.GenerateEvent(params)
+	r, err = Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.HypeTrainEventProgressSubResponse
+	//var body models.HypeTrainEventProgressSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 
 	a.Equal("channel.hype_train.progress", body.Subscription.Type, "Expected event type %v, got %v", "channel.hype_train.progress", body.Subscription.Type)
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 
-	params := *&events.MockEventParameters{
+	params = *&events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
 		Trigger:    "hype-train-end",
 	}
 
-	r, err := Event{}.GenerateEvent(params)
+	r, err = Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.HypeTrainEventProgressSubResponse
+	//var body models.HypeTrainEventProgressSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 
@@ -113,10 +113,10 @@ func TestValidTrigger(t *testing.T) {
 	r := Event{}.ValidTrigger("hype-train-begin")
 	a.Equal(true, r)
 
-	r := Event{}.ValidTrigger("hype-train-progress")
+	r = Event{}.ValidTrigger("hype-train-progress")
 	a.Equal(true, r)
 
-	r := Event{}.ValidTrigger("hype-train-end")
+	r = Event{}.ValidTrigger("hype-train-end")
 	a.Equal(true, r)
 
 }
