@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 package models
 
-type ContributionData struct{
-	TotalContribution   		 	 int64 	`json:"total"`
-	TypeOfContribution        		 string `json:"type"`
-	UserWhoMadeContribution	    	 string `json:"user_id"`
-	UserNameWhoMadeContribution	     string `json:"user_name"`
-	UserLoginWhoMadeContribution     string `json:"user_login"`
+type ContributionData struct {
+	TotalContribution            int64  `json:"total"`
+	TypeOfContribution           string `json:"type"`
+	WebSubUser                   string `json:"user,omitempty"`
+	UserWhoMadeContribution      string `json:"user_id,omitempty"`
+	UserNameWhoMadeContribution  string `json:"user_name,omitempty"`
+	UserLoginWhoMadeContribution string `json:"user_login,omitempty"`
 }
 
 type HypeTrainWebSubEvent struct {
@@ -19,16 +20,16 @@ type HypeTrainWebSubEvent struct {
 }
 
 type HypeTrainWebsubEventData struct {
-	BroadcasterID   			string				 	`json:"broadcaster_id"`
-	CooldownEndTimestamp        string				 	`json:"cooldown_end_time"`
-	ExpiresAtTimestamp	        string 				 	`json:"expires_at"`
-	Goal       				    int64 				 	`json:"goal,omitempty"`
-	Id       				    string 				 	`json:"id,omitempty"`
-	LastContribution 			ContributionData 	 	`json:"last_contribution,omitempty"`
-	Level      				    int64 				 	`json:"level,omitempty"`
-	StartedAtTimestamp		    string 				 	`json:"started_at,omitempty"`
-	TopContributions 			[]ContributionData  	`json:"top_contributions"`
-	Total      				    int64 				 	`json:"total"`
+	BroadcasterID        string             `json:"broadcaster_id"`
+	CooldownEndTimestamp string             `json:"cooldown_end_time"`
+	ExpiresAtTimestamp   string             `json:"expires_at"`
+	Goal                 int64              `json:"goal,omitempty"`
+	Id                   string             `json:"id,omitempty"`
+	LastContribution     ContributionData   `json:"last_contribution,omitempty"`
+	Level                int64              `json:"level,omitempty"`
+	StartedAtTimestamp   string             `json:"started_at,omitempty"`
+	TopContributions     []ContributionData `json:"top_contributions"`
+	Total                int64              `json:"total"`
 }
 
 type HypeTrainWebSubResponse struct {
@@ -36,22 +37,22 @@ type HypeTrainWebSubResponse struct {
 }
 
 type HypeTrainEventSubResponse struct {
-	Subscription EventsubSubscription         	`json:"subscription"`
-	Event        HypeTrainEventSubEvent 		`json:"event"`
+	Subscription EventsubSubscription   `json:"subscription"`
+	Event        HypeTrainEventSubEvent `json:"event"`
 }
 
 type HypeTrainEventSubEvent struct {
-	BroadcasterUserID    		string 					`json:"broadcaster_user_id"`
-	BroadcasterUserLogin 		string 					`json:"broadcaster_user_login"`
-	BroadcasterUserName  		string 					`json:"broadcaster_user_name"`
-	Level   			 		int64 					`json:"level,omitempty"`
-	Total   			 		int64 					`json:"total"`
-	Progress		     		int64 					`json:"progress,omitempty"`
-	Goal       			 		int64					`json:"goal,omitempty"`
-	TopContributions 	 		[]ContributionData  	`json:"top_contributions"`
-	LastContribution 			ContributionData 		`json:"last_contribution,omitempty"`
-	StartedAtTimestamp		    string 					`json:"started_at,omitempty"`
-	ExpiresAtTimestamp	        string 					`json:"expires_at,omitempty"`
-	EndedAtTimestamp	        string 					`json:"ended_at,omitempty"`
-	CooldownEndsAtTimestamp	    string 					`json:"cooldown_ends_at,omitempty"`
+	BroadcasterUserID       string             `json:"broadcaster_user_id"`
+	BroadcasterUserLogin    string             `json:"broadcaster_user_login"`
+	BroadcasterUserName     string             `json:"broadcaster_user_name"`
+	Level                   int64              `json:"level,omitempty"`
+	Total                   int64              `json:"total"`
+	Progress                int64              `json:"progress,omitempty"`
+	Goal                    int64              `json:"goal,omitempty"`
+	TopContributions        []ContributionData `json:"top_contributions"`
+	LastContribution        ContributionData   `json:"last_contribution,omitempty"`
+	StartedAtTimestamp      string             `json:"started_at,omitempty"`
+	ExpiresAtTimestamp      string             `json:"expires_at,omitempty"`
+	EndedAtTimestamp        string             `json:"ended_at,omitempty"`
+	CooldownEndsAtTimestamp string             `json:"cooldown_ends_at,omitempty"`
 }

@@ -1,13 +1,16 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 package hype_train
+
 import (
 	"encoding/json"
 	"time"
+
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
+
 var transportsSupported = map[string]bool{
 	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
@@ -25,7 +28,9 @@ var triggerMapping = map[string]map[string]string{
 		"hype-train-end":      "channel.hype_train.end",
 	},
 }
+
 type Event struct{}
+
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
@@ -36,6 +41,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	localTotal := util.RandomViewerCount()
 	localGoal := util.RandomViewerCount()
 	localProgress := (localTotal / localGoal)
+
 	switch params.Transport {
 	case models.TransportEventSub:
 		body := *&models.HypeTrainEventSubResponse{
@@ -77,8 +83,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					},
 				},
 				LastContribution: models.ContributionData{
-					TotalContribution:            util.RandomViewerCount(),
-					TypeOfContribution:           util.RandomType(),
+					TotalContribution:            lastTotal,
+					TypeOfContribution:           lastType,
 					UserWhoMadeContribution:      lastUser,
 					UserNameWhoMadeContribution:  "cli_user2",
 					UserLoginWhoMadeContribution: "cli_user2",
@@ -109,22 +115,22 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 						Goal:                 localGoal,
 						Id:                   util.RandomGUID(),
 						LastContribution: models.ContributionData{
-							TotalContribution:       lastTotal,
-							TypeOfContribution:      lastType,
-							UserWhoMadeContribution: lastUser,
+							TotalContribution:  lastTotal,
+							TypeOfContribution: lastType,
+							WebSubUser:         lastUser,
 						},
 						Level:              util.RandomViewerCount() % 4,
 						StartedAtTimestamp: util.GetTimestamp().Format(time.RFC3339),
 						TopContributions: []models.ContributionData{
 							{
-								TotalContribution:       lastTotal,
-								TypeOfContribution:      lastType,
-								UserWhoMadeContribution: lastUser,
+								TotalContribution:  lastTotal,
+								TypeOfContribution: lastType,
+								WebSubUser:         lastUser,
 							},
 							{
-								TotalContribution:       util.RandomViewerCount(),
-								TypeOfContribution:      util.RandomType(),
-								UserWhoMadeContribution: util.RandomUserID(),
+								TotalContribution:  util.RandomViewerCount(),
+								TypeOfContribution: util.RandomType(),
+								WebSubUser:         util.RandomUserID(),
 							},
 						},
 						Total: localTotal,
