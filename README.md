@@ -1,6 +1,6 @@
-# Twitch CLI (Open Beta Version)
+# Twitch CLI 
 
-- [Twitch CLI (Open Beta Version)](#twitch-cli-open-beta-version)
+- [Twitch CLI](#twitch-cli)
   - [Download](#download)
     - [Homebrew](#homebrew)
     - [Scoop](#scoop)
