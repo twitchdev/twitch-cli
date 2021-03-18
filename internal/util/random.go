@@ -46,3 +46,17 @@ func RandomViewerCount() int64 {
 	}
 	return viewer.Int64()
 }
+
+// RandomType generates a fake type; Either bits or subscription, in roughly even distribution
+func RandomType() string {
+	someInt, err := rand.Int(rand.Reader, big.NewInt(1*10*100*100*100))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	if (someInt.Int64()%2) == 0{
+		return "bits"
+	}else
+	{
+		return "subscription"
+	}
+}
