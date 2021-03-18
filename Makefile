@@ -1,5 +1,3 @@
-version = "0.5.0"
-
 release:
 	docker build . -t twitch-cli:latest
 	docker run --rm --privileged \
@@ -10,7 +8,7 @@ release:
 		twitch-cli:latest --rm-dist
 
 build:
-	go build --ldflags "-X main.buildVersion=${version}"
+	go build --ldflags "-X main.buildVersion=source"
 
 build_all:
-	xgo -out build/twitch --targets "darwin/amd64,windows/amd64,linux/amd64" --ldflags "-X main.buildVersion=$(version)" ./
+	xgo -out build/twitch --targets "darwin/amd64,windows/amd64,linux/amd64" --ldflags "-X main.buildVersion=source" ./
