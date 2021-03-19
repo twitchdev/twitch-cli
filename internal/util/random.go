@@ -38,13 +38,23 @@ func RandomClientID() string {
 	return fmt.Sprintf("%x", b)[:30]
 }
 
-// RandomViewerCount generates a fake viewercount between 0->10,000,000
+// RandomViewerCount generates a fake viewercount between 0->100,000
 func RandomViewerCount() int64 {
-	viewer, err := rand.Int(rand.Reader, big.NewInt(1*10*100*100*100))
+	viewer, err := rand.Int(rand.Reader, big.NewInt(10*100*100))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	return viewer.Int64()
+}
+
+//RandomInt generates a random integer between 0->max
+func RandomInt(max int64) int64 {
+	someInt, err := rand.Int(rand.Reader, big.NewInt(max))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	return someInt.Int64()
 }
 
 // RandomType generates a fake type; Either bits or subscription, in roughly even distribution
@@ -53,10 +63,9 @@ func RandomType() string {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if (someInt.Int64()%2) == 0{
+	if (someInt.Int64() % 2) == 0 {
 		return "bits"
-	}else
-	{
+	} else {
 		return "subscription"
 	}
 }

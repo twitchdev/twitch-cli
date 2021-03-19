@@ -35,11 +35,12 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var event []byte
 	var err error
 	lastUser := util.RandomUserID()
-	lastTotal := util.RandomViewerCount()
+	lastTotal := util.RandomInt(10 * 100)
 	lastType := util.RandomType()
+
 	//Local variables which will be used for the trigger params below
-	localTotal := util.RandomViewerCount()
-	localGoal := util.RandomViewerCount()
+	localTotal := util.RandomInt(10 * 100)
+	localGoal := util.RandomInt(10*100*100) + localTotal
 	localProgress := (localTotal / localGoal)
 
 	switch params.Transport {
@@ -63,12 +64,12 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
-				Total:                util.RandomViewerCount(),
+				Total:                localTotal,
 				Progress:             localProgress,
 				Goal:                 localGoal,
 				TopContributions: []models.ContributionData{
 					{
-						TotalContribution:            util.RandomViewerCount(),
+						TotalContribution:            util.RandomInt(10 * 100),
 						TypeOfContribution:           util.RandomType(),
 						UserWhoMadeContribution:      util.RandomUserID(),
 						UserNameWhoMadeContribution:  "cli_user1",
@@ -94,7 +95,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			},
 		}
 		if triggerMapping[params.Transport][params.Trigger] == "hype-train-end " {
-			body.Event.CooldownEndsAtTimestamp = util.GetTimestamp().Format(time.RFC3339Nano)
+			body.Event.CooldownEndsAtTimestamp = util.GetTimestamp().Add(1 * time.Hour).Format(time.RFC3339Nano)
 		}
 		event, err = json.Marshal(body)
 		if err != nil {
@@ -119,7 +120,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 							TypeOfContribution: lastType,
 							WebSubUser:         lastUser,
 						},
-						Level:              util.RandomViewerCount() % 4,
+						Level:              util.RandomInt(4) + 1,
 						StartedAtTimestamp: util.GetTimestamp().Format(time.RFC3339),
 						TopContributions: []models.ContributionData{
 							{
@@ -128,7 +129,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 								WebSubUser:         lastUser,
 							},
 							{
-								TotalContribution:  util.RandomViewerCount(),
+								TotalContribution:  util.RandomInt(10 * 100),
 								TypeOfContribution: util.RandomType(),
 								WebSubUser:         util.RandomUserID(),
 							},
