@@ -43,7 +43,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				ID:      params.ID,
 				Status:  "enabled",
 				Type:    triggerMapping[params.Transport][params.Trigger],
-				Version: "beta",
+				Version: "1",
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: params.ToUserID,
 				},

@@ -60,6 +60,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Method:   "webhook",
 					Callback: "null",
 				},
+				Cost:      0,
 				CreatedAt: tNow,
 			},
 			Event: models.RedemptionEventSubEvent{
