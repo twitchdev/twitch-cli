@@ -5,6 +5,7 @@ package api
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -29,6 +30,19 @@ func TestNewRequest(t *testing.T) {
 		a.Equal(params.ClientID, r.Header.Get("Client-ID"), "ClientID mismatch")
 		a.Equal("Bearer "+params.Token, r.Header.Get("Authorization"), "Token mismatch")
 
+		if r.URL.Path == "/error" {
+			w.WriteHeader(http.StatusInternalServerError)
+		} else if r.URL.Path == "/nocontent" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		} else if r.URL.Path == "/cursor" {
+			if strings.Contains(r.URL.RawQuery, "after") {
+				w.Write([]byte("{}"))
+				return
+			}
+			w.Write([]byte("{\"data\":[],\"pagination\":{\"cursor\":\"test\"}}"))
+			return
+		}
 		w.Write([]byte("{}"))
 	}))
 	defer ts.Close()
@@ -39,8 +53,18 @@ func TestNewRequest(t *testing.T) {
 	viper.Set("accesstoken", "4567")
 	viper.Set("refreshtoken", "123")
 
-	NewRequest("POST", "", []string{"test=1", "test=2"}, nil, true, false)
-	NewRequest("POST", "", []string{"test=1", "test=2"}, nil, false, true)
+	// tests for normal get requests
+	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, true, false)
+	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, false, true)
+
+	// testing cursors autopagination
+	NewRequest("GET", "/cursor", []string{"test=1", "test=2"}, nil, false, true)
+
+	// testing 204 no-content apis
+	NewRequest("POST", "/nocontent", []string{"test=1", "test=2"}, nil, false, false)
+
+	// testing 500 errors
+	NewRequest("GET", "/error", []string{"test=1", "test=2"}, nil, false, true)
 }
 
 func TestValidOptions(t *testing.T) {
