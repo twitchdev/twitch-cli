@@ -47,6 +47,7 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 					Method:   "webhook",
 					Callback: "null",
 				},
+				Cost:      0,
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 			Event: models.FollowEventSubEvent{
