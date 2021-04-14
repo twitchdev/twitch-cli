@@ -10,6 +10,7 @@ type EventsubSubscription struct {
 	Condition EventsubCondition `json:"condition"`
 	Transport EventsubTransport `json:"transport"`
 	CreatedAt string            `json:"created_at"`
+	Cost      int64             `json:"cost"`
 }
 
 type EventsubTransport struct {

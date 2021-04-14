@@ -48,6 +48,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Method:   "webhook",
 					Callback: "null",
 				},
+				Cost:      0,
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 			Event: models.StreamDownEventSubEvent{
@@ -62,8 +63,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		}
 	case models.TransportWebSub:
 		body := *&models.StreamDownWebSubResponse{
-			Data: []models.StreamDownWebSubResponseData{	
-			}}
+			Data: []models.StreamDownWebSubResponseData{}}
 
 		event, err = json.Marshal(body)
 		if err != nil {
