@@ -37,3 +37,22 @@ func TestRandomViewerCount(t *testing.T) {
 
 	a.NotEmpty(viewers)
 }
+
+func TestRandomType(t *testing.T) {
+	a := assert.New(t)
+
+	// run the test 20 times to make sure to get at least one of each random type
+	for i := 0; i < 20; i++ {
+		randomType := RandomType()
+
+		a.NotEmpty(randomType)
+	}
+}
+
+func TestRandomInt(t *testing.T) {
+	a := assert.New(t)
+
+	randomInt := RandomInt(10)
+
+	a.Equal(true, randomInt >= 0)
+}

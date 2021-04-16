@@ -79,7 +79,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					GameID:       "509658",
 					Type:         "live",
 					Title:        params.StreamTitle,
-					ViewerCount:  1337,
+					ViewerCount:  util.RandomViewerCount(),
 					StartedAt:    util.GetTimestamp().Format(time.RFC3339),
 					Language:     "en",
 					ThumbnailURL: "https://static-cdn.jtvnw.net/ttv-static/404_preview-440x248.jpg",
