@@ -4,13 +4,16 @@ package login
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"syscall"
 	"testing"
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
@@ -156,4 +159,36 @@ func TestUserAuthServer(t *testing.T) {
 	ur := <-userResponse
 	a.Equal(state, ur.State, "State mismatch")
 	a.Equal(code, ur.Code, "Code mismatch")
+}
+
+func TestIsWsl(t *testing.T) {
+	a := assert.New(t)
+
+	var (
+		ubuntu20Wsl2 = [65]int8{52, 46, 49, 57, 46, 49, 50, 56, 45, 109, 105, 99, 114, 111, 115, 111, 102, 116, 45, 115, 116, 97, 110, 100, 97, 114, 100, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+		archReal     = [65]int8{53, 46, 49, 49, 46, 49, 49, 45, 97, 114, 99, 104, 49, 45, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+	)
+
+	result := isWsl(util.Syscall{
+		Uname: func(buf *syscall.Utsname) (err error) {
+			buf.Release = ubuntu20Wsl2
+			return nil
+		},
+	})
+	a.True(result)
+
+	result = isWsl(util.Syscall{
+		Uname: func(buf *syscall.Utsname) (err error) {
+			buf.Release = archReal
+			return nil
+		},
+	})
+	a.False(result)
+
+	result = isWsl(util.Syscall{
+		Uname: func(buf *syscall.Utsname) (err error) {
+			return errors.New("mocked error")
+		},
+	})
+	a.False(result)
 }

@@ -232,12 +232,13 @@ func generateState() (string, error) {
 }
 
 // check for Windows Subsystem for Linux
-func isWsl() bool {
+func isWsl(sc util.Syscall) bool {
 	// the common factor between WSL distros is the Microsoft-specific kernel version, so we check for that
 	// SUSE, WSLv1: 4.4.0-19041-Microsoft
 	// Ubuntu, WSLv2: 4.19.128-microsoft-standard
+	const wslIdentifier = "microsoft"
 	var uname syscall.Utsname
-	if err := syscall.Uname(&uname); err == nil {
+	if err := sc.Uname(&uname); err == nil {
 		var kernel []byte
 		for _, b := range uname.Release {
 			if b == 0 {
@@ -245,22 +246,23 @@ func isWsl() bool {
 			}
 			kernel = append(kernel, byte(b))
 		}
-		return strings.Contains(strings.ToLower(string(kernel)), "microsoft")
+		return strings.Contains(strings.ToLower(string(kernel)), wslIdentifier)
 	}
 	return false
 }
 
 func openBrowser(url string) error {
+	const rundllParameters = "url.dll,FileProtocolHandler"
 	var err error
 	switch runtime.GOOS {
 	case "linux":
-		if isWsl() {
-			err = exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", url).Start()
+		if isWsl(util.DefaultSyscall) {
+			err = exec.Command("rundll32.exe", rundllParameters, url).Start()
 		} else {
 			err = exec.Command("xdg-open", url).Start()
 		}
 	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+		err = exec.Command("rundll32", rundllParameters, url).Start()
 	case "darwin":
 		err = exec.Command("open", url).Start()
 	default:
