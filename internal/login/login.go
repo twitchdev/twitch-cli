@@ -115,7 +115,10 @@ func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	u.RawQuery = q.Encode()
 
 	fmt.Println("Opening browser. Press Ctrl+C to cancel...")
-	openBrowser(u.String())
+	err = openBrowser(u.String())
+	if err != nil {
+		fmt.Printf("Unable to open default browser. You can manually navigate to this URL to complete the login: %s\n", u.String())
+	}
 
 	ur, err := userAuthServer()
 	if err != nil {
@@ -227,12 +230,17 @@ func generateState() (string, error) {
 }
 
 func openBrowser(url string) error {
+	const rundllParameters = "url.dll,FileProtocolHandler"
 	var err error
 	switch runtime.GOOS {
 	case "linux":
-		err = exec.Command("xdg-open", url).Start()
+		if util.IsWsl() {
+			err = exec.Command("rundll32.exe", rundllParameters, url).Start()
+		} else {
+			err = exec.Command("xdg-open", url).Start()
+		}
 	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+		err = exec.Command("rundll32", rundllParameters, url).Start()
 	case "darwin":
 		err = exec.Command("open", url).Start()
 	default:
