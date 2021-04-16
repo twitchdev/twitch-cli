@@ -63,10 +63,34 @@ brews:
     folder: Formula
     homepage: https://github.com/twitchdev/twitch-cli
     description: CLI for Twitch's developer offerings
+    custom_block: | 
+      if OS.mac? && Hardware::CPU.arm?
+        url "https://github.com/twitchdev/twitch-cli.git", tag: "{{ .Tag }}"
+        depends_on "go" => :build
+      end
+
+      head "https://github.com/twitchdev/twitch-cli.git", branch: "main"
+      head do
+        depends_on "go" => :build
+      end
     install: |
+      v = version
+      if build.head? 
+        v = "head"
+        ldflags = "-X main.buildVersion=#{v}"
+        system "go", "build", "-ldflags=#{ldflags}"
+        mv "twitch-cli", "twitch"
+      end
+
+      if OS.mac? && Hardware::CPU.arm? 
+        ldflags = "-X main.buildVersion=#{v}"
+        system "go", "build", "-ldflags=#{ldflags}"
+        mv "twitch-cli", "twitch"
+      end
+      
       bin.install "twitch"
     test: |
-      system "#{bin}/twitch -v"
+      system "#{bin}/twitch", "version"
     license: Apache-2.0
 archives:
   - replacements:
