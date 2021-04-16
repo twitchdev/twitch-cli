@@ -14,6 +14,8 @@ import (
 	"net/url"
 	"os/exec"
 	"runtime"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/spf13/viper"
@@ -115,7 +117,10 @@ func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	u.RawQuery = q.Encode()
 
 	fmt.Println("Opening browser. Press Ctrl+C to cancel...")
-	openBrowser(u.String())
+	err = openBrowser(u.String())
+	if err != nil {
+		fmt.Printf("Unable to open default browser. You can manually navigate to this URL to complete the login: %s\n", u.String())
+	}
 
 	ur, err := userAuthServer()
 	if err != nil {
@@ -226,11 +231,34 @@ func generateState() (string, error) {
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
+// check for Windows Subsystem for Linux
+func isWsl() bool {
+	// the common factor between WSL distros is the Microsoft-specific kernel version, so we check for that
+	// SUSE, WSLv1: 4.4.0-19041-Microsoft
+	// Ubuntu, WSLv2: 4.19.128-microsoft-standard
+	var uname syscall.Utsname
+	if err := syscall.Uname(&uname); err == nil {
+		var kernel []byte
+		for _, b := range uname.Release {
+			if b == 0 {
+				break
+			}
+			kernel = append(kernel, byte(b))
+		}
+		return strings.Contains(strings.ToLower(string(kernel)), "microsoft")
+	}
+	return false
+}
+
 func openBrowser(url string) error {
 	var err error
 	switch runtime.GOOS {
 	case "linux":
-		err = exec.Command("xdg-open", url).Start()
+		if isWsl() {
+			err = exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", url).Start()
+		} else {
+			err = exec.Command("xdg-open", url).Start()
+		}
 	case "windows":
 		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 	case "darwin":
