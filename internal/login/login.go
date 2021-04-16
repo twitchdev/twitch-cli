@@ -14,8 +14,6 @@ import (
 	"net/url"
 	"os/exec"
 	"runtime"
-	"strings"
-	"syscall"
 	"time"
 
 	"github.com/spf13/viper"
@@ -231,32 +229,12 @@ func generateState() (string, error) {
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
-// check for Windows Subsystem for Linux
-func isWsl(sc util.Syscall) bool {
-	// the common factor between WSL distros is the Microsoft-specific kernel version, so we check for that
-	// SUSE, WSLv1: 4.4.0-19041-Microsoft
-	// Ubuntu, WSLv2: 4.19.128-microsoft-standard
-	const wslIdentifier = "microsoft"
-	var uname syscall.Utsname
-	if err := sc.Uname(&uname); err == nil {
-		var kernel []byte
-		for _, b := range uname.Release {
-			if b == 0 {
-				break
-			}
-			kernel = append(kernel, byte(b))
-		}
-		return strings.Contains(strings.ToLower(string(kernel)), wslIdentifier)
-	}
-	return false
-}
-
 func openBrowser(url string) error {
 	const rundllParameters = "url.dll,FileProtocolHandler"
 	var err error
 	switch runtime.GOOS {
 	case "linux":
-		if isWsl(util.DefaultSyscall) {
+		if util.IsWsl() {
 			err = exec.Command("rundll32.exe", rundllParameters, url).Start()
 		} else {
 			err = exec.Command("xdg-open", url).Start()
