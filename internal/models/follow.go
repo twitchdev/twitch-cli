@@ -8,7 +8,7 @@ type FollowEventSubEvent struct {
 	UserName             string `json:"user_name"`
 	BroadcasterUserID    string `json:"broadcaster_user_id"`
 	BroadcasterUserLogin string `json:"broadcaster_user_login"`
-	BroadcasterUserName  string `json:"broadcaster_user_name"`,
+	BroadcasterUserName  string `json:"broadcaster_user_name"`
         FollowedAt           string `json:"followed_at"`
 }
 
