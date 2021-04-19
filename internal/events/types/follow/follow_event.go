@@ -57,6 +57,7 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 				BroadcasterUserID:    p.ToUserID,
 				BroadcasterUserLogin: p.ToUserID,
 				BroadcasterUserName:  p.ToUserName,
+				FollowedAt:           util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 		}
 
