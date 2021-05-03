@@ -58,7 +58,7 @@ var verifyCmd = &cobra.Command{
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: events.ValidTriggers(),
 	Run:       verifyCmdRun,
-	Example:   `twitch verify-subscribe subscribe`,
+	Example:   `twitch event verify-subscription subscribe`,
 }
 
 var retriggerCmd = &cobra.Command{
