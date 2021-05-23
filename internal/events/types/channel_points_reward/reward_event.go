@@ -81,7 +81,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				},
 				GlobalCooldown: models.RewardGlobalCooldown{
 					IsEnabled: true,
-					Value:     300,
+					Seconds:   300,
 				},
 				BackgroundColor: "#c0ffee",
 				Image: models.RewardImage{
