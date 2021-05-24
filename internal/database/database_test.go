@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package util
+package database
 
 import (
 	"os"
@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestGetDatabase(t *testing.T) {
-	a := SetupTestEnv(t)
-	p, _ := GetApplicationDir()
+	a := util.SetupTestEnv(t)
+	p, _ := util.GetApplicationDir()
 
 	dbFileName = viper.GetString("DB_FILENAME")
 
@@ -38,22 +39,25 @@ func TestGetDatabase(t *testing.T) {
 }
 
 func TestRetriveFromDB(t *testing.T) {
-	a := SetupTestEnv(t)
+	a := util.SetupTestEnv(t)
+
+	db, err := NewConnection()
+	a.Nil(err)
 
 	ecParams := *&EventCacheParameters{
-		ID:        RandomGUID(),
+		ID:        util.RandomGUID(),
 		Event:     "foo",
 		JSON:      "bar",
 		FromUser:  "1234",
 		ToUser:    "5678",
 		Transport: "test",
-		Timestamp: GetTimestamp().Format(time.RFC3339Nano),
+		Timestamp: util.GetTimestamp().Format(time.RFC3339Nano),
 	}
 
-	err := InsertIntoDB(ecParams)
+	err = db.InsertIntoDB(ecParams)
 	a.Nil(err)
 
-	dbResponse, err := GetEventByID(ecParams.ID)
+	dbResponse, err := db.GetEventByID(ecParams.ID)
 	a.Nil(err)
 
 	println(dbResponse.ID)

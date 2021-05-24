@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
 	"github.com/twitchdev/twitch-cli/internal/util"
@@ -75,7 +76,12 @@ func Fire(p TriggerParameters) (string, error) {
 		return "", err
 	}
 
-	err = util.InsertIntoDB(util.EventCacheParameters{
+	db, err := database.NewConnection()
+	if err != nil {
+		return "", err
+	}
+
+	err = db.InsertIntoDB(database.EventCacheParameters{
 		ID:        resp.ID,
 		Event:     p.Event,
 		JSON:      string(resp.JSON),
