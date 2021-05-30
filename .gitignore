@@ -16,7 +16,7 @@ twitch-cli
 *.out
 
 # Editor configs
-.vsvode/
+.vscode/
 .idea/
 
 # junk files
