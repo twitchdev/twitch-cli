@@ -35,7 +35,7 @@ type Event struct{}
 
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var (
-		event        []byte
+        event        []byte
         err          error
         giftUserID   string
         giftUserName string
