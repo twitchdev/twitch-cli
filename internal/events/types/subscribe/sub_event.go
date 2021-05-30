@@ -34,10 +34,12 @@ var triggerMapping = map[string]map[string]string{
 type Event struct{}
 
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
-	var event []byte
-	var err error
-	var giftUserID string
-	var giftUserName string
+	var (
+		event        []byte
+        err          error
+        giftUserID   string
+        giftUserName string
+    )
 
 	if params.Trigger == "gift" {
 		params.IsGift = true

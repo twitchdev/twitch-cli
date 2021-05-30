@@ -16,7 +16,7 @@ func NewRequest(method string, url string, body io.Reader) (*http.Request, error
 	}
 	version := util.GetVersion()
 
-	req.Header.Set("User-Agent", "twitch-cli/"+version)
+	req.Header.Set("User-Agent", "twitch-cli/" + version)
 
 	return req, nil
 }
