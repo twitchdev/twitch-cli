@@ -48,6 +48,6 @@ func StartServer(port int) {
 func RegisterHandlers(m *http.ServeMux) {
 	// all mock endpoints live in the /mock/ namespace
 	for _, e := range endpoints.All() {
-		m.Handle(MOCK_NAMESPACE+e.GetPath(), authentication.AuthenticationMiddleware(e))
+		m.Handle(MOCK_NAMESPACE+e.Path(), authentication.AuthenticationMiddleware(e))
 	}
 }

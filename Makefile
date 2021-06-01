@@ -21,3 +21,6 @@ build:
 
 build_all:
 	xgo -out build/twitch --targets "darwin/amd64,windows/amd64,linux/amd64" --ldflags "-X main.buildVersion=source" ./
+
+clean: 
+	rm -rf ~/.twitch-cli/eventCache.db

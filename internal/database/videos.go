@@ -2,30 +2,43 @@
 // SPDX-License-Identifier: Apache-2.0
 package database
 
-import "log"
-
 type Video struct {
+	ID               string `db:"id" json:"id"`
+	StreamID         string `db:"stream_id" json:"stream_id"`
+	BroadcasterID    string `db:"broadcaster_id" json:"user_id"`
+	BroadcasterLogin string `json:"user_login"`
+	BroadcasterName  string `json:"user_name"`
+	Title            string `db:"title" json:"title"`
+	VideoDescription string `db:"video_description" json:"video_description"`
+	CreatedAt        string `db:"created_at" json:"created_at"`
+	PublishedAt      string `db:"published_at" json:"published_at"`
+	Viewable         string `db:"viewable" json:"viewable"`
+	ViewCount        int    `db:"view_count" json:"view_count"`
+	Duration         string `db:"duration" json:"duration"`
+	VideoLanguage    string `db:"video_language" json:"video_language"`
 }
 
-func (c CLIDatabase) GetVideoById(id string) (Video, error) {
-	var r Video
+func (c CLIDatabase) GetVideos(v Video) ([]Video, error) {
+	var r []Video
 
-	err := c.DB.Get(&r, "select * from videos where id = $1", id)
+	sql := generateSQL("select * from videos", v, SEP_AND)
+	rows, err := c.DB.NamedQuery(sql, v)
 	if err != nil {
 		return r, err
 	}
-	log.Printf("%#v", r)
 
-	return r, err
-}
-
-func (c CLIDatabase) InsertVideo(v Video, upsert bool) error {
-	tx := c.DB.MustBegin()
-	tx.NamedExec(`insert into videos values(:id, :values...)`, v)
-	err := tx.Commit()
-	if err != nil {
-		return err
+	for rows.Next() {
+		err := rows.StructScan(&r)
+		if err != nil {
+			return r, err
+		}
 	}
 
-	return nil
+	return r, nil
+}
+
+func (c CLIDatabase) InsertVideo(v Video) error {
+	stmt := generateInsertSQL("videos", "id", v, false)
+	_, err := c.DB.NamedExec(stmt, v)
+	return err
 }

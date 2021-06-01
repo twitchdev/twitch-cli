@@ -39,3 +39,21 @@ func generateUsername() string {
 		util.RandomInt(1000),
 	)
 }
+
+var categories = []string{
+	"Just Chatting",
+	"Just Developing",
+	"Just Making a CLI",
+	"Science & Technology",
+	"Development Test",
+}
+
+var tags = []string{
+	"Happy",
+	"Developement",
+	"CLI",
+	"Smiling",
+	"Fake tag!",
+	"Definitely not real data!",
+	"KomodoHype",
+}

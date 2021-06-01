@@ -7,14 +7,22 @@ import "log"
 type Principle struct {
 }
 
-func (c CLIDatabase) GetPrincipleById(id string) (Principle, error) {
+func (c CLIDatabase) GetPrinciple(p Principle) (Principle, error) {
 	var r Principle
 
-	err := c.DB.Get(&r, "select * from principle where id = $1", id)
+	sql := generateSQL("select * from principle", u, SEP_AND)
+	sql = fmt.Sprintf("%v LIMIT 1", sql)
+	rows, err := c.DB.NamedQuery(sql, u)
 	if err != nil {
 		return r, err
 	}
-	log.Printf("%#v", r)
+
+	for rows.Next() {
+		err := rows.StructScan(&r)
+		if err != nil {
+			return r, err
+		}
+	}
 
 	return r, err
 }

@@ -2,20 +2,24 @@
 // SPDX-License-Identifier: Apache-2.0
 package database
 
-import "log"
-
 type Category struct {
-	ID   string `db:"id"`
-	Name string `db:"category_name"`
+	ID   string `db:"id" json:"id"`
+	Name string `db:"category_name" json:"name"`
 }
 
-func (c CLIDatabase) GetCategoryByID(id string) (Category, error) {
+func (c CLIDatabase) GetCategory(cat Category) (Category, error) {
 	var r Category
-	err := c.DB.Get(&r, "select * from categories where id = $1", id)
+	rows, err := c.DB.NamedQuery(generateSQL("select * from categories", cat, SEP_AND), cat)
 	if err != nil {
 		return r, err
 	}
-	log.Printf("%#v", r)
+
+	for rows.Next() {
+		err := rows.StructScan(&r)
+		if err != nil {
+			return r, err
+		}
+	}
 
 	return r, err
 }

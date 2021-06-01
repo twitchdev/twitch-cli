@@ -23,6 +23,9 @@ func Generate(userCount int) error {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, "db", db)
 
+	// generate users and random related info (follows, bans, etc)
+	generateUsers(ctx, userCount)
+
 	// generate a client and fake secret
 	c, err := generateClient(ctx)
 	if err != nil {
@@ -30,17 +33,18 @@ func Generate(userCount int) error {
 	}
 	generateAuthorization(ctx, c, "")
 
-	// generate users and random related info (follows, bans, etc)
-	generateUsers(ctx, userCount)
-
 	return nil
 }
 
 func generateUsers(ctx context.Context, count int) error {
 	db := ctx.Value("db").(database.CLIDatabase)
 	var userIds []string
+	var categoryIds []string
+	var streamIds []string
+	var tagIds []string
 
 	// create users
+	log.Printf("Creating users...")
 	for i := 0; i < count; i++ {
 		id := util.RandomUserID()
 		userIds = append(userIds, id)
@@ -74,8 +78,23 @@ func generateUsers(ctx context.Context, count int) error {
 			log.Print(err.Error())
 		}
 	}
+	// fake team
+	log.Printf("Creating team...")
+	team := database.Team{
+		ID:              fmt.Sprint(util.RandomInt(10 * 1000)),
+		TeamName:        "clidev",
+		TeamDisplayName: "CLI Developers",
+		CreatedAt:       util.GetTimestamp().Format(time.RFC3339),
+		UpdatedAt:       util.GetTimestamp().Format(time.RFC3339),
+	}
 
-	// create fake follows, blocks, mods
+	err := db.InsertTeam(team)
+	if err != nil {
+		log.Print(err.Error())
+	}
+
+	// create fake follows, blocks, mods, and team membership
+	log.Printf("Creating follows, blocks, mods, bans, and team members...")
 	for i, broadcaster := range userIds {
 		for j, user := range userIds {
 			// can't follow/block yourself :)
@@ -84,19 +103,21 @@ func generateUsers(ctx context.Context, count int) error {
 			}
 
 			userSeed := util.RandomInt(100 * 100)
+			// 1 in 25 chance roughly to block one another
+			shouldBlock := userSeed%25 == 0
+			if shouldBlock {
+				err := db.AddBlock(database.UserRequestParams{UserID: user, BroadcasterID: broadcaster})
+				if err != nil {
+					log.Print(err.Error())
+				}
+				// since you're blocked, can't do any of the other things, so continue
+				continue
+			}
 
 			// 1 in 5 to follow
 			shouldFollow := userSeed%5 == 0
 			if shouldFollow {
-				err := db.AddFollow(broadcaster, user)
-				if err != nil {
-					log.Print(err.Error())
-				}
-			}
-			// 1 in 10 chance roughly to block one another
-			shouldBlock := userSeed%10 == 0
-			if shouldBlock {
-				err := db.AddBlock(broadcaster, user)
+				err := db.AddFollow(database.UserRequestParams{UserID: user, BroadcasterID: broadcaster})
 				if err != nil {
 					log.Print(err.Error())
 				}
@@ -105,21 +126,127 @@ func generateUsers(ctx context.Context, count int) error {
 			// 1 in 50 chance to mod one another, plus adds to the moderator events
 			shouldMod := userSeed%50 == 0
 			if shouldMod {
-				err := db.AddModerator(broadcaster, user)
+				err := db.AddModerator(database.UserRequestParams{UserID: user, BroadcasterID: broadcaster})
+				if err != nil {
+					log.Print(err.Error())
+				}
+			}
+
+			// 1 in 100 chance to ban one another, plus adds to banned events
+			shouldBan := userSeed%100 == 0
+			if shouldBan {
+				err := db.InsertBan(database.UserRequestParams{UserID: user, BroadcasterID: broadcaster})
+				if err != nil {
+					log.Print(err.Error())
+				}
+			}
+
+			shouldSub := userSeed%10 == 0
+			if shouldSub {
+				err := db.InsertSubscription(database.SubscriptionInsert{
+					UserID:        user,
+					BroadcasterID: broadcaster,
+					Tier:          fmt.Sprint((util.RandomInt(3) + 1) * 1000),
+					CreatedAt:     util.GetTimestamp().Format(time.RFC3339),
+					IsGift:        false,
+				})
 				if err != nil {
 					log.Print(err.Error())
 				}
 			}
 		}
+
+		shouldBeTeamMember := util.RandomInt(100*100)%20 == 0
+
+		if shouldBeTeamMember {
+			err := db.InsertTeamMember(database.TeamMemberInsert{
+				TeamID: team.ID,
+				UserID: broadcaster,
+			})
+			if err != nil {
+				log.Print(err.Error())
+			}
+		}
 	}
 
 	// seed categories
+	log.Printf("Creating categories...")
+	for _, c := range categories {
+		category := database.Category{
+			ID:   fmt.Sprintf("%v", util.RandomInt(10*100*100)),
+			Name: c,
+		}
+
+		err := db.InsertCategory(category, false)
+		if err != nil {
+			log.Print(err.Error())
+		}
+		category = database.Category{
+			ID: category.ID,
+		}
+		categoryIds = append(categoryIds, category.ID)
+	}
 
 	// create fake streams
+	log.Printf("Creating streams...")
+	for _, u := range userIds {
+		if util.RandomInt(100)%25 != 0 {
+			continue
+		}
+		s := database.StreamInsert{
+			ID:             util.RandomGUID(),
+			UserID:         u,
+			CategoryID:     categoryIds[util.RandomInt(int64(len(categoryIds)-1))],
+			StreamType:     "live",
+			Title:          "Sample stream!",
+			ViewerCount:    int(util.RandomViewerCount()),
+			StartedAt:      util.GetTimestamp().Format(time.RFC3339),
+			StreamLanguage: "en",
+			IsMature:       false,
+		}
+		err := db.InsertStream(s, false)
+		if err != nil {
+			log.Print(err.Error())
+		}
+		streamIds = append(streamIds, s.ID)
+	}
 
-	// create fake stream_markers
+	log.Printf("Creating tags...")
+	for _, t := range tags {
+		tag := database.Tag{
+			ID:   util.RandomGUID(),
+			Name: t,
+		}
+		err := db.InsertTag(tag)
+		if err != nil {
+			log.Print(err.Error())
+		}
+		tagIds = append(tagIds, tag.ID)
+	}
 
-	// create fake videos
+	// creates fake stream tags, videos, and markers
+	log.Printf("Creating stream tags, videos, and stream markers...")
+	for _, s := range streamIds {
+		var prevTag string
+		for i := 0; i < int(util.RandomInt(5)); i++ {
+			st := database.StreamTag{
+				StreamID: s,
+				TagID:    tagIds[util.RandomInt(int64(len(tagIds)-1))],
+			}
+			if prevTag == st.TagID {
+				continue
+			}
+
+			err := db.InsertStreamTag(st)
+			if err != nil {
+				log.Print(err.Error())
+			}
+			prevTag = st.TagID
+		}
+		// videos
+
+		// markers
+	}
 
 	// create fake polls
 

@@ -28,7 +28,7 @@ var db database.CLIDatabase
 
 type Endpoint struct{}
 
-func (e Endpoint) GetPath() string { return "/endpoint" }
+func (e Endpoint) Path() string { return "/endpoint" }
 
 func (e Endpoint) GetRequiredScopes(method string) []string {
 	return scopesByMethod[method]

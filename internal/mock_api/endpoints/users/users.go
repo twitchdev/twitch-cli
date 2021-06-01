@@ -32,7 +32,7 @@ var db database.CLIDatabase
 
 type Endpoint struct{}
 
-func (e Endpoint) GetPath() string { return "/users" }
+func (e Endpoint) Path() string { return "/users" }
 
 func (e Endpoint) GetRequiredScopes(method string) []string {
 	return scopesByMethod[method]
@@ -101,7 +101,12 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, i := range userIDs {
-		u, err := db.GetUserByID(i)
+		user := database.User{
+			ID: i,
+		}
+		println(i)
+		u, err := db.GetUser(user)
+		log.Printf("%#v", u)
 		if err != nil {
 			log.Print(err.Error())
 			w.WriteHeader(500)
@@ -111,7 +116,10 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, l := range logins {
-		u, err := db.GetUserByLogin(l)
+		user := database.User{
+			UserLogin: l,
+		}
+		u, err := db.GetUser(user)
 		if err != nil {
 			w.WriteHeader(500)
 			return
@@ -143,7 +151,7 @@ func putUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := db.GetUserByID(userCtx.UserID)
+	u, err := db.GetUser(database.User{ID: userCtx.UserID})
 	if err != nil {
 		log.Printf(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

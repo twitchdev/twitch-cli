@@ -38,7 +38,7 @@ var db database.CLIDatabase
 
 type Endpoint struct{}
 
-func (e Endpoint) GetPath() string { return "/users/follows" }
+func (e Endpoint) Path() string { return "/users/follows" }
 
 func (e Endpoint) GetRequiredScopes(method string) []string {
 	return scopesByMethod[method]
@@ -69,24 +69,27 @@ func getFollows(w http.ResponseWriter, r *http.Request) {
 	to := q["to_id"]
 	from := q["from_id"]
 	var f []database.Follow
-	var err error
 
-	log.Printf("%v\n%v", to, from)
-
-	if len(to) > 0 && len(from) > 0 {
-		f, err = db.GetFollowsByBroadcasterAndUser(to[0], from[0])
-	} else if len(to) > 0 {
-		f, err = db.GetFollowsByBroadcaster(to[0])
-	} else if len(from) > 0 {
-		f, err = db.GetFollowsByViewer(from[0])
-	} else {
+	if len(to) == 0 && len(from) == 0 {
 		w.WriteHeader(400)
+		return
 	}
+
+	// adds a blank string to the end of the array- so will always have at least a 0 index attribute
+	to = append(to, "")
+	from = append(from, "")
+
+	req := database.UserRequestParams{
+		UserID:        from[0],
+		BroadcasterID: to[0],
+	}
+
+	f, err := db.GetFollows(req)
 	log.Printf("%v", err)
+
 	if len(f) == 0 {
 		f = []database.Follow{}
 	}
-
 	body := models.APIResponse{
 		Data: f,
 	}
@@ -134,7 +137,7 @@ func postFollows(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.AddFollow(body.FromID, body.ToID)
+	err = db.AddFollow(database.UserRequestParams{UserID: body.FromID, BroadcasterID: body.ToID})
 	if err != nil {
 		if database.DatabaseErrorIs(err, sqlite3.ErrConstraintForeignKey) || database.DatabaseErrorIs(err, sqlite3.ErrConstraintUnique) || database.DatabaseErrorIs(err, sqlite3.ErrConstraintPrimaryKey) {
 			http.Error(w, err.Error(), http.StatusUnprocessableEntity)

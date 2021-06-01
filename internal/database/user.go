@@ -3,8 +3,7 @@
 package database
 
 import (
-	"database/sql"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/util"
@@ -32,93 +31,68 @@ type Follow struct {
 	FollowedAt       string `db:"created_at" json:"followed_at"`
 }
 
+type UserRequestParams struct {
+	BroadcasterID string `db:"broadcaster_id"`
+	UserID        string `db:"user_id"`
+	CreatedAt     string `db:"created_at"`
+}
+
 type Block struct {
 	UserID    string `db:"user_id" son:"user_id"`
 	UserLogin string `db:"user_login" json:"user_login"`
 	UserName  string `db:"user_name" json:"display_name"`
 }
 
-func (c CLIDatabase) GetUserByID(id string) (User, error) {
-	db := c.DB
+func (c CLIDatabase) GetUser(u User) (User, error) {
 	var r User
-
-	err := db.Get(&r, "select * from users where id = $1", id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return r, nil
-	} else if err != nil {
+	sql := generateSQL("select * from users", u, SEP_AND)
+	sql = fmt.Sprintf("%v LIMIT 1", sql)
+	rows, err := c.DB.NamedQuery(sql, u)
+	if err != nil {
 		return r, err
 	}
 
-	return r, err
-}
-
-func (c CLIDatabase) GetUserByLogin(login string) (User, error) {
-	db := c.DB
-	var r User
-
-	err := db.Get(&r, "select * from users where user_login = $1", login)
-	if errors.Is(err, sql.ErrNoRows) {
-		return r, nil
-	} else if err != nil {
-		return r, err
+	for rows.Next() {
+		err := rows.StructScan(&r)
+		if err != nil {
+			return r, err
+		}
 	}
 
 	return r, err
 }
 
 func (c CLIDatabase) InsertUser(u User, upsert bool) error {
-	db := c.DB
-
-	stmt := `insert into users values(:id, :user_login, :display_name, :email, :user_type, :broadcaster_type, :user_description, :created_at, :modified_at)`
-	if upsert == true {
-		stmt += ` on conflict(id) do update set user_login=:user_login, display_name=:display_name, email=:email, user_type=:user_type, broadcaster_type=:broadcaster_type, user_description=:user_description, modified_at=:modified_at`
-	}
-	_, err := db.NamedExec(stmt, u)
+	stmt := generateInsertSQL("users", "id", u, true)
+	_, err := c.DB.NamedExec(stmt, u)
 	return err
 }
 
-func (c CLIDatabase) AddFollow(from_user string, to_user string) error {
-	_, err := c.DB.Exec(`insert into follows values($1, $2, $3)`, to_user, from_user, util.GetTimestamp().UTC().Format(time.RFC3339))
+func (c CLIDatabase) AddFollow(p UserRequestParams) error {
+	stmt := generateInsertSQL("follows", "", p, false)
+	p.CreatedAt = util.GetTimestamp().UTC().Format(time.RFC3339)
+	_, err := c.DB.NamedExec(stmt, p)
 	return err
 }
 
-func (c CLIDatabase) GetFollowsByBroadcaster(id string) ([]Follow, error) {
+func (c CLIDatabase) GetFollows(p UserRequestParams) ([]Follow, error) {
 	db := c.DB
 	var r []Follow
+	var f Follow
+	sql := generateSQL("SELECT u1.id as to_id, u1.user_login as to_login, u1.display_name as to_name, u2.id as from_id, u2.user_login as from_login, u2.display_name as from_name, f.created_at as created_at FROM follows as f JOIN users u1 ON f.broadcaster_id = u1.id JOIN users u2 ON f.user_id = u2.id", p, SEP_AND)
+	sql = fmt.Sprintf("%v ORDER BY f.created_at DESC", sql)
 
-	err := db.Select(&r, "SELECT u1.id as to_id, u1.user_login as to_login, u1.display_name as to_name, u2.id as from_id, u2.user_login as from_login, u2.display_name as from_name, f.created_at as created_at FROM follows as f JOIN users u1 ON f.broadcaster_id = u1.id JOIN users u2 ON f.user_id = u2.id where broadcaster_id = $1 ORDER BY f.created_at DESC", id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return r, nil
-	} else if err != nil {
+	rows, err := db.NamedQuery(sql, p)
+	if err != nil {
 		return r, err
 	}
 
-	return r, err
-}
-
-func (c CLIDatabase) GetFollowsByViewer(id string) ([]Follow, error) {
-	db := c.DB
-	var r []Follow
-
-	err := db.Select(&r, "SELECT u1.id as to_id, u1.user_login as to_login, u1.display_name as to_name, u2.id as from_id, u2.user_login as from_login, u2.display_name as from_name, f.created_at as created_at FROM follows as f JOIN users u1 ON f.broadcaster_id = u1.id JOIN users u2 ON f.user_id = u2.id where user_id = $1 ORDER BY f.created_at DESC", id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return r, nil
-	} else if err != nil {
-		return r, err
-	}
-
-	return r, err
-}
-
-func (c CLIDatabase) GetFollowsByBroadcasterAndUser(b string, u string) ([]Follow, error) {
-	db := c.DB
-	var r []Follow
-
-	err := db.Select(&r, "SELECT u1.id as to_id, u1.user_login as to_login, u1.display_name as to_name, u2.id as from_id, u2.user_login as from_login, u2.display_name as from_name, f.created_at as created_at FROM follows as f JOIN users u1 ON f.broadcaster_id = u1.id JOIN users u2 ON f.user_id = u2.id where broadcaster_id = $1 and user_id = $2 ORDER BY f.created_at DESC", b, u)
-	if errors.Is(err, sql.ErrNoRows) {
-		return r, nil
-	} else if err != nil {
-		return r, err
+	for rows.Next() {
+		err := rows.StructScan(&f)
+		if err != nil {
+			return r, err
+		}
+		r = append(r, f)
 	}
 
 	return r, err
@@ -129,21 +103,31 @@ func (c CLIDatabase) DeleteFollow(from_user string, to_user string) error {
 	return err
 }
 
-func (c CLIDatabase) AddBlock(from_user string, to_user string) error {
-	_, err := c.DB.Exec(`insert into blocks values($1, $2, $3)`, to_user, from_user, util.GetTimestamp().UTC().Format(time.RFC3339))
+func (c CLIDatabase) AddBlock(p UserRequestParams) error {
+	stmt := generateInsertSQL("blocks", "id", p, false)
+	p.CreatedAt = util.GetTimestamp().UTC().Format(time.RFC3339)
+	_, err := c.DB.NamedExec(stmt, p)
 	return err
 }
 
-func (c CLIDatabase) GetBlocksByBroadcaster(id string) ([]Block, error) {
+func (c CLIDatabase) GetBlocks(p UserRequestParams) ([]Block, error) {
 	var r []Block
+	sql := generateSQL("SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name FROM blocks as b JOIN users u1 ON b.user_id = u1.id", p, SEP_AND)
+	sql = fmt.Sprintf("%v ORDER BY f.created_at DESC", sql)
 
-	err := c.DB.Select(&r, "SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name FROM blocks as b JOIN users u1 ON f.user_id = u1.id where broadcaster_id = $1 ORDER BY b.created_at DESC", id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return r, nil
-	} else if err != nil {
+	rows, err := c.DB.NamedQuery(sql, p)
+	if err != nil {
 		return r, err
 	}
 
+	for rows.Next() {
+		b := Block{}
+		err := rows.StructScan(&b)
+		if err != nil {
+			return r, err
+		}
+		r = append(r, b)
+	}
 	return r, err
 }
 

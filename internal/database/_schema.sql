@@ -35,6 +35,17 @@ create table bans (
   foreign key (broadcaster_id) references users(id), 
   foreign key (user_id) references users(id)
 );
+create table ban_events (
+    id text not null primary key, 
+    event_timestamp text not null,
+    event_type text not null, 
+    event_version text not null default '1.0',
+    broadcaster_id text not null, 
+    user_id text not null, 
+    expires_at text,
+    foreign key (broadcaster_id) references users(id), 
+    foreign key (user_id) references users(id)
+);
 create table moderators (
   broadcaster_id text not null, 
   user_id text not null, 
@@ -163,6 +174,7 @@ create table subscriptions (
   is_gift boolean not null default false, 
   gifter_id text, 
   tier text not null default '1000', 
+  created_at text not null,
   primary key (broadcaster_id, user_id), 
   foreign key (broadcaster_id) references users(id), 
   foreign key (user_id) references users(id), 

@@ -13,6 +13,8 @@ import (
 
 const MOD_ADD = "moderation.moderator.add"
 const MOD_REMOVE = "moderation.moderator.remove"
+const BAN_ADD = "moderation.user.ban"
+const BAN_REMOVE = "moderation.user.unban"
 
 type Moderator struct {
 	UserID    string `db:"user_id" json:"user_id"`
@@ -37,6 +39,11 @@ type ModeratorActionEvent struct {
 	UserName         string `db:"user_name" json:"user_name"`
 }
 
+type BanEvent struct {
+	ModeratorAction
+	ExpiresAt *sql.NullString `db:"expires_at" json:"expires_at"`
+}
+
 func (c CLIDatabase) GetModerationActionsByBroadcaster(broadcaster string) ([]ModeratorAction, error) {
 	var r []ModeratorAction
 
@@ -49,21 +56,23 @@ func (c CLIDatabase) GetModerationActionsByBroadcaster(broadcaster string) ([]Mo
 	return r, err
 }
 
-func (c CLIDatabase) AddModerator(broadcaster string, user string) error {
+func (c CLIDatabase) AddModerator(p UserRequestParams) error {
+	stmt := generateInsertSQL("moderators", "id", p, false)
+	p.CreatedAt = util.GetTimestamp().UTC().Format(time.RFC3339)
+
 	ma := ModeratorAction{
 		ID:             util.RandomGUID(),
 		EventType:      MOD_ADD,
 		EventVersion:   "1.0",
 		EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
 		ModeratorActionEvent: ModeratorActionEvent{
-			UserID:        user,
-			BroadcasterID: broadcaster,
+			UserID:        p.UserID,
+			BroadcasterID: p.BroadcasterID,
 		},
 	}
 
 	tx := c.DB.MustBegin()
-	tx.Exec(`insert into moderators values($1, $2, $3)`, broadcaster, user, util.GetTimestamp().UTC().Format(time.RFC3339))
-
+	tx.NamedExec(stmt, p)
 	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id)`, ma)
 	return tx.Commit()
 }
@@ -84,7 +93,7 @@ func (c CLIDatabase) GetModeratorsForBroadcaster(broadcasterID string, userID st
 func (c CLIDatabase) RemoveModerator(broadcaster string, user string) error {
 	ma := ModeratorAction{
 		ID:             util.RandomGUID(),
-		EventType:      MOD_REMOVE,
+		EventType:      BAN_ADD,
 		EventVersion:   "1.0",
 		EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
 		ModeratorActionEvent: ModeratorActionEvent{
@@ -96,5 +105,29 @@ func (c CLIDatabase) RemoveModerator(broadcaster string, user string) error {
 	tx := c.DB.MustBegin()
 	tx.Exec(`delete from moderators where broadcaster_id=$1 and user_id=$2`, broadcaster, user)
 	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id)`, ma)
+	return tx.Commit()
+}
+
+func (c CLIDatabase) InsertBan(p UserRequestParams) error {
+	stmt := generateInsertSQL("bans", "id", p, false)
+	p.CreatedAt = util.GetTimestamp().UTC().Format(time.RFC3339)
+
+	ma := BanEvent{
+		ModeratorAction: ModeratorAction{
+			ID:             util.RandomGUID(),
+			EventType:      BAN_ADD,
+			EventVersion:   "1.0",
+			EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
+			ModeratorActionEvent: ModeratorActionEvent{
+				UserID:        p.UserID,
+				BroadcasterID: p.BroadcasterID,
+			},
+		},
+		ExpiresAt: &sql.NullString{String: ""},
+	}
+
+	tx := c.DB.MustBegin()
+	tx.NamedExec(stmt, p)
+	tx.NamedExec(`INSERT INTO ban_events VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id, :expires_at)`, ma)
 	return tx.Commit()
 }
