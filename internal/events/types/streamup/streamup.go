@@ -33,8 +33,12 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var event []byte
 	var err error
 
-	if params.StreamTitle == "" {
-		params.StreamTitle = "Example title from the CLI!"
+	if params.Description == "" {
+		params.Description = "Example title from the CLI!"
+	}
+
+	if params.ItemID == "" {
+		params.ItemID = "509658"
 	}
 
 	switch params.Transport {
@@ -76,9 +80,9 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					UserID:       params.ToUserID,
 					UserLogin:    params.ToUserName,
 					UserName:     params.ToUserName,
-					GameID:       "509658",
+					GameID:       params.ItemID,
 					Type:         "live",
-					Title:        params.StreamTitle,
+					Title:        params.Description,
 					ViewerCount:  util.RandomViewerCount(),
 					StartedAt:    util.GetTimestamp().Format(time.RFC3339),
 					Language:     "en",
