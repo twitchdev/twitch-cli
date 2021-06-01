@@ -26,7 +26,8 @@ type TriggerParameters struct {
 	Secret         string
 	Verbose        bool
 	Count          int
-	StreamTitle    string
+	Description    string
+	ItemName       string
 }
 
 type TriggerResponse struct {
@@ -62,7 +63,8 @@ func Fire(p TriggerParameters) (string, error) {
 		Cost:         p.Cost,
 		Status:       p.Status,
 		ItemID:       p.ItemID,
-		StreamTitle:  p.StreamTitle,
+		Description:  p.Description,
+		ItemName:     p.ItemName,
 	}
 
 	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)

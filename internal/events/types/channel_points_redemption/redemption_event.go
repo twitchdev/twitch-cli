@@ -45,6 +45,10 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		params.Cost = 150
 	}
 
+	if params.ItemName == "" {
+		params.ItemName = "Test Reward from CLI"
+	}
+
 	switch params.Transport {
 	case models.TransportEventSub:
 		body := *&models.RedemptionEventSubResponse{
@@ -75,7 +79,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Status:               params.Status,
 				Reward: models.RedemptionReward{
 					ID:     params.ItemID,
-					Title:  "Test Reward from CLI",
+					Title:  params.ItemName,
 					Cost:   params.Cost,
 					Prompt: "Redeem Your Test Reward from CLI",
 				},

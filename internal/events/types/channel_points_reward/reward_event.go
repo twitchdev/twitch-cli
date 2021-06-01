@@ -38,6 +38,10 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		params.Cost = 150
 	}
 
+	if params.ItemName == "" {
+		params.ItemName = "Test Reward from CLI"
+	}
+
 	switch params.Transport {
 	case models.TransportEventSub:
 		body := models.EventsubResponse{
@@ -64,7 +68,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				IsEnabled:                         true,
 				IsPaused:                          false,
 				IsInStock:                         true,
-				Title:                             "Test Reward from CLI",
+				Title:                             params.ItemName,
 				Cost:                              params.Cost,
 				Prompt:                            "Redeem Your Test Reward from CLI",
 				IsUserInputRequired:               true,

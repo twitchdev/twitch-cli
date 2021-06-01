@@ -16,9 +16,10 @@ type MockEventParameters struct {
 	IsGift       bool
 	Status       string
 	ItemID       string
+	ItemName     string
 	Cost         int64
 	IsPermanent  bool
-	StreamTitle  string
+	Description  string
 }
 
 type MockEventResponse struct {
