@@ -3,10 +3,11 @@
 package models
 
 type APIPagination struct {
-	Cursor string `json:"cursor"`
+	Cursor *string `json:"cursor"`
 }
 
 type APIResponse struct {
+	Total      *int           `json:"total,omitempty"`
 	Data       interface{}    `json:"data"`
 	Pagination *APIPagination `json:"pagination,omitempty"`
 }

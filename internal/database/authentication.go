@@ -28,9 +28,9 @@ type Authorization struct {
 	Scopes    sql.NullString `db:"scopes"`
 }
 
-func (c CLIDatabase) GetAuthorizationByToken(token string) (Authorization, error) {
+func (q *Query) GetAuthorizationByToken(token string) (Authorization, error) {
 	var r Authorization
-	db := c.DB
+	db := q.DB
 
 	err := db.Get(&r, "select * from authorizations where token = $1", token)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -42,8 +42,8 @@ func (c CLIDatabase) GetAuthorizationByToken(token string) (Authorization, error
 	return r, err
 }
 
-func (c CLIDatabase) InsertOrUpdateAuthenticationClient(client AuthenticationClient, upsert bool) (AuthenticationClient, error) {
-	db := c.DB
+func (q *Query) InsertOrUpdateAuthenticationClient(client AuthenticationClient, upsert bool) (AuthenticationClient, error) {
+	db := q.DB
 
 	stmt := `insert into clients values(:id, :secret, :is_extension, :name)`
 	if upsert == true {
@@ -64,8 +64,8 @@ func (c CLIDatabase) InsertOrUpdateAuthenticationClient(client AuthenticationCli
 	}
 }
 
-func (c CLIDatabase) CreateAuthorization(a Authorization) (Authorization, error) {
-	db := c.DB
+func (q *Query) CreateAuthorization(a Authorization) (Authorization, error) {
+	db := q.DB
 
 	a.Token = generateString(15)
 	a.ExpiresAt = util.GetTimestamp().Add(24 * 30 * time.Hour).Format(time.RFC3339Nano)

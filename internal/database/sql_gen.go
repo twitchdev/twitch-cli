@@ -25,6 +25,7 @@ type InternalCursor struct {
 	Limit  int `json:"l"`
 }
 
+// generates SELECT SQL for use with querying on an interface for easier querying. Generates the WHERE clause using a provided interface
 func generateSQL(s string, i interface{}, seperator string) string {
 	if seperator == "" {
 		seperator = "and"
@@ -36,10 +37,17 @@ func generateSQL(s string, i interface{}, seperator string) string {
 	whereClause := []string{}
 	for index := 0; index < t.NumField(); index++ {
 		field := v.Field(index)
-
+		dbField := ""
 		db := t.Field(index).Tag.Get("db")
 		if db == "" {
 			continue
+		}
+		dbField = db
+
+		// dbs or DB Select is used to ovverride the tag used when complex joins are used; allows for easier generation of SQL
+		dbUpdate := t.Field(index).Tag.Get("dbs")
+		if dbUpdate != "" {
+			dbField = dbUpdate
 		}
 
 		switch field.Kind() {
@@ -58,17 +66,28 @@ func generateSQL(s string, i interface{}, seperator string) string {
 				continue
 			}
 			break
+		case reflect.Int:
+			if field.Interface().(int) == 0 {
+				continue
+			}
+			break
 		default:
-			println(v.Field(index).Kind())
+			break
 		}
 
-		whereClause = append(whereClause, fmt.Sprintf("%v = :%v", db, db))
+		whereClause = append(whereClause, fmt.Sprintf("%v = :%v", dbField, db))
 	}
+
+	if len(whereClause) == 0 {
+		return s
+	}
+
 	w := strings.Join(whereClause, fmt.Sprintf(" %v ", seperator))
 	s = fmt.Sprintf("%v where %v", s, w)
 	return s
 }
 
+// Generates an Insert statement using a provided interface and optional upsert functionality
 func generateInsertSQL(table string, pk string, i interface{}, upsert bool) string {
 	t := reflect.TypeOf(i)
 
@@ -82,6 +101,13 @@ func generateInsertSQL(table string, pk string, i interface{}, upsert bool) stri
 		if db == "" {
 			continue
 		}
+
+		// dbi or Database Insert is used to omit specific fields from being inserted, such as during joins where certain fields come from other tables
+		dbi := field.Tag.Get("dbi")
+		if dbi == "false" {
+			continue
+		}
+
 		insertClause = append(insertClause, fmt.Sprintf("%v", db))
 		valuesClause = append(valuesClause, fmt.Sprintf(":%v", db))
 		if upsert {
@@ -96,6 +122,7 @@ func generateInsertSQL(table string, pk string, i interface{}, upsert bool) stri
 	return s
 }
 
+// Generates the respective pagination token
 func generatePaginationSQLAndResponse(limit int, prev_cursor string, is_before bool) InternalPagination {
 	ic := InternalCursor{}
 	if limit == 0 {

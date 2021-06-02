@@ -7,20 +7,32 @@ import "log"
 type Extension struct {
 }
 
-func (c CLIDatabase) GetExtensionById(id string) (Extension, error) {
-	var r Extension
+func (q *Query) GetExtensionById(id string) (*DBResposne, error) {
+	var r []Extension
 
-	err := c.DB.Get(&r, "select * from principle where id = $1", id)
+	err := q.DB.Get(&r, "select * from principle where id = $1", id)
 	if err != nil {
-		return r, err
+		return nil, err
 	}
 	log.Printf("%#v", r)
 
-	return r, err
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }
 
-func (c CLIDatabase) InsertExtension(p Extension, upsert bool) error {
-	tx := c.DB.MustBegin()
+func (q *Query) InsertExtension(p Extension, upsert bool) error {
+	tx := q.DB.MustBegin()
 	tx.NamedExec(`insert into principle values(:id, :values...)`, p)
 	return tx.Commit()
 }

@@ -81,7 +81,7 @@ func Fire(p TriggerParameters) (string, error) {
 		return "", err
 	}
 
-	err = db.InsertIntoDB(database.EventCacheParameters{
+	err = db.NewQuery(nil, 100).InsertIntoDB(database.EventCacheParameters{
 		ID:        resp.ID,
 		Event:     p.Event,
 		JSON:      string(resp.JSON),

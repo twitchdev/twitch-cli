@@ -23,8 +23,8 @@ type EventCacheResponse struct {
 }
 
 // InsertIntoDB inserts an event into the database for replay functions later.
-func (c CLIDatabase) InsertIntoDB(p EventCacheParameters) error {
-	db := c.DB
+func (q *Query) InsertIntoDB(p EventCacheParameters) error {
+	db := q.DB
 
 	tx := db.MustBegin()
 	tx.NamedExec(`insert into events(id, event, json, from_user, to_user, transport, timestamp) values(:id, :event, :json, :from_user, :to_user, :transport, :timestamp)`, p)
@@ -37,8 +37,8 @@ func (c CLIDatabase) InsertIntoDB(p EventCacheParameters) error {
 }
 
 // GetEventByID returns an event based on an ID provided for replay.
-func (c CLIDatabase) GetEventByID(id string) (EventCacheResponse, error) {
-	db := c.DB
+func (q *Query) GetEventByID(id string) (EventCacheResponse, error) {
+	db := q.DB
 	var r EventCacheResponse
 
 	err := db.Get(&r, "select id, json, transport, event from events where id = $1", id)

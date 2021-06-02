@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/models"
@@ -56,9 +55,7 @@ func (e Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func getSubscriptions(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	bid := q["broadcaster_id"]
-	a := q["after"]
-	f := q["first"]
+	bid := q.Get("broadcaster_id")
 
 	if len(bid) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -66,29 +63,10 @@ func getSubscriptions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s := database.Subscription{
-		BroadcasterID: bid[0],
+		BroadcasterID: bid,
 	}
 
-	p := database.DBPagination{}
-	if len(a) > 0 {
-		p.Cursor = a[0]
-	}
-	if len(f) > 0 {
-		f, e := strconv.Atoi(f[0])
-		if e != nil {
-			log.Print(e)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		if f > 100 || f <= 0 {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		p.Limit = int(f)
-	}
-
-	res, err := db.GetSubscriptions(s, p)
+	res, err := db.NewQuery(r, 100).GetSubscriptions(s)
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -104,7 +82,7 @@ func getSubscriptions(w http.ResponseWriter, r *http.Request) {
 
 	if res.Cursor != "" {
 		pag := &models.APIPagination{
-			Cursor: res.Cursor,
+			Cursor: &res.Cursor,
 		}
 		body.Pagination = pag
 	}

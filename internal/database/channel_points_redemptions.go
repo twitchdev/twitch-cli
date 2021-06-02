@@ -7,8 +7,8 @@ import "log"
 type ChannelPointsRedemption struct {
 }
 
-func (c CLIDatabase) GetChannelPointsRedemptionById(id string) (ChannelPointsRedemption, error) {
-	db := c.DB
+func (q *Query) GetChannelPointsRedemptionById(id string) (ChannelPointsRedemption, error) {
+	db := q.DB
 	var r ChannelPointsRedemption
 
 	err := db.Get(&r, "select * from channel_points_redemptions where id = $1", id)
@@ -20,8 +20,8 @@ func (c CLIDatabase) GetChannelPointsRedemptionById(id string) (ChannelPointsRed
 	return r, err
 }
 
-func (c CLIDatabase) InsertChannelPointsRedemption(r ChannelPointsRedemption, upsert bool) error {
-	db := c.DB
+func (q *Query) InsertChannelPointsRedemption(r ChannelPointsRedemption, upsert bool) error {
+	db := q.DB
 
 	tx := db.MustBegin()
 	tx.NamedExec(`insert into channel_points_redemptions values(:id, :values...)`, r)

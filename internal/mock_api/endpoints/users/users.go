@@ -105,7 +105,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 			ID: i,
 		}
 		println(i)
-		u, err := db.GetUser(user)
+		u, err := db.NewQuery(r, 100).GetUser(user)
 		log.Printf("%#v", u)
 		if err != nil {
 			log.Print(err.Error())
@@ -119,7 +119,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		user := database.User{
 			UserLogin: l,
 		}
-		u, err := db.GetUser(user)
+		u, err := db.NewQuery(r, 100).GetUser(user)
 		if err != nil {
 			w.WriteHeader(500)
 			return
@@ -151,7 +151,7 @@ func putUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := db.GetUser(database.User{ID: userCtx.UserID})
+	u, err := db.NewQuery(r, 100).GetUser(database.User{ID: userCtx.UserID})
 	if err != nil {
 		log.Printf(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -160,7 +160,7 @@ func putUsers(w http.ResponseWriter, r *http.Request) {
 
 	u.UserDescription = description[len(description)-1]
 
-	err = db.InsertUser(u, true)
+	err = db.NewQuery(r, 100).InsertUser(u, true)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

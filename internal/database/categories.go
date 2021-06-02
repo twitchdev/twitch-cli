@@ -7,31 +7,45 @@ type Category struct {
 	Name string `db:"category_name" json:"name"`
 }
 
-func (c CLIDatabase) GetCategory(cat Category) (Category, error) {
-	var r Category
-	rows, err := c.DB.NamedQuery(generateSQL("select * from categories", cat, SEP_AND), cat)
+func (q *Query) GetCategories(cat Category) (*DBResposne, error) {
+	var r []Category
+	rows, err := q.DB.NamedQuery(generateSQL("select * from categories", cat, SEP_AND)+q.SQL, cat)
 	if err != nil {
-		return r, err
+		return nil, err
 	}
 
 	for rows.Next() {
-		err := rows.StructScan(&r)
+		var cat Category
+		err := rows.StructScan(&cat)
 		if err != nil {
-			return r, err
+			return nil, err
 		}
+		r = append(r, cat)
 	}
 
-	return r, err
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }
 
-func (c CLIDatabase) InsertCategory(category Category, upsert bool) error {
-	_, err := c.DB.NamedExec(`insert into categories values(:id, :category_name)`, category)
+func (q *Query) InsertCategory(category Category, upsert bool) error {
+	_, err := q.DB.NamedExec(`insert into categories values(:id, :category_name)`, category)
 	return err
 }
 
-func (c CLIDatabase) SearchCategories(query string) ([]Category, error) {
+func (q *Query) SearchCategories(query string) ([]Category, error) {
 	categories := []Category{}
-	err := c.DB.Select(&categories, `select * from categories where category_name like '%$1%'`, query)
+	err := q.DB.Select(&categories, `select * from categories where category_name like '%$1%'`, query)
 	if err != nil {
 		return categories, err
 	}

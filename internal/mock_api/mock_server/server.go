@@ -12,6 +12,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/authentication"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints"
+	"github.com/twitchdev/twitch-cli/internal/mock_units"
 )
 
 const MOCK_NAMESPACE = "/mock"
@@ -48,6 +49,17 @@ func StartServer(port int) {
 func RegisterHandlers(m *http.ServeMux) {
 	// all mock endpoints live in the /mock/ namespace
 	for _, e := range endpoints.All() {
-		m.Handle(MOCK_NAMESPACE+e.Path(), authentication.AuthenticationMiddleware(e))
+		m.Handle(MOCK_NAMESPACE+e.Path(), loggerMiddleware(authentication.AuthenticationMiddleware(e)))
 	}
+	for _, e := range mock_units.All() {
+		m.Handle(UNITS_NAMESPACE+e.Path(), loggerMiddleware(e))
+	}
+}
+
+func loggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%v %v", r.Method, r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
+	})
 }

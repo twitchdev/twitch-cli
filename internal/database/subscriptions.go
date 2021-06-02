@@ -31,17 +31,16 @@ type SubscriptionInsert struct {
 	CreatedAt     string          `db:"created_at" json:"-"`
 }
 
-func (c CLIDatabase) GetSubscriptions(s Subscription, p DBPagination) (DBResposne, error) {
-	var r []Subscription
+func (q *Query) GetSubscriptions(s Subscription) (*DBResposne, error) {
+	r := []Subscription{}
 	sql := generateSQL("SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name, u2.id as broadcaster_id, u2.user_login as broadcaster_login, u2.display_name as broadcaster_name, u3.id as gifter_id, u3.user_login as gifter_login, u3.display_name as gifter_name, s.tier as tier, s.is_gift as is_gift FROM subscriptions as s JOIN users u1 ON s.user_id = u1.id JOIN users u2 ON s.broadcaster_id = u2.id LEFT JOIN users u3 ON s.gifter_id = u3.id", s, SEP_AND)
 	sql += " order by s.created_at desc"
-	pagination := generatePaginationSQLAndResponse(p.Limit, p.Cursor, false)
-	sql += pagination.SQL
+	sql += q.SQL
 
-	rows, err := c.DB.NamedQuery(sql, s)
+	rows, err := q.DB.NamedQuery(sql, s)
 	if err != nil {
 		log.Print(err)
-		return DBResposne{}, err
+		return nil, err
 	}
 
 	for rows.Next() {
@@ -49,23 +48,38 @@ func (c CLIDatabase) GetSubscriptions(s Subscription, p DBPagination) (DBResposn
 		err := rows.StructScan(&s)
 		if err != nil {
 			log.Print(err)
-			return DBResposne{}, err
+			return nil, err
 		}
 		r = append(r, s)
 	}
 
-	if len(r) != p.Limit {
-		pagination.PaginationCursor = ""
+	var total int
+	rows, err = q.DB.NamedQuery(generateSQL("select count(*) from subscriptions", s, SEP_AND), s)
+	for rows.Next() {
+		err := rows.Scan(&total)
+		if err != nil {
+			log.Print(err)
+			return nil, err
+		}
 	}
 
-	return DBResposne{
-		Data:   r,
-		Cursor: pagination.PaginationCursor,
-	}, err
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: total,
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }
 
-func (c CLIDatabase) InsertSubscription(s SubscriptionInsert) error {
+func (q *Query) InsertSubscription(s SubscriptionInsert) error {
 	stmt := generateInsertSQL("subscriptions", "", s, false)
-	_, err := c.DB.NamedExec(stmt, s)
+	_, err := q.DB.NamedExec(stmt, s)
 	return err
 }

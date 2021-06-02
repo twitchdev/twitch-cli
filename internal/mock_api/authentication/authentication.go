@@ -22,9 +22,7 @@ type UserAuthentication struct {
 func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		db := r.Context().Value("db").(database.CLIDatabase)
-		w.Header().Add("Content-Type", "application/json")
 
-		log.Printf("%v %v", r.Method, r.URL.Path)
 		// skip auth check for unsupported methods
 		if next.ValidMethod(r.Method) == false {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -40,6 +38,10 @@ func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 
 		clientID := r.Header.Get("Client-ID")
 		bearerToken := r.Header.Get("Authorization")
+		if clientID == "" || bearerToken == "" || len(bearerToken) < 7 {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
 
 		prefix := strings.ToLower(bearerToken[:6])
 		token := bearerToken[7:]
@@ -51,7 +53,7 @@ func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 		}
 
 		// get the authorization from the db
-		auth, err := db.GetAuthorizationByToken(token)
+		auth, err := db.NewQuery(r, 100).GetAuthorizationByToken(token)
 		if err != nil {
 			log.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)

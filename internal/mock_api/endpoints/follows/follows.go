@@ -68,7 +68,6 @@ func getFollows(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	to := q["to_id"]
 	from := q["from_id"]
-	var f []database.Follow
 
 	if len(to) == 0 && len(from) == 0 {
 		w.WriteHeader(400)
@@ -84,14 +83,30 @@ func getFollows(w http.ResponseWriter, r *http.Request) {
 		BroadcasterID: to[0],
 	}
 
-	f, err := db.GetFollows(req)
+	dbr, err := db.NewQuery(r, 100).GetFollows(req)
+	if dbr == nil {
+		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	f := dbr.Data.([]database.Follow)
+
 	log.Printf("%v", err)
 
 	if len(f) == 0 {
 		f = []database.Follow{}
 	}
+
 	body := models.APIResponse{
-		Data: f,
+		Data:  f,
+		Total: &dbr.Total,
+	}
+	if dbr.Cursor != "" {
+		log.Printf("%#v", &dbr)
+		body.Pagination = &models.APIPagination{
+			Cursor: &dbr.Cursor,
+		}
 	}
 
 	json, _ := json.Marshal(body)
@@ -108,7 +123,7 @@ func deleteFollows(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := db.DeleteFollow(from[0], to[0])
+	err := db.NewQuery(r, 100).DeleteFollow(from[0], to[0])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -137,7 +152,7 @@ func postFollows(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.AddFollow(database.UserRequestParams{UserID: body.FromID, BroadcasterID: body.ToID})
+	err = db.NewQuery(r, 100).AddFollow(database.UserRequestParams{UserID: body.FromID, BroadcasterID: body.ToID})
 	if err != nil {
 		if database.DatabaseErrorIs(err, sqlite3.ErrConstraintForeignKey) || database.DatabaseErrorIs(err, sqlite3.ErrConstraintUnique) || database.DatabaseErrorIs(err, sqlite3.ErrConstraintPrimaryKey) {
 			http.Error(w, err.Error(), http.StatusUnprocessableEntity)

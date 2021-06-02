@@ -13,8 +13,7 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	res, err := db.GetEventByID(id)
+	res, err := db.NewQuery(nil, 100).GetEventByID(id)
 	if err != nil {
 		return "", err
 	}

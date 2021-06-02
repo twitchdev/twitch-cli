@@ -54,10 +54,12 @@ func TestRetriveFromDB(t *testing.T) {
 		Timestamp: util.GetTimestamp().Format(time.RFC3339Nano),
 	}
 
-	err = db.InsertIntoDB(ecParams)
+	q := Query{DB: db.DB}
+
+	err = q.InsertIntoDB(ecParams)
 	a.Nil(err)
 
-	dbResponse, err := db.GetEventByID(ecParams.ID)
+	dbResponse, err := q.GetEventByID(ecParams.ID)
 	a.Nil(err)
 
 	println(dbResponse.ID)

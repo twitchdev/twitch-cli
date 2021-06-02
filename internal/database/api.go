@@ -3,13 +3,8 @@
 package database
 
 type DBResposne struct {
-	Cursor string
-	Total  string
-	Limit  int
-	Data   interface{}
-}
-
-type DBPagination struct {
-	Limit  int
-	Cursor string
+	Cursor string      `json:"cursor"`
+	Total  int         `json:"total"`
+	Limit  int         `json:"-"`
+	Data   interface{} `json:"data"`
 }

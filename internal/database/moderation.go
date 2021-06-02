@@ -44,19 +44,31 @@ type BanEvent struct {
 	ExpiresAt *sql.NullString `db:"expires_at" json:"expires_at"`
 }
 
-func (c CLIDatabase) GetModerationActionsByBroadcaster(broadcaster string) ([]ModeratorAction, error) {
+func (q *Query) GetModerationActionsByBroadcaster(broadcaster string) (*DBResposne, error) {
 	var r []ModeratorAction
 
-	err := c.DB.Select(&r, "SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name, u2.id as broadcaster_id, u2.user_login as broadcaster_login, u2.display_name as broadcaster_name, ma.event_type, ma.event_version, ma.event_timestamp, ma.id FROM moderator_actions as ma JOIN users u1 ON ma.user_id = u1.id JOIN users u2 ON ma.broadcaster_id = u2.id where broadcaster_id = $1 ORDER BY ma.event_timestamp DESC", broadcaster)
+	err := q.DB.Select(&r, "SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name, u2.id as broadcaster_id, u2.user_login as broadcaster_login, u2.display_name as broadcaster_name, ma.event_type, ma.event_version, ma.event_timestamp, ma.id FROM moderator_actions as ma JOIN users u1 ON ma.user_id = u1.id JOIN users u2 ON ma.broadcaster_id = u2.id where broadcaster_id = $1 ORDER BY ma.event_timestamp DESC", broadcaster)
 	if err != nil {
-		return r, err
+		return nil, err
 	}
 	log.Printf("%#v", r)
 
-	return r, err
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }
 
-func (c CLIDatabase) AddModerator(p UserRequestParams) error {
+func (q *Query) AddModerator(p UserRequestParams) error {
 	stmt := generateInsertSQL("moderators", "id", p, false)
 	p.CreatedAt = util.GetTimestamp().UTC().Format(time.RFC3339)
 
@@ -71,26 +83,38 @@ func (c CLIDatabase) AddModerator(p UserRequestParams) error {
 		},
 	}
 
-	tx := c.DB.MustBegin()
+	tx := q.DB.MustBegin()
 	tx.NamedExec(stmt, p)
 	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id)`, ma)
 	return tx.Commit()
 }
 
-func (c CLIDatabase) GetModeratorsForBroadcaster(broadcasterID string, userID string) ([]Moderator, error) {
+func (q *Query) GetModeratorsForBroadcaster(broadcasterID string, userID string) (*DBResposne, error) {
 	var r []Moderator
 
-	err := c.DB.Select(&r, "SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name FROM moderators as m JOIN users u1 ON m.user_id = u1.id where broadcaster_id = $1 ORDER BY m.created_at DESC", broadcasterID)
+	err := q.DB.Select(&r, "SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name FROM moderators as m JOIN users u1 ON m.user_id = u1.id where broadcaster_id = $1 ORDER BY m.created_at DESC", broadcasterID)
 	if errors.Is(err, sql.ErrNoRows) {
-		return r, nil
+		return nil, nil
 	} else if err != nil {
-		return r, err
+		return nil, err
 	}
 
-	return r, err
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }
 
-func (c CLIDatabase) RemoveModerator(broadcaster string, user string) error {
+func (q *Query) RemoveModerator(broadcaster string, user string) error {
 	ma := ModeratorAction{
 		ID:             util.RandomGUID(),
 		EventType:      BAN_ADD,
@@ -102,13 +126,13 @@ func (c CLIDatabase) RemoveModerator(broadcaster string, user string) error {
 		},
 	}
 
-	tx := c.DB.MustBegin()
+	tx := q.DB.MustBegin()
 	tx.Exec(`delete from moderators where broadcaster_id=$1 and user_id=$2`, broadcaster, user)
 	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id)`, ma)
 	return tx.Commit()
 }
 
-func (c CLIDatabase) InsertBan(p UserRequestParams) error {
+func (q *Query) InsertBan(p UserRequestParams) error {
 	stmt := generateInsertSQL("bans", "id", p, false)
 	p.CreatedAt = util.GetTimestamp().UTC().Format(time.RFC3339)
 
@@ -126,7 +150,7 @@ func (c CLIDatabase) InsertBan(p UserRequestParams) error {
 		ExpiresAt: &sql.NullString{String: ""},
 	}
 
-	tx := c.DB.MustBegin()
+	tx := q.DB.MustBegin()
 	tx.NamedExec(stmt, p)
 	tx.NamedExec(`INSERT INTO ban_events VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id, :expires_at)`, ma)
 	return tx.Commit()
