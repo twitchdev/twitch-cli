@@ -34,7 +34,7 @@ var triggerMapping = map[string]map[string]string{
 type Event struct{}
 
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
-	var (
+    var (
         event        []byte
         err          error
         giftUserID   string
