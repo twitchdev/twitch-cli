@@ -17,7 +17,7 @@ test-release:
 		twitch-cli:latest --rm-dist --skip-publish --snapshot
 	
 build:
-	go build --ldflags "-X main.buildVersion=source"
+	CGO_ENABLED=0 go build --ldflags "-X main.buildVersion=source"
 
 build_all:
-	xgo -out build/twitch --targets "darwin/amd64,windows/amd64,linux/amd64" --ldflags "-X main.buildVersion=source" ./
+	CGO_ENABLED=0 xgo -out build/twitch --targets "darwin/amd64,windows/amd64,linux/amd64" --ldflags "-X main.buildVersion=source" ./

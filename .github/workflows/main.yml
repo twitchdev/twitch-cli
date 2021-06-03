@@ -16,6 +16,8 @@ jobs:
       -
         name: Build with xgo
         uses: crazy-max/ghaction-xgo@v1
+        env:
+          CGO_ENABLED: "0"
         with:
           dest: build
           targets: windows/amd64,linux/amd64,darwin/amd64
