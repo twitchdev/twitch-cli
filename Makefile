@@ -17,10 +17,10 @@ test-release:
 		twitch-cli:latest --rm-dist --skip-publish --snapshot
 	
 build:
-	go build --ldflags "-X main.buildVersion=source"
+	go build --ldflags "-s -w -X main.buildVersion=source"
 
 build_all:
-	xgo -out build/twitch --targets "darwin/amd64,windows/amd64,linux/amd64" --ldflags "-X main.buildVersion=source" ./
+	xgo -out build/twitch --targets "darwin/amd64,windows/amd64,linux/amd64" --ldflags "-s -w -X main.buildVersion=source" ./
 
 clean: 
 	rm -rf ~/.twitch-cli/eventCache.db

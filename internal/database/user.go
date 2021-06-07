@@ -3,6 +3,8 @@
 package database
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -11,15 +13,23 @@ import (
 )
 
 type User struct {
-	ID              string `db:"id"`
-	UserLogin       string `db:"user_login"`
-	DisplayName     string `db:"display_name"`
-	Email           string `db:"email"`
-	UserType        string `db:"user_type"`
-	BroadcasterType string `db:"broadcaster_type"`
-	UserDescription string `db:"user_description"`
-	CreatedAt       string `db:"created_at"`
-	ModifiedAt      string `db:"modified_at"`
+	ID              string         `db:"id" json:"id" dbs:"u1.id"`
+	UserLogin       string         `db:"user_login" json:"login"`
+	DisplayName     string         `db:"display_name" json:"display_name"`
+	Email           string         `db:"email" json:"email,omitempty"`
+	UserType        string         `db:"user_type" json:"type"`
+	BroadcasterType string         `db:"broadcaster_type" json:"broadcaster_type"`
+	UserDescription string         `db:"user_description" json:"description"`
+	CreatedAt       string         `db:"created_at" json:"created_at"`
+	ModifiedAt      string         `db:"modified_at" json:"-"`
+	ProfileImageURL string         `dbi:"false" json:"profile_image_url" `
+	OfflineImageURL string         `dbi:"false" json:"offline_image_url" `
+	ViewCount       int            `dbi:"false" json:"view_count"`
+	CategoryID      sql.NullString `db:"category_id" json:"game_id" dbi:"force"`
+	CategoryName    sql.NullString `db:"category_name" json:"game_name" dbi:"false"`
+	Title           string         `db:"title" json:"title"`
+	Language        string         `db:"stream_language" json:"stream_language"`
+	Delay           int            `db:"delay" json:"delay" dbi:"force"`
 }
 
 type Follow struct {
@@ -44,9 +54,16 @@ type Block struct {
 	UserName  string `db:"user_name" json:"display_name"`
 }
 
+type Editor struct {
+	UserID    string `db:"user_id" json:"user_id"`
+	UserLogin string `db:"user_login" json:"-"`
+	UserName  string `db:"user_name" json:"user_name"`
+	CreatedAt string `db:"created_at" json:"created_at"`
+}
+
 func (q *Query) GetUser(u User) (User, error) {
 	var r User
-	sql := generateSQL("select * from users", u, SEP_AND)
+	sql := generateSQL("select * from users u1", u, SEP_AND)
 	sql = fmt.Sprintf("%v LIMIT 1", sql)
 	rows, err := q.DB.NamedQuery(sql, u)
 	if err != nil {
@@ -58,31 +75,75 @@ func (q *Query) GetUser(u User) (User, error) {
 		if err != nil {
 			return r, err
 		}
+		r.OfflineImageURL = "https://static-cdn.jtvnw.net/jtv_user_pictures/3f13ab61-ec78-4fe6-8481-8682cb3b0ac2-channel_offline_image-1920x1080.png"
+		r.ProfileImageURL = "https://static-cdn.jtvnw.net/jtv_user_pictures/8a6381c7-d0c0-4576-b179-38bd5ce1d6af-profile_image-300x300.png"
 	}
 
 	return r, err
 }
 
-func (q *Query) GetUsers(u User) ([]User, error) {
+func (q *Query) GetUsers(u User) (*DBResposne, error) {
 	var r []User
-	sql := generateSQL("select * from users", u, SEP_AND)
-	rows, err := q.DB.NamedQuery(sql, u)
+	sql := generateSQL("select * from users u1", u, SEP_AND)
+	rows, err := q.DB.NamedQuery(sql+q.SQL, u)
 	if err != nil {
-		return r, err
+		return nil, err
 	}
 
 	for rows.Next() {
 		var u User
 		err := rows.StructScan(&u)
 		if err != nil {
-			return r, err
+			return nil, err
 		}
 		r = append(r, u)
 	}
 
-	return r, err
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }
 
+func (q *Query) GetChannels(u User) (*DBResposne, error) {
+	var r []User
+	sql := generateSQL("select u1.*, c.category_name from users u1 left join categories c on u1.category_id = c.id", u, SEP_AND)
+	rows, err := q.DB.NamedQuery(sql+q.SQL, u)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var u User
+		err := rows.StructScan(&u)
+		if err != nil {
+			return nil, err
+		}
+		r = append(r, u)
+	}
+
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
+}
 func (q *Query) InsertUser(u User, upsert bool) error {
 	stmt := generateInsertSQL("users", "id", u, true)
 	_, err := q.DB.NamedExec(stmt, u)
@@ -187,4 +248,42 @@ func (q *Query) GetBlocks(p UserRequestParams) (*DBResposne, error) {
 func (q *Query) DeleteBlock(from_user string, to_user string) error {
 	_, err := q.DB.Exec(`delete from blocks where broadcaster_id=$1 and user_id=$2`, to_user, from_user)
 	return err
+}
+
+func (q *Query) UpdateChannel(id string, u User) error {
+	sql := generateUpdateSQL("users", []string{"id"}, u)
+	_, err := q.DB.NamedExec(sql, u)
+	return err
+}
+
+func (q *Query) AddEditor(p UserRequestParams) error {
+	stmt := generateInsertSQL("editors", "id", p, false)
+	p.CreatedAt = util.GetTimestamp().UTC().Format(time.RFC3339)
+	_, err := q.DB.NamedExec(stmt, p)
+	return err
+}
+
+func (q *Query) GetEditors(u User) (*DBResposne, error) {
+	var r []Editor
+
+	err := q.DB.Select(&r, "SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name, e.created_at FROM editors as e JOIN users u1 ON e.user_id = u1.id where broadcaster_id = $1 ORDER BY e.created_at DESC", u.ID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }

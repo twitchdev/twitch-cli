@@ -1,8 +1,9 @@
-// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reseved.
 // SPDX-License-Identifier: Apache-2.0
 package database
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -50,31 +51,40 @@ func generateSQL(s string, i interface{}, seperator string) string {
 			dbField = dbUpdate
 		}
 
-		switch field.Kind() {
-		case reflect.String:
+		switch f := field.Interface().(type) {
+		case sql.NullString:
+			if f.Valid == false {
+				continue
+			}
+			break
+		case string:
 			if field.Interface().(string) == "" {
 				continue
 			}
 			break
-		case reflect.Ptr:
-			if !field.Elem().IsValid() {
+		case bool:
+			if f == false {
 				continue
 			}
 			break
-		case reflect.Bool:
-			if field.Interface() == false {
+		case int:
+			if f == 0 {
 				continue
 			}
 			break
-		case reflect.Int:
-			if field.Interface().(int) == 0 {
+		case float64:
+			if f == 0.0 {
 				continue
 			}
-			break
 		default:
 			break
 		}
 
+		if v.Field(index).Kind() == reflect.Ptr {
+			if v.Field(index).IsNil() {
+				continue
+			}
+		}
 		whereClause = append(whereClause, fmt.Sprintf("%v = :%v", dbField, db))
 	}
 
@@ -94,6 +104,7 @@ func generateInsertSQL(table string, pk string, i interface{}, upsert bool) stri
 	insertClause := []string{}
 	valuesClause := []string{}
 	upsertClause := []string{}
+
 	for index := 0; index < t.NumField(); index++ {
 		field := t.Field(index)
 
@@ -120,6 +131,74 @@ func generateInsertSQL(table string, pk string, i interface{}, upsert bool) stri
 	}
 
 	return s
+}
+
+func generateUpdateSQL(table string, pk []string, i interface{}) string {
+	t := reflect.TypeOf(i)
+	v := reflect.ValueOf(i)
+
+	updateClause := []string{}
+	for index := 0; index < t.NumField(); index++ {
+		field := v.Field(index)
+
+		db := t.Field(index).Tag.Get("db")
+		if db == "" {
+			continue
+		}
+
+		// dbi or Database Insert is used to omit specific fields from being inserted, such as during joins where certain fields come from other tables
+		dbi := t.Field(index).Tag.Get("dbi")
+		if dbi == "false" {
+			continue
+		}
+
+		// if you need to force an update to a null value, force will do so
+		if dbi == "force" {
+			updateClause = append(updateClause, fmt.Sprintf("%v=:%v", db, db))
+			continue
+		}
+
+		switch f := field.Interface().(type) {
+		case sql.NullString:
+			if f.Valid == false {
+				continue
+			}
+			break
+		case string:
+			if field.Interface().(string) == "" {
+				continue
+			}
+			break
+		case bool:
+			if f == false {
+				continue
+			}
+			break
+		case int:
+			if f == 0 {
+				continue
+			}
+			break
+		default:
+			break
+		}
+		if v.Field(index).Kind() == reflect.Ptr {
+			if v.Field(index).IsNil() {
+				continue
+			}
+		}
+		updateClause = append(updateClause, fmt.Sprintf("%v=:%v", db, db))
+	}
+	s := fmt.Sprintf("update %v set %v", table, strings.Join(updateClause, ", "))
+	if len(pk) == 0 {
+		return s
+	}
+
+	whereClause := []string{}
+	for _, key := range pk {
+		whereClause = append(whereClause, fmt.Sprintf("%v=:%v", key, key))
+	}
+	return fmt.Sprintf("%v where %v", s, strings.Join(whereClause, " AND "))
 }
 
 // Generates the respective pagination token

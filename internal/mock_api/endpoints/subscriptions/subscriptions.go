@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
-	"github.com/twitchdev/twitch-cli/internal/mock_api/models"
+	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
 var methodsSupported = map[string]bool{
@@ -77,12 +77,13 @@ func getSubscriptions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body := models.APIResponse{
-		Data: res.Data,
+		Data:  res.Data,
+		Total: &res.Total,
 	}
 
 	if res.Cursor != "" {
 		pag := &models.APIPagination{
-			Cursor: &res.Cursor,
+			Cursor: res.Cursor,
 		}
 		body.Pagination = pag
 	}

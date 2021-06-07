@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package follows
+package users
 
 import (
 	"encoding/json"
@@ -10,10 +10,10 @@ import (
 
 	"github.com/mattn/go-sqlite3"
 	"github.com/twitchdev/twitch-cli/internal/database"
-	"github.com/twitchdev/twitch-cli/internal/mock_api/models"
+	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
-var methodsSupported = map[string]bool{
+var followMethodsSupported = map[string]bool{
 	http.MethodGet:    true,
 	http.MethodPost:   true,
 	http.MethodDelete: true,
@@ -21,7 +21,7 @@ var methodsSupported = map[string]bool{
 	http.MethodPut:    false,
 }
 
-var scopesByMethod = map[string][]string{
+var followScopesByMethod = map[string][]string{
 	http.MethodGet:    {},
 	http.MethodPost:   {"user:edit:follows"},
 	http.MethodDelete: {"user:edit:follows"},
@@ -34,21 +34,19 @@ type PostFollowBody struct {
 	FromID string `json:"from_id"`
 }
 
-var db database.CLIDatabase
+type FollowsEndpoint struct{}
 
-type Endpoint struct{}
+func (e FollowsEndpoint) Path() string { return "/users/follows" }
 
-func (e Endpoint) Path() string { return "/users/follows" }
-
-func (e Endpoint) GetRequiredScopes(method string) []string {
-	return scopesByMethod[method]
+func (e FollowsEndpoint) GetRequiredScopes(method string) []string {
+	return followScopesByMethod[method]
 }
 
-func (e Endpoint) ValidMethod(method string) bool {
-	return methodsSupported[method]
+func (e FollowsEndpoint) ValidMethod(method string) bool {
+	return followMethodsSupported[method]
 }
 
-func (e Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (e FollowsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	db = r.Context().Value("db").(database.CLIDatabase)
 
 	switch r.Method {
@@ -105,7 +103,7 @@ func getFollows(w http.ResponseWriter, r *http.Request) {
 	if dbr.Cursor != "" {
 		log.Printf("%#v", &dbr)
 		body.Pagination = &models.APIPagination{
-			Cursor: &dbr.Cursor,
+			Cursor: dbr.Cursor,
 		}
 	}
 

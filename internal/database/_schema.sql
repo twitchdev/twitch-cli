@@ -4,12 +4,20 @@ create table events (
   to_user text not null, transport text not null, 
   timestamp text not null
 );
+create table categories(
+  id text not null primary key, category_name text not null
+);
 create table users(
   id text not null primary key, user_login text not null, 
   display_name text not null, email text not null, 
   user_type text, broadcaster_type text, 
   user_description text, created_at text not null, 
-  modified_at text
+  category_id text, 
+  modified_at text,
+  stream_language text not null default 'en', 
+  title text not null default '', 
+  delay int not null default 0,
+  foreign key (category_id) references categories(id)
 );
 create table follows (
   broadcaster_id text not null, 
@@ -64,26 +72,34 @@ create table moderator_actions (
   foreign key (broadcaster_id) references users(id), 
   foreign key (user_id) references users(id)
 );
+create table editors (
+  broadcaster_id text not null, 
+  user_id text not null, 
+  created_at text not null, 
+  primary key (broadcaster_id, user_id), 
+  foreign key (broadcaster_id) references users(id), 
+  foreign key (user_id) references users(id)
+);
 create table channel_points_rewards(
   id text not null primary key, 
   broadcaster_id text not null, 
   reward_image text, 
   background_color text, 
   is_enabled boolean not null default false, 
-  cost number not null default 0, 
+  cost int not null default 0, 
   title text not null, 
   reward_prompt text, 
   is_user_input_required boolean default false, 
   stream_max_enabled boolean default false, 
-  stream_max_count number default 0, 
+  stream_max_count int default 0, 
   stream_user_max_enabled boolean default false, 
-  stream_user_max_count number default 0, 
+  stream_user_max_count int default 0, 
   global_cooldown_enabled boolean default false, 
-  global_cooldown_seconds number default 0, 
+  global_cooldown_seconds int default 0, 
   is_paused boolean default false, 
   is_in_stock boolean default true, 
   should_redemptions_skip_queue boolean default false, 
-  redemptions_redeemed_current_stream number, 
+  redemptions_redeemed_current_stream int, 
   cooldown_expires_at text, 
   foreign key (broadcaster_id) references users(id)
 );
@@ -91,27 +107,22 @@ create table channel_points_redemptions(
   id text not null primary key, 
   reward_id text not null, 
   broadcaster_id text not null, 
+  user_id text not null,
   user_input text, 
   redemption_status text not null, 
   redeemed_at text, 
   foreign key (reward_id) references channel_points_rewards(id), 
-  foreign key (broadcaster_id) references users(id)
-);
-create table categories(
-  id text not null primary key, category_name text not null
+  foreign key (broadcaster_id) references users(id),
+  foreign key (user_id) references users(id)
 );
 create table streams(
   id text not null primary key, 
   broadcaster_id id text not null, 
-  category_id text, 
   stream_type text not null default 'live', 
-  title text not null, 
-  viewer_count number not null, 
+  viewer_count int not null, 
   started_at text not null, 
-  stream_language text not null default 'en', 
   is_mature boolean not null default false, 
-  foreign key (broadcaster_id) references users(id), 
-  foreign key (category_id) references categories(id)
+  foreign key (broadcaster_id) references users(id)
 );
 create table tags(
   id text not null primary key, is_auto boolean not null default false, 
@@ -145,7 +156,7 @@ create table videos(
   created_at text not null, 
   published_at text, 
   viewable text not null, 
-  view_count number not null default 0, 
+  view_count int not null default 0, 
   duration text not null, 
   video_language text not null default 'en', 
   foreign key (stream_id) references streams(id), 
@@ -163,8 +174,8 @@ create table stream_markers(
 );
 create table video_muted_segments (
   video_id text not null, 
-  video_offset number not null, 
-  duration number not null, 
+  video_offset int not null, 
+  duration int not null, 
   primary key (video_id, video_offset), 
   foreign key (video_id) references videos(id)
 );
@@ -195,7 +206,7 @@ create table clients (
   name text not null
 );
 create table authorizations (
-  id integer not null primary key, 
+  id integer not null primary key AUTOINCREMENT, 
   client_id text not null, 
   user_id text, 
   token text not null unique, 
@@ -251,4 +262,17 @@ create table prediction_predictions (
   primary key(prediction_id, user_id), 
   foreign key(user_id) references users(id), 
   foreign key(prediction_id) references predictions(id)
+);
+create table clips (
+  id text not null primary key, 
+  broadcaster_id text not null,
+  creator_id text not null,
+  video_id text not null,
+  game_id text not null,
+  title text not null,
+  view_count int default 0, 
+  created_at text not null,
+  duration real not null,
+  foreign key (broadcaster_id) references users(id),
+  foreign key (creator_id) references users(id)
 );

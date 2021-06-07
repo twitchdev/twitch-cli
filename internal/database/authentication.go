@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/util"
@@ -20,12 +21,12 @@ type AuthenticationClient struct {
 }
 
 type Authorization struct {
-	ID        string         `db:"id"`
-	ClientID  string         `db:"client_id"`
-	UserID    sql.NullString `db:"user_id"`
-	Token     string         `db:"token"`
-	ExpiresAt string         `db:"expires_at"`
-	Scopes    sql.NullString `db:"scopes"`
+	ID        int    `db:"id" dbi:"false"`
+	ClientID  string `db:"client_id"`
+	UserID    string `db:"user_id"`
+	Token     string `db:"token"`
+	ExpiresAt string `db:"expires_at"`
+	Scopes    string `db:"scopes"`
 }
 
 func (q *Query) GetAuthorizationByToken(token string) (Authorization, error) {
@@ -73,13 +74,50 @@ func (q *Query) CreateAuthorization(a Authorization) (Authorization, error) {
 	for {
 		// loop to create unique tokens; likely won't happen, but is worth handling regardless
 		tx := db.MustBegin()
-		tx.NamedExec(`insert into authorizations (client_id, user_id, token, expires_at) values (:client_id, :user_id, :token, :expires_at)`, a)
-		err := tx.Commit()
+		stmt := generateInsertSQL("authorizations", "", a, false)
+		_, err := tx.NamedExec(stmt, a)
+		if err != nil {
+			log.Print(err)
+			return a, nil
+		}
+
+		err = tx.Commit()
 		if err == nil {
 			return a, nil
 		}
 		a.Token = generateString(15)
 	}
+}
+
+func (q *Query) GetAuthenticationClient(ac AuthenticationClient) (*DBResposne, error) {
+	var r []AuthenticationClient
+	rows, err := q.DB.NamedQuery(generateSQL("select * from clients", ac, SEP_AND)+q.SQL, ac)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var ac AuthenticationClient
+		err := rows.StructScan(&ac)
+		if err != nil {
+			return nil, err
+		}
+		r = append(r, ac)
+	}
+
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }
 
 func generateString(length int) string {

@@ -28,7 +28,7 @@ func (e Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func getStreams(w http.ResponseWriter, r *http.Request) {
-	s, err := db.NewQuery(r, 100).GetStream(database.Stream{})
+	s, err := db.NewQuery(nil, 100).GetStream(database.Stream{})
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)

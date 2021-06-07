@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/twitchdev/twitch-cli/internal/mock_units/categories"
+	"github.com/twitchdev/twitch-cli/internal/mock_units/clients"
 	"github.com/twitchdev/twitch-cli/internal/mock_units/streams"
 	"github.com/twitchdev/twitch-cli/internal/mock_units/subscriptions"
 	"github.com/twitchdev/twitch-cli/internal/mock_units/tags"
@@ -23,6 +24,7 @@ type UnitEndpoint interface {
 func All() []UnitEndpoint {
 	return []UnitEndpoint{
 		categories.Endpoint{},
+		clients.Endpoint{},
 		users.Endpoint{},
 		teams.Endpoint{},
 		videos.Endpoint{},

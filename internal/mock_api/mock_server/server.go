@@ -12,12 +12,14 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/authentication"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/generate"
+	"github.com/twitchdev/twitch-cli/internal/mock_auth"
 	"github.com/twitchdev/twitch-cli/internal/mock_units"
 )
 
 const MOCK_NAMESPACE = "/mock"
 const UNITS_NAMESPACE = "/units"
-const AUTH_NAMESPACE = "/mock_auth"
+const AUTH_NAMESPACE = "/auth"
 
 func StartServer(port int) {
 	m := http.NewServeMux()
@@ -30,6 +32,15 @@ func StartServer(port int) {
 		return
 	}
 
+	firstTime := db.IsFirstRun()
+
+	if firstTime {
+		err := generate.Generate(25)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	ctx = context.WithValue(ctx, "db", db)
 
 	RegisterHandlers(m)
@@ -40,6 +51,7 @@ func StartServer(port int) {
 			return ctx
 		},
 	}
+	log.Print("Mock server started")
 	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 		return
@@ -53,6 +65,10 @@ func RegisterHandlers(m *http.ServeMux) {
 	}
 	for _, e := range mock_units.All() {
 		m.Handle(UNITS_NAMESPACE+e.Path(), loggerMiddleware(e))
+	}
+
+	for _, e := range mock_auth.All() {
+		m.Handle(AUTH_NAMESPACE+e.Path(), loggerMiddleware(e))
 	}
 }
 

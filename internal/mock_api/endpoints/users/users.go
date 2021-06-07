@@ -9,10 +9,10 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/authentication"
-	"github.com/twitchdev/twitch-cli/internal/mock_api/models"
+	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
-var methodsSupported = map[string]bool{
+var userMethodsSupported = map[string]bool{
 	http.MethodGet:    true,
 	http.MethodPost:   false,
 	http.MethodDelete: false,
@@ -20,29 +20,42 @@ var methodsSupported = map[string]bool{
 	http.MethodPut:    true,
 }
 
-var scopesByMethod = map[string][]string{
+var userScopesByMethod = map[string][]string{
 	http.MethodGet:    {},
 	http.MethodPost:   {},
 	http.MethodDelete: {},
 	http.MethodPatch:  {},
-	http.MethodPut:    {},
+	http.MethodPut:    {"user:edit"},
 }
 
-var db database.CLIDatabase
-
-type Endpoint struct{}
-
-func (e Endpoint) Path() string { return "/users" }
-
-func (e Endpoint) GetRequiredScopes(method string) []string {
-	return scopesByMethod[method]
+type User struct {
+	ID              string `db:"id" json:"id"`
+	UserLogin       string `db:"user_login" json:"login"`
+	DisplayName     string `db:"display_name" json:"display_name"`
+	Email           string `db:"email" json:"email,omitempty"`
+	UserType        string `db:"user_type" json:"type"`
+	BroadcasterType string `db:"broadcaster_type" json:"broadcaster_type"`
+	UserDescription string `db:"user_description" json:"description"`
+	CreatedAt       string `db:"created_at" json:"created_at"`
+	ModifiedAt      string `db:"modified_at" json:"-"`
+	ProfileImageURL string `dbi:"false" json:"profile_image_url" `
+	OfflineImageURL string `dbi:"false" json:"offline_image_url" `
+	ViewCount       int    `dbi:"false" json:"view_count"`
 }
 
-func (e Endpoint) ValidMethod(method string) bool {
-	return methodsSupported[method]
+type UsersEndpoint struct{}
+
+func (e UsersEndpoint) Path() string { return "/users" }
+
+func (e UsersEndpoint) GetRequiredScopes(method string) []string {
+	return userScopesByMethod[method]
 }
 
-func (e Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (e UsersEndpoint) ValidMethod(method string) bool {
+	return userMethodsSupported[method]
+}
+
+func (e UsersEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	db = r.Context().Value("db").(database.CLIDatabase)
 
 	switch r.Method {
@@ -55,64 +68,40 @@ func (e Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func convertUsers(users []database.User, includeEmail bool) []models.UserAPIData {
-	r := []models.UserAPIData{}
-
-	for _, u := range users {
-		if u.ID == "" {
-			continue
-		}
-
-		if includeEmail == false {
-			u.Email = ""
-		}
-
-		r = append(r, models.UserAPIData{
-			ID:              u.ID,
-			Login:           u.UserLogin,
-			DisplayName:     u.DisplayName,
-			Type:            u.UserType,
-			BroadcasterType: u.BroadcasterType,
-			Description:     u.UserDescription,
-			ViewCount:       0,
-			Email:           u.Email,
-			CreatedAt:       u.CreatedAt,
-			OfflineImageURL: "https://static-cdn.jtvnw.net/jtv_user_pictures/3f13ab61-ec78-4fe6-8481-8682cb3b0ac2-channel_offline_image-1920x1080.png",
-			ProfileImageURL: "https://static-cdn.jtvnw.net/jtv_user_pictures/8a6381c7-d0c0-4576-b179-38bd5ce1d6af-profile_image-300x300.png",
-		})
-	}
-	return r
-}
-
 func getUsers(w http.ResponseWriter, r *http.Request) {
-
 	q := r.URL.Query()
-	users := []database.User{}
+	users := []User{}
 	userIDs := q["id"]
 	logins := q["login"]
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 
 	shouldIncludeEmail := userCtx.HasScope("user:read:email")
 
-	// TODO: update to handle in case the token contains the user info vs. simple params
 	if len(logins) == 0 && len(userIDs) == 0 && len(userCtx.UserID) == 0 {
+		log.Print(userCtx)
 		w.WriteHeader(400)
 		return
+	}
+
+	// add to list to get users if no logins or ids specified
+	if len(userCtx.UserID) > 0 && len(logins) == 0 && len(userIDs) == 0 {
+		userIDs = append(userIDs, userCtx.UserID)
 	}
 
 	for _, i := range userIDs {
 		user := database.User{
 			ID: i,
 		}
-		println(i)
 		u, err := db.NewQuery(r, 100).GetUser(user)
-		log.Printf("%#v", u)
 		if err != nil {
 			log.Print(err.Error())
 			w.WriteHeader(500)
 			return
 		}
-		users = append(users, u)
+		if u.ID == "" {
+			continue
+		}
+		users = append(users, convertUsers([]database.User{u})...)
 	}
 
 	for _, l := range logins {
@@ -124,26 +113,37 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
-		users = append(users, u)
+		if u.ID == "" {
+			continue
+		}
+		users = append(users, convertUsers([]database.User{u})...)
+	}
+
+	// filter out emails for everyone but the authorized user
+	for i, _ := range users {
+		if users[i].ID != userCtx.UserID {
+			users[i].Email = ""
+		} else if !shouldIncludeEmail {
+			users[i].Email = ""
+		}
 	}
 
 	data := models.APIResponse{
-		Data: convertUsers(users, shouldIncludeEmail),
+		Data: users,
 	}
 
 	body, err := json.Marshal(data)
 	if err != nil {
 		w.WriteHeader(500)
 	}
-	w.Header().Add("Content-Type", "application/json")
 	w.Write(body)
 }
 
 func putUsers(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
-	users := []database.User{}
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 	description := q["description"]
+
 	shouldIncludeEmail := userCtx.HasScope("user:read:email")
 
 	if userCtx.UserID == "" || len(description) == 0 {
@@ -166,9 +166,22 @@ func putUsers(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	users := convertUsers([]database.User{u})
+
+	for i, _ := range users {
+		if users[i].ID != userCtx.UserID {
+			users[i].Email = ""
+		} else if !shouldIncludeEmail {
+			users[i].Email = ""
+		}
+	}
+
+	if !shouldIncludeEmail {
+		u.Email = ""
+	}
 
 	data := models.APIResponse{
-		Data: convertUsers(append(users, u), shouldIncludeEmail),
+		Data: users,
 	}
 
 	body, err := json.Marshal(data)
@@ -176,4 +189,27 @@ func putUsers(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 	}
 	w.Write(body)
+}
+
+func convertUsers(users []database.User) []User {
+	response := []User{}
+	if len(users) == 0 {
+		return response
+	}
+	for _, u := range users {
+		response = append(response, User{
+			ID:              u.ID,
+			UserLogin:       u.UserLogin,
+			DisplayName:     u.DisplayName,
+			Email:           u.Email,
+			UserType:        u.UserType,
+			BroadcasterType: u.BroadcasterType,
+			CreatedAt:       u.CreatedAt,
+			ProfileImageURL: u.ProfileImageURL,
+			OfflineImageURL: u.OfflineImageURL,
+			ViewCount:       u.ViewCount,
+			UserDescription: u.UserDescription,
+		})
+	}
+	return response
 }

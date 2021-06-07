@@ -42,14 +42,8 @@ func (c CLIDatabase) NewQuery(r *http.Request, max_limit int) *Query {
 		p.Cursor = a
 	}
 
-	first, err := strconv.Atoi(f)
-	if err != nil {
-		return &p
-	}
+	first, _ := strconv.Atoi(f)
 	if first > max_limit || first <= 0 {
-		return &p
-	}
-	if first == 0 {
 		first = 20
 	}
 	p.Limit = int(first)

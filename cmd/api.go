@@ -98,7 +98,7 @@ func init() {
 
 	mockCmd.AddCommand(startCmd, generateCmd)
 
-	startCmd.Flags().IntVarP(&port, "port", "p", 3000, "Defines the port that the mock API will run on.")
+	startCmd.Flags().IntVarP(&port, "port", "p", 8080, "Defines the port that the mock API will run on.")
 
 	generateCmd.Flags().IntVarP(&count, "count", "c", 10, "Defines the number of fake users to generate.")
 }

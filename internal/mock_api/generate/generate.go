@@ -19,6 +19,11 @@ type Stream struct {
 	Broacaster string
 }
 
+type UserInfo struct {
+	ID   string
+	Type string
+}
+
 func Generate(userCount int) error {
 	db, err := database.NewConnection()
 	if err != nil {
@@ -38,21 +43,39 @@ func Generate(userCount int) error {
 	}
 	generateAuthorization(ctx, c, "")
 
+	log.Print("Finished generation.")
 	return nil
 }
 
 func generateUsers(ctx context.Context, count int) error {
 	db := ctx.Value("db").(database.CLIDatabase)
-	var userIds []string
+	var users []UserInfo
 	var categoryIds []string
 	var streams []Stream
 	var tagIds []string
+
+	// seed categories
+	log.Printf("Creating categories...")
+	for _, c := range categories {
+		category := database.Category{
+			ID:   fmt.Sprintf("%v", util.RandomInt(10*100*100)),
+			Name: c,
+		}
+
+		err := db.NewQuery(nil, 100).InsertCategory(category, false)
+		if err != nil {
+			log.Print(err.Error())
+		}
+		category = database.Category{
+			ID: category.ID,
+		}
+		categoryIds = append(categoryIds, category.ID)
+	}
 
 	// create users
 	log.Printf("Creating users...")
 	for i := 0; i < count; i++ {
 		id := util.RandomUserID()
-		userIds = append(userIds, id)
 
 		un := generateUsername()
 
@@ -66,6 +89,8 @@ func generateUsers(ctx context.Context, count int) error {
 			bt = "partner"
 		}
 
+		users = append(users, UserInfo{ID: id, Type: bt})
+
 		u := database.User{
 			ID:              id,
 			UserLogin:       strings.ToLower(un),
@@ -76,6 +101,9 @@ func generateUsers(ctx context.Context, count int) error {
 			UserDescription: "",
 			CreatedAt:       util.GetTimestamp().Format(time.RFC3339),
 			ModifiedAt:      util.GetTimestamp().Format(time.RFC3339),
+			CategoryID:      sql.NullString{String: categoryIds[util.RandomInt(int64(len(categoryIds)-1))], Valid: true},
+			Title:           "Sample stream!",
+			Language:        "en",
 		}
 
 		err := db.NewQuery(nil, 100).InsertUser(u, false)
@@ -98,20 +126,81 @@ func generateUsers(ctx context.Context, count int) error {
 		log.Print(err.Error())
 	}
 
+	t := true
 	// create fake follows, blocks, mods, and team membership
-	log.Printf("Creating follows, blocks, mods, bans, and team members...")
-	for i, broadcaster := range userIds {
-		for j, user := range userIds {
+	log.Printf("Creating channel points rewards and redemptions, follows, blocks, mods, bans, editors, and team members...")
+	for i, broadcaster := range users {
+		copoReward := database.ChannelPointsReward{}
+		if broadcaster.Type != "" {
+			copoReward = database.ChannelPointsReward{
+				ID:                  util.RandomGUID(),
+				BroadcasterID:       broadcaster.ID,
+				RewardImage:         sql.NullString{},
+				BackgroundColor:     "#9146FF",
+				IsEnabled:           &t,
+				Cost:                1,
+				Title:               fmt.Sprintf("Fake reward for %v", broadcaster.ID),
+				RewardPrompt:        "",
+				IsUserInputRequired: false,
+				MaxPerStream: database.MaxPerStream{
+					StreamMaxEnabled: false,
+					StreamMaxCount:   0,
+				},
+				MaxPerUserPerStream: database.MaxPerUserPerStream{
+					StreamUserMaxEnabled: false,
+					StreamMUserMaxCount:  0,
+				},
+				GlobalCooldown: database.GlobalCooldown{
+					GlobalCooldownEnabled: false,
+					GlobalCooldownSeconds: 0,
+				},
+				IsPaused:                         false,
+				IsInStock:                        true,
+				ShouldRedemptionsSkipQueue:       false,
+				RedemptionsRedeemedCurrentStream: nil,
+				CooldownExpiresAt:                sql.NullString{},
+			}
+
+			err := db.NewQuery(nil, 100).InsertChannelPointsReward(copoReward)
+			if err != nil {
+				log.Print(err.Error())
+			}
+		}
+
+		for j, user := range users {
+			if copoReward.ID != "" {
+				copoRedemption := database.ChannelPointsRedemption{
+					ID:            util.RandomGUID(),
+					BroadcasterID: broadcaster.ID,
+					UserID:        user.ID,
+					RewardID:      copoReward.ID,
+					ChannelPointsRedemptionRewardInfo: database.ChannelPointsRedemptionRewardInfo{
+						ID:           copoReward.ID,
+						Title:        copoReward.Title,
+						RewardPrompt: copoReward.RewardPrompt,
+						Cost:         copoReward.Cost,
+					},
+					UserInput:        sql.NullString{},
+					RedemptionStatus: "UNFULFILLED",
+					RedeemedAt:       util.GetTimestamp().Format(time.RFC3339),
+				}
+				err := db.NewQuery(nil, 100).InsertChannelPointsRedemption(copoRedemption)
+				if err != nil {
+					log.Print(err.Error())
+				}
+			}
+
 			// can't follow/block yourself :)
 			if i == j {
 				continue
 			}
 
+			// create a seed used for the below determination on if a user should follow one another- this simply simulates a social mesh
 			userSeed := util.RandomInt(100 * 100)
 			// 1 in 25 chance roughly to block one another
 			shouldBlock := userSeed%25 == 0
 			if shouldBlock {
-				err := db.NewQuery(nil, 100).AddBlock(database.UserRequestParams{UserID: user, BroadcasterID: broadcaster})
+				err := db.NewQuery(nil, 100).AddBlock(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
 				if err != nil {
 					log.Print(err.Error())
 				}
@@ -122,35 +211,43 @@ func generateUsers(ctx context.Context, count int) error {
 			// 1 in 5 to follow
 			shouldFollow := userSeed%5 == 0
 			if shouldFollow {
-				err := db.NewQuery(nil, 100).AddFollow(database.UserRequestParams{UserID: user, BroadcasterID: broadcaster})
+				err := db.NewQuery(nil, 100).AddFollow(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
 				if err != nil {
 					log.Print(err.Error())
 				}
 			}
 
-			// 1 in 50 chance to mod one another, plus adds to the moderator events
-			shouldMod := userSeed%50 == 0
+			// 1 in 20 chance to mod one another, plus adds to the moderator events
+			shouldMod := userSeed%20 == 0
 			if shouldMod {
-				err := db.NewQuery(nil, 100).AddModerator(database.UserRequestParams{UserID: user, BroadcasterID: broadcaster})
+				err := db.NewQuery(nil, 100).AddModerator(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
 				if err != nil {
 					log.Print(err.Error())
 				}
 			}
 
-			// 1 in 100 chance to ban one another, plus adds to banned events
-			shouldBan := userSeed%100 == 0
+			// 1 in 20 chance to ban one another, plus adds to banned events
+			shouldBan := userSeed%20 == 0
 			if shouldBan {
-				err := db.NewQuery(nil, 100).InsertBan(database.UserRequestParams{UserID: user, BroadcasterID: broadcaster})
+				err := db.NewQuery(nil, 100).InsertBan(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
+				if err != nil {
+					log.Print(err.Error())
+				}
+			}
+
+			shouldAddEditor := userSeed%15 == 0
+			if shouldAddEditor {
+				err := db.NewQuery(nil, 100).AddEditor(database.UserRequestParams{BroadcasterID: broadcaster.ID, UserID: user.ID})
 				if err != nil {
 					log.Print(err.Error())
 				}
 			}
 
 			shouldSub := userSeed%10 == 0
-			if shouldSub {
+			if shouldSub && broadcaster.Type != "" {
 				err := db.NewQuery(nil, 100).InsertSubscription(database.SubscriptionInsert{
-					UserID:        user,
-					BroadcasterID: broadcaster,
+					UserID:        user.ID,
+					BroadcasterID: broadcaster.ID,
 					Tier:          fmt.Sprint((util.RandomInt(3) + 1) * 1000),
 					CreatedAt:     util.GetTimestamp().Format(time.RFC3339),
 					IsGift:        false,
@@ -166,48 +263,28 @@ func generateUsers(ctx context.Context, count int) error {
 		if shouldBeTeamMember {
 			err := db.NewQuery(nil, 100).InsertTeamMember(database.TeamMember{
 				TeamID: team.ID,
-				UserID: broadcaster,
+				UserID: broadcaster.ID,
 			})
 			if err != nil {
 				log.Print(err.Error())
 			}
 		}
-	}
 
-	// seed categories
-	log.Printf("Creating categories...")
-	for _, c := range categories {
-		category := database.Category{
-			ID:   fmt.Sprintf("%v", util.RandomInt(10*100*100)),
-			Name: c,
-		}
-
-		err := db.NewQuery(nil, 100).InsertCategory(category, false)
-		if err != nil {
-			log.Print(err.Error())
-		}
-		category = database.Category{
-			ID: category.ID,
-		}
-		categoryIds = append(categoryIds, category.ID)
 	}
 
 	// create fake streams
 	log.Printf("Creating streams...")
-	for _, u := range userIds {
+	for _, u := range users {
 		if util.RandomInt(100)%25 != 0 {
 			continue
 		}
 		s := database.Stream{
-			ID:             util.RandomGUID(),
-			UserID:         u,
-			CategoryID:     categoryIds[util.RandomInt(int64(len(categoryIds)-1))],
-			StreamType:     "live",
-			Title:          "Sample stream!",
-			ViewerCount:    int(util.RandomViewerCount()),
-			StartedAt:      util.GetTimestamp().Format(time.RFC3339),
-			StreamLanguage: "en",
-			IsMature:       false,
+			ID:          util.RandomGUID(),
+			UserID:      u.ID,
+			StreamType:  "live",
+			ViewerCount: int(util.RandomViewerCount()),
+			StartedAt:   util.GetTimestamp().Format(time.RFC3339),
+			IsMature:    false,
 		}
 		err := db.NewQuery(nil, 100).InsertStream(s, false)
 		if err != nil {
@@ -230,7 +307,7 @@ func generateUsers(ctx context.Context, count int) error {
 	}
 
 	// creates fake stream tags, videos, and markers
-	log.Printf("Creating stream tags, videos, and stream markers...")
+	log.Printf("Creating stream tags, videos, clips, and stream markers...")
 	for _, s := range streams {
 		var prevTag string
 		for i := 0; i < int(util.RandomInt(5)); i++ {
@@ -241,7 +318,6 @@ func generateUsers(ctx context.Context, count int) error {
 			if prevTag == st.TagID {
 				continue
 			}
-			log.Printf("%#v", st)
 
 			err := db.NewQuery(nil, 100).InsertStreamTag(st)
 			if err != nil {
@@ -282,6 +358,24 @@ func generateUsers(ctx context.Context, count int) error {
 				log.Print(err.Error())
 			}
 		}
+
+		// clips
+		c := database.Clip{
+			ID:            util.RandomGUID(), // does not follow the same slug format, but for this it'll do
+			BroadcasterID: s.Broacaster,
+			GameID:        categoryIds[util.RandomInt(int64(len(categoryIds)-1))],
+			CreatorID:     s.Broacaster,
+			VideoID:       v.ID,
+			Title:         "Generated clip!",
+			Language:      "en",
+			ViewCount:     0,
+			CreatedAt:     util.GetTimestamp().Format(time.RFC3339),
+			Duration:      30.1,
+		}
+		err = db.NewQuery(nil, 100).InsertClip(c)
+		if err != nil {
+			log.Print(err.Error())
+		}
 	}
 
 	// create fake polls
@@ -310,8 +404,9 @@ func generateAuthorization(ctx context.Context, c database.AuthenticationClient,
 
 	a := database.Authorization{
 		ClientID:  c.ID,
-		UserID:    sql.NullString{String: userID},
+		UserID:    userID,
 		ExpiresAt: util.GetTimestamp().Add(24 * time.Hour).Format(time.RFC3339),
+		Scopes:    "",
 	}
 
 	auth, err := db.NewQuery(nil, 100).CreateAuthorization(a)

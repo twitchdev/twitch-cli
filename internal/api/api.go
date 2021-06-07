@@ -100,15 +100,16 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			data = apiResponse
 			break
 		}
+		d := data.Data.([]interface{})
+		data.Data = append(d, apiResponse.Data)
 
-		data.Data = append(data.Data, apiResponse.Data...)
-
-		if autopaginate == false {
-			data.Pagination.Cursor = apiResponse.Pagination.Cursor
+		if apiResponse.Pagination == nil || *&apiResponse.Pagination.Cursor == "" {
 			break
 		}
 
-		if apiResponse.Pagination.Cursor == "" {
+		// log.Printf("%v", apiResponse)
+		if autopaginate == false {
+			data.Pagination.Cursor = apiResponse.Pagination.Cursor
 			break
 		}
 
@@ -120,7 +121,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	}
 
 	// handle json marshalling better; returns empty slice vs. null
-	if len(data.Data) == 0 && data.Error == "" {
+	if len(data.Data.([]interface{})) == 0 && data.Error == "" {
 		data.Data = make([]interface{}, 0)
 	}
 

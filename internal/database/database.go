@@ -3,6 +3,7 @@
 package database
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 
@@ -54,6 +55,7 @@ func getDatabase() (sqlx.DB, error) {
 	if needToInit == true {
 		err = initDatabase(*db)
 		if err != nil {
+			log.Print(err)
 			return sqlx.DB{}, err
 		}
 	}

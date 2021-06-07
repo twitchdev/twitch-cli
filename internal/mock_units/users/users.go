@@ -28,7 +28,7 @@ func (e Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	u, err := db.NewQuery(r, 100).GetUsers(database.User{})
+	u, err := db.NewQuery(nil, 100).GetUsers(database.User{})
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)

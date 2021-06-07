@@ -4,6 +4,8 @@ package authentication
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/mock_errors"
 )
 
 type UserAuthentication struct {
@@ -38,7 +41,9 @@ func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 
 		clientID := r.Header.Get("Client-ID")
 		bearerToken := r.Header.Get("Authorization")
+		unauthroizedError := mock_errors.GetErrorBytes(http.StatusUnauthorized, errors.New("Unauthorized"), "Missing Client ID or OAuth token")
 		if clientID == "" || bearerToken == "" || len(bearerToken) < 7 {
+			w.Write(unauthroizedError)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -48,6 +53,7 @@ func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 
 		// check if the client ID is invalid or missing the proper token prefix
 		if len(clientID) < 30 || prefix != "bearer" {
+			w.Write(unauthroizedError)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -60,34 +66,43 @@ func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 			return
 		}
 
-		// check for mismatches
-		if auth.ID == "" || auth.ClientID != clientID {
+		// check if invalid
+		if auth.Token == "" {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write(mock_errors.GetErrorBytes(http.StatusUnauthorized, errors.New("Unauthorized"), "Invalid OAuth token"))
+			return
+		}
+
+		// check for mismatches
+		if auth.ClientID != clientID {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write(mock_errors.GetErrorBytes(http.StatusUnauthorized, errors.New("Unauthorized"), "Missing Client ID or OAuth token"))
 			return
 		}
 
 		// check if expired
 		expiration, err := time.Parse(time.RFC3339, auth.ExpiresAt)
 		if err != nil {
-			log.Print(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		if time.Now().After(expiration) {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write(mock_errors.GetErrorBytes(http.StatusUnauthorized, errors.New("Unauthorized"), "Token expired"))
 			return
 		}
 
 		// pass as context
 		authContext := UserAuthentication{
-			Scopes:   strings.Split(auth.Scopes.String, " "),
-			UserID:   auth.UserID.String,
+			Scopes:   strings.Split(auth.Scopes, " "),
+			UserID:   auth.UserID,
 			ClientID: auth.ClientID,
 		}
 
 		if authContext.HasOneOfRequiredScope(next.GetRequiredScopes(r.Method)) == false {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write(mock_errors.GetErrorBytes(http.StatusUnauthorized, errors.New("Unauthorized"), fmt.Sprintf("Missing required scope %v", next.GetRequiredScopes(r.Method))))
 			return
 		}
 
@@ -108,6 +123,10 @@ func (u UserAuthentication) HasScope(scope string) bool {
 }
 
 func (u UserAuthentication) HasOneOfRequiredScope(scopes []string) bool {
+	if len(scopes) == 0 {
+		return true
+	}
+
 	for _, s := range scopes {
 		for _, us := range u.Scopes {
 			if s == us {
@@ -116,4 +135,12 @@ func (u UserAuthentication) HasOneOfRequiredScope(scopes []string) bool {
 		}
 	}
 	return false
+}
+
+func (u *UserAuthentication) MatchesBroadcasterIDParam(r *http.Request) bool {
+	bid := r.URL.Query().Get("broadcaster_id")
+	if bid == "" || bid != u.UserID {
+		return false
+	}
+	return true
 }

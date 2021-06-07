@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package database
 
-import "log"
+import (
+	"fmt"
+	"log"
+)
 
 type Video struct {
 	ID               string              `db:"id" json:"id" dbs:"v.id"`
@@ -19,9 +22,10 @@ type Video struct {
 	Duration         string              `db:"duration" json:"duration"`
 	VideoLanguage    string              `db:"video_language" json:"video_language"`
 	MutedSegments    []VideoMutedSegment `json:"muted_segments"`
-	Type             string              `json:"type"`
-	URL              string              `json:"url"`
-	ThumbnailURL     string              `json:"thumbnail_url"`
+	// calculated fields
+	Type         string `json:"type"`
+	URL          string `json:"url"`
+	ThumbnailURL string `json:"thumbnail_url"`
 }
 
 type VideoMutedSegment struct {
@@ -30,32 +34,65 @@ type VideoMutedSegment struct {
 	Duration    int    `db:"duration" json:"duration"`
 }
 
-func (q *Query) GetVideos(v Video) ([]Video, error) {
+type Clip struct {
+	ID              string  `db:"id" json:"id" dbs:"c.id"`
+	BroadcasterID   string  `db:"broadcaster_id" json:"broadcaster_id"`
+	BroadcasterName string  `db:"broadcaster_name" json:"broadcaster_name" dbi:"false"`
+	CreatorID       string  `db:"creator_id" json:"creator_id"`
+	CreatorName     string  `db:"creator_name" json:"creator_login" dbi:"false"`
+	VideoID         string  `db:"video_id" json:"video_id"`
+	GameID          string  `db:"game_id" json:"game_id"`
+	Language        string  `db:"language" dbi:"false" json:"language"`
+	Title           string  `db:"title" json:"title"`
+	ViewCount       int     `db:"view_count" json:"view_count"`
+	CreatedAt       string  `db:"created_at" json:"created_at"`
+	Duration        float64 `db:"duration" json:"duration"`
+	// calculated fields
+	URL          string `json:"url"`
+	ThumbnailURL string `json:"thumbnail_url"`
+	EmbedURL     string `json:"embed_urL"`
+	StartedAt    string `db:"started_at" dbi:"false" json:"-"`
+	EndedAt      string `db:"ended_at" dbi:"false" json:"-"`
+}
+
+func (q *Query) GetVideos(v Video) (*DBResposne, error) {
 	var r []Video
 	sql := generateSQL("select v.*, u1.user_login as broadcaster_login, u1.display_name as broadcaster_name from videos v join users u1 on v.broadcaster_id = u1.id", v, SEP_AND)
 	rows, err := q.DB.NamedQuery(sql, v)
 	if err != nil {
 		log.Print(err)
-		return r, err
+		return nil, err
 	}
-
 	for rows.Next() {
 		var v Video
 		var vms []VideoMutedSegment
 		err := rows.StructScan(&v)
 		if err != nil {
 			log.Print(err)
-			return r, err
+			return nil, err
 		}
 		err = q.DB.Select(&vms, "select * from video_muted_segments where video_id=$1", v.ID)
 		if err != nil {
 			log.Print(err)
-			return r, err
+			return nil, err
 		}
 		v.MutedSegments = vms
 		r = append(r, v)
 	}
-	return r, nil
+
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }
 
 func (q *Query) InsertVideo(v Video) error {
@@ -73,4 +110,51 @@ func (q *Query) InsertMutedSegmentsForVideo(vms VideoMutedSegment) error {
 	stmt := generateInsertSQL("video_muted_segments", "", vms, false)
 	_, err := q.DB.NamedExec(stmt, vms)
 	return err
+}
+
+func (q *Query) InsertClip(c Clip) error {
+	stmt := generateInsertSQL("clips", "", c, false)
+	_, err := q.DB.NamedExec(stmt, c)
+	return err
+}
+
+func (q *Query) GetClips(c Clip, startDate string, endDate string) (*DBResposne, error) {
+	var r []Clip
+	sql := generateSQL("select c.*,  u1.display_name as broadcaster_name, u1.stream_language as language, u2.display_name as creator_name from clips c join users u1 on c.broadcaster_id = u1.id join users u2 on c.creator_id = u2.id ", c, SEP_AND)
+	if startDate != "" {
+		sql += fmt.Sprintf(" and c.created_at > :started_at and c.created_at < :ended_at ")
+	}
+	sql += q.SQL
+	println(sql)
+	rows, err := q.DB.NamedQuery(sql, c)
+	if err != nil {
+		log.Print(err)
+		return nil, err
+	}
+	for rows.Next() {
+		var c Clip
+		err := rows.StructScan(&c)
+		if err != nil {
+			log.Print(err)
+			return nil, err
+		}
+		c.EmbedURL = fmt.Sprintf("https://clips.twitch.tv/embed?clip=%v", c.ID)
+		c.ThumbnailURL = "https://clips-media-assets2.twitch.tv/157589949-preview-480x272.jpg"
+		c.URL = fmt.Sprintf("https://clips.twitch.tv/%v", c.ID)
+		r = append(r, c)
+	}
+
+	dbr := DBResposne{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
 }
