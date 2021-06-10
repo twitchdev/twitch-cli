@@ -24,7 +24,7 @@ func (q *Query) GetPrinciple(p Principle) (*DBResponse, error) {
 		}
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),

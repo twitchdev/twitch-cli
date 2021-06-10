@@ -39,6 +39,7 @@ create table bans (
   broadcaster_id text not null, 
   user_id text not null, 
   created_at text not null, 
+  expires_at text,
   primary key (broadcaster_id, user_id), 
   foreign key (broadcaster_id) references users(id), 
   foreign key (user_id) references users(id)
@@ -129,10 +130,10 @@ create table tags(
   tag_name text not null
 );
 create table stream_tags(
-  stream_id text not null, 
+  user_id text not null, 
   tag_id text not null, 
-  primary key(stream_id, tag_id), 
-  foreign key(stream_id) references streams(id), 
+  primary key(user_id, tag_id), 
+  foreign key(user_id) references users(id), 
   foreign key(tag_id) references tags(id)
 );
 create table teams(
@@ -159,9 +160,12 @@ create table videos(
   view_count int not null default 0, 
   duration text not null, 
   video_language text not null default 'en', 
+  category_id text,
+  type text default 'archive', 
   foreign key (stream_id) references streams(id), 
-  foreign key (broadcaster_id) references users(id)
-);
+  foreign key (broadcaster_id) references users(id),
+  foreign key (category_id) references categories(id)
+};
 create table stream_markers(
   id text not null primary key, 
   video_id text not null, 

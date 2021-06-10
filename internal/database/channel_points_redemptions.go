@@ -29,7 +29,7 @@ type ChannelPointsRedemptionRewardInfo struct {
 	Cost         int    `dbi:"false" db:"cost" json:"cost"`
 }
 
-func (q *Query) GetChannelPointsRedemption(cpr ChannelPointsRedemption, sort string) (*DBResposne, error) {
+func (q *Query) GetChannelPointsRedemption(cpr ChannelPointsRedemption, sort string) (*DBResponse, error) {
 	var r []ChannelPointsRedemption
 	orderBy := ""
 	if sort == "" || sort == "OLDEST" {
@@ -57,7 +57,7 @@ func (q *Query) GetChannelPointsRedemption(cpr ChannelPointsRedemption, sort str
 		r = append(r, red)
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),

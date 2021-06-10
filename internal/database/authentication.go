@@ -89,7 +89,7 @@ func (q *Query) CreateAuthorization(a Authorization) (Authorization, error) {
 	}
 }
 
-func (q *Query) GetAuthenticationClient(ac AuthenticationClient) (*DBResposne, error) {
+func (q *Query) GetAuthenticationClient(ac AuthenticationClient) (*DBResponse, error) {
 	var r []AuthenticationClient
 	rows, err := q.DB.NamedQuery(generateSQL("select * from clients", ac, SEP_AND)+q.SQL, ac)
 	if err != nil {
@@ -105,7 +105,7 @@ func (q *Query) GetAuthenticationClient(ac AuthenticationClient) (*DBResposne, e
 		r = append(r, ac)
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),

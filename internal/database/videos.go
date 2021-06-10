@@ -9,7 +9,7 @@ import (
 
 type Video struct {
 	ID               string              `db:"id" json:"id" dbs:"v.id"`
-	StreamID         string              `db:"stream_id" json:"stream_id"`
+	StreamID         *string             `db:"stream_id" json:"stream_id"`
 	BroadcasterID    string              `db:"broadcaster_id" json:"user_id"`
 	BroadcasterLogin string              `db:"broadcaster_login" json:"user_login" dbi:"false"`
 	BroadcasterName  string              `db:"broadcaster_name" json:"user_name" dbi:"false"`
@@ -22,10 +22,13 @@ type Video struct {
 	Duration         string              `db:"duration" json:"duration"`
 	VideoLanguage    string              `db:"video_language" json:"video_language"`
 	MutedSegments    []VideoMutedSegment `json:"muted_segments"`
+	CategoryID       *string             `db:"category_id" dbs:"v.category_id" json:"-"`
+	OldCat           *string             `db:"old_cat" json:"-"` // temp
+	Type             string              `db:"type" json:"type"`
 	// calculated fields
-	Type         string `json:"type"`
 	URL          string `json:"url"`
 	ThumbnailURL string `json:"thumbnail_url"`
+	PeriodDate   string `db:"period_date" dbi:"false" json:"-"`
 }
 
 type VideoMutedSegment struct {
@@ -55,17 +58,29 @@ type Clip struct {
 	EndedAt      string `db:"ended_at" dbi:"false" json:"-"`
 }
 
-func (q *Query) GetVideos(v Video) (*DBResposne, error) {
+var sortMap = map[string]string{
+	"time":     " order by v.created_at desc",
+	"trending": "",
+	"views":    " order by v.view_count desc",
+}
+
+func (q *Query) GetVideos(v Video, period string, sort string) (*DBResponse, error) {
 	var r []Video
 	sql := generateSQL("select v.*, u1.user_login as broadcaster_login, u1.display_name as broadcaster_name from videos v join users u1 on v.broadcaster_id = u1.id", v, SEP_AND)
-	rows, err := q.DB.NamedQuery(sql, v)
+
+	if period != "" {
+		sql += " and datetime(v.created_at) > datetime(:period_date) "
+		v.PeriodDate = period
+	}
+
+	rows, err := q.DB.NamedQuery(sql+sortMap[sort]+q.SQL, v)
 	if err != nil {
 		log.Print(err)
 		return nil, err
 	}
 	for rows.Next() {
 		var v Video
-		var vms []VideoMutedSegment
+		vms := []VideoMutedSegment{}
 		err := rows.StructScan(&v)
 		if err != nil {
 			log.Print(err)
@@ -76,11 +91,13 @@ func (q *Query) GetVideos(v Video) (*DBResposne, error) {
 			log.Print(err)
 			return nil, err
 		}
+		v.ThumbnailURL = "https://static-cdn.jtvnw.net/cf_vods/d2nvs31859zcd8/twitchdev/335921245/ce0f3a7f-57a3-4152-bc06-0c6610189fb3/thumb/index-0000000000-%{width}x%{height}.jpg"
+		v.URL = fmt.Sprintf("https://www.twitch.tv/videos/%v", v.ID)
 		v.MutedSegments = vms
 		r = append(r, v)
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),
@@ -102,8 +119,10 @@ func (q *Query) InsertVideo(v Video) error {
 }
 
 func (q *Query) DeleteVideo(id string) error {
-	_, err := q.DB.Exec("delete from videos where id = $1", id)
-	return err
+	tx := q.DB.MustBegin()
+	tx.MustExec("delete from video_muted_segments where video_id=$1", id)
+	tx.MustExec("delete from videos where id = $1", id)
+	return tx.Commit()
 }
 
 func (q *Query) InsertMutedSegmentsForVideo(vms VideoMutedSegment) error {
@@ -118,14 +137,15 @@ func (q *Query) InsertClip(c Clip) error {
 	return err
 }
 
-func (q *Query) GetClips(c Clip, startDate string, endDate string) (*DBResposne, error) {
+func (q *Query) GetClips(c Clip, startDate string, endDate string) (*DBResponse, error) {
 	var r []Clip
-	sql := generateSQL("select c.*,  u1.display_name as broadcaster_name, u1.stream_language as language, u2.display_name as creator_name from clips c join users u1 on c.broadcaster_id = u1.id join users u2 on c.creator_id = u2.id ", c, SEP_AND)
+	sql := generateSQL("select c.id, c.broadcaster_id, c.creator_id, c.video_id, c.game_id, c.title, c.view_count, c.duration, datetime(c.created_at) as created_at,  u1.display_name as broadcaster_name, u1.stream_language as language, u2.display_name as creator_name from clips c join users u1 on c.broadcaster_id = u1.id join users u2 on c.creator_id = u2.id ", c, SEP_AND)
 	if startDate != "" {
-		sql += fmt.Sprintf(" and c.created_at > :started_at and c.created_at < :ended_at ")
+		c.StartedAt = startDate
+		c.EndedAt = endDate
+		sql += fmt.Sprintf(" and datetime(c.created_at) > datetime(:started_at) and datetime(c.created_at) < datetime(:ended_at) ")
 	}
 	sql += q.SQL
-	println(sql)
 	rows, err := q.DB.NamedQuery(sql, c)
 	if err != nil {
 		log.Print(err)
@@ -144,7 +164,7 @@ func (q *Query) GetClips(c Clip, startDate string, endDate string) (*DBResposne,
 		r = append(r, c)
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),

@@ -66,12 +66,14 @@ func areValidScopes(scopes []string, tokenType string) bool {
 	if tokenType != APP_ACCES_TOKEN && tokenType != USER_ACCESS_TOKEN {
 		return false
 	}
-
 	if len(scopes) == 0 {
 		return true
 	}
 
 	for _, s := range scopes {
+		if s == "" {
+			continue
+		}
 		if validScopesByTokenType[tokenType][s] != true {
 			return false
 		}

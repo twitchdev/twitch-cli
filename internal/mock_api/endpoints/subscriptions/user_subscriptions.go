@@ -12,7 +12,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
-var broadcasterSubscriptionsMethodsSupported = map[string]bool{
+var userSubscriptionsMethodsSupported = map[string]bool{
 	http.MethodGet:    true,
 	http.MethodPost:   false,
 	http.MethodDelete: false,
@@ -20,49 +20,54 @@ var broadcasterSubscriptionsMethodsSupported = map[string]bool{
 	http.MethodPut:    false,
 }
 
-var broadcasterSubscriptionsScopesByMethod = map[string][]string{
-	http.MethodGet:    {"channel:read:subscriptions"},
+var userSubscriptionsScopesByMethod = map[string][]string{
+	http.MethodGet:    {"user:read:subscriptions"},
 	http.MethodPost:   {},
 	http.MethodDelete: {},
 	http.MethodPatch:  {},
 	http.MethodPut:    {},
 }
 
-type BroadcasterSubscriptions struct{}
+type UserSubscriptions struct{}
 
-func (e BroadcasterSubscriptions) Path() string { return "/subscriptions" }
+func (e UserSubscriptions) Path() string { return "/subscriptions/user" }
 
-func (e BroadcasterSubscriptions) GetRequiredScopes(method string) []string {
-	return broadcasterSubscriptionsScopesByMethod[method]
+func (e UserSubscriptions) GetRequiredScopes(method string) []string {
+	return userSubscriptionsScopesByMethod[method]
 }
 
-func (e BroadcasterSubscriptions) ValidMethod(method string) bool {
-	return broadcasterSubscriptionsMethodsSupported[method]
+func (e UserSubscriptions) ValidMethod(method string) bool {
+	return userSubscriptionsMethodsSupported[method]
 }
 
-func (e BroadcasterSubscriptions) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (e UserSubscriptions) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	db = r.Context().Value("db").(database.CLIDatabase)
 
 	switch r.Method {
 	case http.MethodGet:
-		getBroadcasterSubscriptions(w, r)
+		getUserSubscriptions(w, r)
+		break
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 }
 
-func getBroadcasterSubscriptions(w http.ResponseWriter, r *http.Request) {
+func getUserSubscriptions(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 
-	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+	if userCtx.UserID != r.URL.Query().Get("user_id") {
+		mock_errors.WriteBadRequest(w, "user_id does not match token")
 		return
 	}
 
+	if r.URL.Query().Get("broadcaster_id") == "" {
+		mock_errors.WriteBadRequest(w, "broadcaster_id is required")
+		return
+	}
 	s := database.Subscription{
-		BroadcasterID: userCtx.UserID,
-		UserID:        r.URL.Query().Get("user_id"),
+		BroadcasterID: r.URL.Query().Get("broadcaster_id"),
+		UserID:        userCtx.UserID,
 	}
 
 	dbr, err := db.NewQuery(r, 100).GetSubscriptions(s)
@@ -76,14 +81,7 @@ func getBroadcasterSubscriptions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body := models.APIResponse{
-		Data:  dbr.Data,
-		Total: &dbr.Total,
-	}
-
-	if dbr.Cursor != "" {
-		body.Pagination = &models.APIPagination{
-			Cursor: dbr.Cursor,
-		}
+		Data: dbr.Data,
 	}
 
 	j, _ := json.Marshal(body)

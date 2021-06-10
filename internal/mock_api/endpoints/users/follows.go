@@ -4,12 +4,12 @@ package users
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/mattn/go-sqlite3"
 	"github.com/twitchdev/twitch-cli/internal/database"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/mock_errors"
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
@@ -63,22 +63,17 @@ func (e FollowsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func getFollows(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	to := q["to_id"]
-	from := q["from_id"]
+	to := r.URL.Query().Get("to_id")
+	from := r.URL.Query().Get("from_id")
 
 	if len(to) == 0 && len(from) == 0 {
-		w.WriteHeader(400)
+		mock_errors.WriteBadRequest(w, "one of to_id or from_id is required")
 		return
 	}
 
-	// adds a blank string to the end of the array- so will always have at least a 0 index attribute
-	to = append(to, "")
-	from = append(from, "")
-
 	req := database.UserRequestParams{
-		UserID:        from[0],
-		BroadcasterID: to[0],
+		UserID:        from,
+		BroadcasterID: to,
 	}
 
 	dbr, err := db.NewQuery(r, 100).GetFollows(req)
@@ -89,8 +84,6 @@ func getFollows(w http.ResponseWriter, r *http.Request) {
 	}
 
 	f := dbr.Data.([]database.Follow)
-
-	log.Printf("%v", err)
 
 	if len(f) == 0 {
 		f = []database.Follow{}
@@ -112,16 +105,15 @@ func getFollows(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteFollows(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	to := q["to_id"]
-	from := q["from_id"]
+	to := r.URL.Query().Get("to_id")
+	from := r.URL.Query().Get("from_id")
 
 	if len(to) == 0 || len(from) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err := db.NewQuery(r, 100).DeleteFollow(from[0], to[0])
+	err := db.NewQuery(r, 100).DeleteFollow(from, to)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -132,21 +124,14 @@ func deleteFollows(w http.ResponseWriter, r *http.Request) {
 
 func postFollows(w http.ResponseWriter, r *http.Request) {
 	var body PostFollowBody
-	b, err := ioutil.ReadAll(r.Body)
+
+	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		mock_errors.WriteBadRequest(w, "error reading body")
 		return
 	}
-
-	err = json.Unmarshal(b, &body)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		return
-	}
-
 	if body.FromID == "" || body.ToID == "" {
-		log.Printf("%#v", body)
-		w.WriteHeader(http.StatusBadRequest)
+		mock_errors.WriteBadRequest(w, "from_id and to_id are required")
 		return
 	}
 

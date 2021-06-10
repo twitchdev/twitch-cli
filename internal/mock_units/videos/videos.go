@@ -28,7 +28,7 @@ func (e Endpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func getVideos(w http.ResponseWriter, r *http.Request) {
-	u, err := db.NewQuery(r, 100).GetVideos(database.Video{})
+	u, err := db.NewQuery(r, 100).GetVideos(database.Video{}, "", "")
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)

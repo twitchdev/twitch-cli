@@ -10,6 +10,7 @@ import (
 	"log"
 	"reflect"
 	"strings"
+	"time"
 )
 
 const SEP_AND = "and"
@@ -74,6 +75,10 @@ func generateSQL(s string, i interface{}, seperator string) string {
 			break
 		case float64:
 			if f == 0.0 {
+				continue
+			}
+		case time.Time:
+			if f.IsZero() {
 				continue
 			}
 		default:

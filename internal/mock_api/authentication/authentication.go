@@ -102,7 +102,7 @@ func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 
 		if authContext.HasOneOfRequiredScope(next.GetRequiredScopes(r.Method)) == false {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write(mock_errors.GetErrorBytes(http.StatusUnauthorized, errors.New("Unauthorized"), fmt.Sprintf("Missing required scope %v", next.GetRequiredScopes(r.Method))))
+			w.Write(mock_errors.GetErrorBytes(http.StatusUnauthorized, errors.New("Unauthorized"), fmt.Sprintf("Missing required scope %v", strings.Join(next.GetRequiredScopes(r.Method), " or "))))
 			return
 		}
 

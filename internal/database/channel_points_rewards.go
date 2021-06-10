@@ -52,7 +52,7 @@ type DefaultImage struct {
 	URL4x string `json:"url_4x"`
 }
 
-func (q *Query) GetChannelPointsReward(cpr ChannelPointsReward) (*DBResposne, error) {
+func (q *Query) GetChannelPointsReward(cpr ChannelPointsReward) (*DBResponse, error) {
 	var r []ChannelPointsReward
 	sql := generateSQL("select cpr.*,  u1.user_login as broadcaster_login, u1.display_name as broadcaster_name from channel_points_rewards cpr join users u1 on cpr.broadcaster_id = u1.id", cpr, SEP_AND)
 	rows, err := q.DB.NamedQuery(sql+q.SQL, cpr)
@@ -81,7 +81,7 @@ func (q *Query) GetChannelPointsReward(cpr ChannelPointsReward) (*DBResposne, er
 		r = append(r, cpr)
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),

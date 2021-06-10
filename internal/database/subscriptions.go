@@ -31,7 +31,7 @@ type SubscriptionInsert struct {
 	CreatedAt     string          `db:"created_at" json:"-"`
 }
 
-func (q *Query) GetSubscriptions(s Subscription) (*DBResposne, error) {
+func (q *Query) GetSubscriptions(s Subscription) (*DBResponse, error) {
 	r := []Subscription{}
 	sql := generateSQL("SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name, u2.id as broadcaster_id, u2.user_login as broadcaster_login, u2.display_name as broadcaster_name, u3.id as gifter_id, u3.user_login as gifter_login, u3.display_name as gifter_name, s.tier as tier, s.is_gift as is_gift FROM subscriptions as s JOIN users u1 ON s.user_id = u1.id JOIN users u2 ON s.broadcaster_id = u2.id LEFT JOIN users u3 ON s.gifter_id = u3.id", s, SEP_AND)
 	sql += " order by s.created_at desc"
@@ -63,7 +63,7 @@ func (q *Query) GetSubscriptions(s Subscription) (*DBResposne, error) {
 		}
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: total,

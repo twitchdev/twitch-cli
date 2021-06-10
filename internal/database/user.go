@@ -49,7 +49,7 @@ type UserRequestParams struct {
 }
 
 type Block struct {
-	UserID    string `db:"user_id" son:"user_id"`
+	UserID    string `db:"user_id" json:"user_id"`
 	UserLogin string `db:"user_login" json:"user_login"`
 	UserName  string `db:"user_name" json:"display_name"`
 }
@@ -59,6 +59,19 @@ type Editor struct {
 	UserLogin string `db:"user_login" json:"-"`
 	UserName  string `db:"user_name" json:"user_name"`
 	CreatedAt string `db:"created_at" json:"created_at"`
+}
+
+type SearchChannel struct {
+	ID           string   `db:"id" json:"id" dbs:"u1.id"`
+	UserLogin    string   `db:"user_login" json:"broadcaster_login"`
+	DisplayName  string   `db:"display_name" json:"display_name"`
+	CategoryID   *string  `db:"category_id" json:"game_id" dbi:"false"`
+	CategoryName *string  `db:"category_name" json:"game_name" dbi:"false"`
+	Title        string   `db:"title" json:"title"`
+	Language     string   `db:"stream_language" json:"broadcaster_language"`
+	TagIDs       []string `json:"tag_ids" dbi:"false"`
+	IsLive       bool     `json:"is_live" db:"is_live"`
+	StartedAt    *string  `db:"started_at" json:"started_at"`
 }
 
 func (q *Query) GetUser(u User) (User, error) {
@@ -82,7 +95,7 @@ func (q *Query) GetUser(u User) (User, error) {
 	return r, err
 }
 
-func (q *Query) GetUsers(u User) (*DBResposne, error) {
+func (q *Query) GetUsers(u User) (*DBResponse, error) {
 	var r []User
 	sql := generateSQL("select * from users u1", u, SEP_AND)
 	rows, err := q.DB.NamedQuery(sql+q.SQL, u)
@@ -99,7 +112,7 @@ func (q *Query) GetUsers(u User) (*DBResposne, error) {
 		r = append(r, u)
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),
@@ -114,7 +127,7 @@ func (q *Query) GetUsers(u User) (*DBResposne, error) {
 	return &dbr, err
 }
 
-func (q *Query) GetChannels(u User) (*DBResposne, error) {
+func (q *Query) GetChannels(u User) (*DBResponse, error) {
 	var r []User
 	sql := generateSQL("select u1.*, c.category_name from users u1 left join categories c on u1.category_id = c.id", u, SEP_AND)
 	rows, err := q.DB.NamedQuery(sql+q.SQL, u)
@@ -130,7 +143,7 @@ func (q *Query) GetChannels(u User) (*DBResposne, error) {
 		r = append(r, u)
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),
@@ -144,6 +157,7 @@ func (q *Query) GetChannels(u User) (*DBResposne, error) {
 
 	return &dbr, err
 }
+
 func (q *Query) InsertUser(u User, upsert bool) error {
 	stmt := generateInsertSQL("users", "id", u, true)
 	_, err := q.DB.NamedExec(stmt, u)
@@ -157,7 +171,7 @@ func (q *Query) AddFollow(p UserRequestParams) error {
 	return err
 }
 
-func (q *Query) GetFollows(p UserRequestParams) (*DBResposne, error) {
+func (q *Query) GetFollows(p UserRequestParams) (*DBResponse, error) {
 	db := q.DB
 	var r []Follow
 	var f Follow
@@ -185,7 +199,7 @@ func (q *Query) GetFollows(p UserRequestParams) (*DBResposne, error) {
 		}
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: total,
@@ -212,10 +226,10 @@ func (q *Query) AddBlock(p UserRequestParams) error {
 	return err
 }
 
-func (q *Query) GetBlocks(p UserRequestParams) (*DBResposne, error) {
+func (q *Query) GetBlocks(p UserRequestParams) (*DBResponse, error) {
 	var r []Block
 	sql := generateSQL("SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name FROM blocks as b JOIN users u1 ON b.user_id = u1.id", p, SEP_AND)
-	sql = fmt.Sprintf("%v ORDER BY f.created_at DESC", sql)
+	sql = fmt.Sprintf("%v ORDER BY b.created_at DESC", sql)
 
 	rows, err := q.DB.NamedQuery(sql, p)
 	if err != nil {
@@ -230,7 +244,7 @@ func (q *Query) GetBlocks(p UserRequestParams) (*DBResposne, error) {
 		}
 		r = append(r, b)
 	}
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),
@@ -263,7 +277,7 @@ func (q *Query) AddEditor(p UserRequestParams) error {
 	return err
 }
 
-func (q *Query) GetEditors(u User) (*DBResposne, error) {
+func (q *Query) GetEditors(u User) (*DBResponse, error) {
 	var r []Editor
 
 	err := q.DB.Select(&r, "SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name, e.created_at FROM editors as e JOIN users u1 ON e.user_id = u1.id where broadcaster_id = $1 ORDER BY e.created_at DESC", u.ID)
@@ -273,7 +287,49 @@ func (q *Query) GetEditors(u User) (*DBResposne, error) {
 		return nil, err
 	}
 
-	dbr := DBResposne{
+	dbr := DBResponse{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
+}
+
+func (q *Query) SearchChannels(query string, live_only bool) (*DBResponse, error) {
+	r := []SearchChannel{}
+	stmt := `select u1.id, u1.user_login, u1.display_name, u1.category_id, u1.title, u1.stream_language, c.category_name, case when s.id is null then 'false' else 'true' end is_live, s.started_at from users u1 left join streams s on u1.id = s.broadcaster_id left join categories c on u1.category_id = c.id where lower(u1.user_login) like lower($1)`
+
+	if live_only == true {
+		stmt = `select u1.id, u1.user_login, u1.display_name, u1.category_id, u1.title, u1.stream_language, c.category_name, case when s.id is null then 'false' else 'true' end is_live, s.started_at from users u1 left join streams s on u1.id = s.broadcaster_id left join categories c on u1.category_id = c.id where lower(u1.user_login) like lower($1) and is_live='true'`
+	}
+
+	err := q.DB.Select(&r, stmt+q.SQL, fmt.Sprintf("%%%v%%", query))
+	if err != nil {
+		return nil, err
+	}
+
+	for i, c := range r {
+		st := []string{}
+		err = q.DB.Select(&st, "select tag_id from stream_tags where user_id=$1", c.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		emptyString := ""
+		if c.StartedAt == nil {
+			r[i].StartedAt = &emptyString
+		}
+		r[i].TagIDs = st
+	}
+
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),

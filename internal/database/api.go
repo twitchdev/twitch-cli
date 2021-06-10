@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type DBResposne struct {
+type DBResponse struct {
 	Cursor string      `json:"cursor"`
 	Total  int         `json:"total"`
 	Limit  int         `json:"-"`

@@ -7,7 +7,7 @@ import "log"
 type Extension struct {
 }
 
-func (q *Query) GetExtensionById(id string) (*DBResposne, error) {
+func (q *Query) GetExtensionById(id string) (*DBResponse, error) {
 	var r []Extension
 
 	err := q.DB.Get(&r, "select * from principle where id = $1", id)
@@ -16,7 +16,7 @@ func (q *Query) GetExtensionById(id string) (*DBResposne, error) {
 	}
 	log.Printf("%#v", r)
 
-	dbr := DBResposne{
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),

@@ -120,12 +120,16 @@ func generateUsers(ctx context.Context, count int) error {
 		CreatedAt:       util.GetTimestamp().Format(time.RFC3339),
 		UpdatedAt:       util.GetTimestamp().Format(time.RFC3339),
 	}
-
 	err := db.NewQuery(nil, 100).InsertTeam(team)
 	if err != nil {
 		log.Print(err.Error())
 	}
 
+	// drops entitlements static data
+	benefitID := util.RandomGUID()
+	dropsGameID := categoryIds[len(categoryIds)-1]
+
+	// t is true for use with a *bool value used below
 	t := true
 	// create fake follows, blocks, mods, and team membership
 	log.Printf("Creating channel points rewards and redemptions, follows, blocks, mods, bans, editors, and team members...")
@@ -165,6 +169,18 @@ func generateUsers(ctx context.Context, count int) error {
 			if err != nil {
 				log.Print(err.Error())
 			}
+		}
+
+		entitlement := database.DropsEntitlement{
+			ID:        util.RandomGUID(),
+			BenefitID: benefitID,
+			GameID:    dropsGameID,
+			UserID:    broadcaster.ID,
+			Timestamp: util.GetTimestamp().Format(time.RFC3339Nano),
+		}
+		err = db.NewQuery(nil, 1000).InsertDropsEntitlement(entitlement)
+		if err != nil {
+			log.Print(err.Error())
 		}
 
 		for j, user := range users {
@@ -207,37 +223,19 @@ func generateUsers(ctx context.Context, count int) error {
 				// since you're blocked, can't do any of the other things, so continue
 				continue
 			}
-
-			// 1 in 5 to follow
-			shouldFollow := userSeed%5 == 0
-			if shouldFollow {
-				err := db.NewQuery(nil, 100).AddFollow(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
-				if err != nil {
-					log.Print(err.Error())
-				}
-			}
-
-			// 1 in 20 chance to mod one another, plus adds to the moderator events
-			shouldMod := userSeed%20 == 0
-			if shouldMod {
-				err := db.NewQuery(nil, 100).AddModerator(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
-				if err != nil {
-					log.Print(err.Error())
-				}
-			}
-
-			// 1 in 20 chance to ban one another, plus adds to banned events
 			shouldBan := userSeed%20 == 0
 			if shouldBan {
 				err := db.NewQuery(nil, 100).InsertBan(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
 				if err != nil {
 					log.Print(err.Error())
 				}
+				// if banned, you wouldn't be able to follow or anything else- so continuing
+				continue
 			}
 
-			shouldAddEditor := userSeed%15 == 0
-			if shouldAddEditor {
-				err := db.NewQuery(nil, 100).AddEditor(database.UserRequestParams{BroadcasterID: broadcaster.ID, UserID: user.ID})
+			shouldFollow := userSeed%5 == 0
+			if shouldFollow {
+				err := db.NewQuery(nil, 100).AddFollow(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
 				if err != nil {
 					log.Print(err.Error())
 				}
@@ -256,6 +254,23 @@ func generateUsers(ctx context.Context, count int) error {
 					log.Print(err.Error())
 				}
 			}
+
+			shouldMod := userSeed%10 == 0
+			if shouldMod {
+				err := db.NewQuery(nil, 100).AddModerator(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
+				if err != nil {
+					log.Print(err.Error())
+				}
+			}
+
+			shouldAddEditor := userSeed%20 == 0
+			if shouldAddEditor {
+				err := db.NewQuery(nil, 100).AddEditor(database.UserRequestParams{BroadcasterID: broadcaster.ID, UserID: user.ID})
+				if err != nil {
+					log.Print(err.Error())
+				}
+			}
+
 		}
 
 		shouldBeTeamMember := util.RandomInt(100*100)%20 == 0
@@ -275,7 +290,7 @@ func generateUsers(ctx context.Context, count int) error {
 	// create fake streams
 	log.Printf("Creating streams...")
 	for _, u := range users {
-		if util.RandomInt(100)%25 != 0 {
+		if util.RandomInt(100)%10 != 0 {
 			continue
 		}
 		s := database.Stream{
@@ -312,8 +327,8 @@ func generateUsers(ctx context.Context, count int) error {
 		var prevTag string
 		for i := 0; i < int(util.RandomInt(5)); i++ {
 			st := database.StreamTag{
-				StreamID: s.ID,
-				TagID:    tagIds[util.RandomInt(int64(len(tagIds)-1))],
+				UserID: s.Broacaster,
+				TagID:  tagIds[util.RandomInt(int64(len(tagIds)-1))],
 			}
 			if prevTag == st.TagID {
 				continue
@@ -330,7 +345,7 @@ func generateUsers(ctx context.Context, count int) error {
 		// videos
 		v := database.Video{
 			ID:               fmt.Sprint(util.RandomInt(10 * 1000 * 1000)),
-			StreamID:         s.ID,
+			StreamID:         &s.ID,
 			BroadcasterID:    s.Broacaster,
 			Title:            "Sample stream!",
 			VideoDescription: "",

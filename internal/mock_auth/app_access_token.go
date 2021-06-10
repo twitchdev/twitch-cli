@@ -5,6 +5,7 @@ package mock_auth
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -41,11 +42,18 @@ func (e AppAccessTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request
 	scopes := strings.Split(scope, " ")
 	if clientID == "" || clientSecret == "" || grantType != "client_credentials" {
 		w.WriteHeader(http.StatusBadRequest)
-
 		return
 	}
 
-	if areValidScopes(scopes, APP_ACCES_TOKEN) != true {
+	// remove empty entries
+	for i, s := range scopes {
+		if s == "" {
+			scopes = removeFromSlice(scopes, i)
+		}
+	}
+
+	if !areValidScopes(scopes, APP_ACCES_TOKEN) {
+		log.Printf("%v", scopes)
 		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Unauthorized"), "Invalid scopes requested"))
 		return
 	}
@@ -83,4 +91,8 @@ func (e AppAccessTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request
 	bytes, _ := json.Marshal(ater)
 	w.Write(bytes)
 	return
+}
+
+func removeFromSlice(s []string, index int) []string {
+	return append(s[:index], s[index+1:]...)
 }

@@ -5,18 +5,34 @@ package database
 import "log"
 
 type DropsEntitlement struct {
+	ID        string `db:"id" json:"id" dbs:"c.id"`
+	UserID    string `db:"user_id" json:"user_id"`
+	BenefitID string `db:"benefit_id" json:"benefit_id"`
+	GameID    string `db:"game_id" json:"game_id"`
+	Timestamp string `db:"timestamp" json:"timestamp"`
 }
 
-func (q *Query) GetDropsEntitlementById(id string) (*DBResposne, error) {
+func (q *Query) GetDropsEntitlements(de DropsEntitlement) (*DBResponse, error) {
 	var r []DropsEntitlement
-
-	err := q.DB.Get(&r, "select * from drops_entitlements where id = $1", id)
+	stmt := generateSQL("select * from drops_entitlements", de, SEP_AND)
+	stmt += " order by timestamp desc " + q.SQL
+	rows, err := q.DB.NamedQuery(stmt, de)
 	if err != nil {
+		log.Print(err)
 		return nil, err
 	}
-	log.Printf("%#v", r)
+	for rows.Next() {
+		var de DropsEntitlement
+		err := rows.StructScan(&de)
+		if err != nil {
+			log.Print(err)
+			return nil, err
+		}
 
-	dbr := DBResposne{
+		r = append(r, de)
+	}
+
+	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
 		Total: len(r),
@@ -30,14 +46,8 @@ func (q *Query) GetDropsEntitlementById(id string) (*DBResposne, error) {
 
 	return &dbr, err
 }
-
-func (q *Query) InsertDropsEntitlement(d DropsEntitlement, upsert bool) error {
-	tx := q.DB.MustBegin()
-	tx.NamedExec(`insert into drops_entitlements values(:id, :values...)`, d)
-	err := tx.Commit()
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (q *Query) InsertDropsEntitlement(d DropsEntitlement) error {
+	stmt := generateInsertSQL("drops_entitlements", "id", d, false)
+	_, err := q.DB.NamedExec(stmt, d)
+	return err
 }
