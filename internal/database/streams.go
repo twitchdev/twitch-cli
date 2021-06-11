@@ -74,7 +74,7 @@ func (q *Query) GetStream(s Stream) (*DBResponse, error) {
 		var s Stream
 		st := []string{}
 		err := rows.StructScan(&s)
-		println(s.Language)
+
 		if err != nil {
 			return nil, err
 		}
@@ -193,7 +193,6 @@ func (q *Query) GetFollowedStreams(userID string) (*DBResponse, error) {
 
 	for i, s := range r {
 		var st []string
-		println(s.Language)
 		if err != nil {
 			return nil, err
 		}
@@ -203,7 +202,7 @@ func (q *Query) GetFollowedStreams(userID string) (*DBResponse, error) {
 		if s.CategoryName.Valid {
 			r[i].RealCategoryName = s.CategoryName.String
 		}
-		err = q.DB.Select(&st, "select tag_id from stream_tags where stream_id=$1", s.ID)
+		err = q.DB.Select(&st, "select tag_id from stream_tags where user_id=$1", s.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -255,9 +254,10 @@ func (q *Query) GetStreamMarkers(sm StreamMarker) (*DBResponse, error) {
 			if err != nil {
 				return nil, err
 			}
-			for i, _ := range sm {
+			for i := range sm {
 				sm[i].URL = fmt.Sprintf("https://twitch.tv/%v/manager/highlighter/%v?t=%v", u.BroadcasterLogin, v.ID, calcTOffset(sm[i].PositionSeconds))
 			}
+
 			r[i].Videos = append(r[i].Videos, StreamMarkerVideo{VideoID: v.ID, Markers: sm})
 		}
 

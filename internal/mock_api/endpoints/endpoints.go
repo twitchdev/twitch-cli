@@ -13,6 +13,8 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/drops"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/hype_train"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/moderation"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/polls"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/predictions"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/search"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/streams"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/subscriptions"
@@ -43,6 +45,8 @@ func All() []mock_api.MockEndpoint {
 		moderation.Bans{},
 		moderation.ModeratorEvents{},
 		moderation.Moderators{},
+		polls.Polls{},
+		predictions.Predictions{},
 		search.SearchCategories{},
 		search.SearchChannels{},
 		streams.AllTags{},

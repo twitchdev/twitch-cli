@@ -46,20 +46,26 @@ func getDatabase() (sqlx.DB, error) {
 		needToInit = true
 	}
 
-	// open and force Foreign Key support ("fk=true")
-	db, err := sqlx.Open("sqlite3", path+"?_fk=true")
-	if err != nil {
-		return sqlx.DB{}, err
-	}
-
-	if needToInit == true {
-		err = initDatabase(*db)
+	for i := 0; i <= 5; i++ {
+		// open and force Foreign Key support ("fk=true")
+		db, err := sqlx.Open("sqlite3", path+"?_fk=true&cache=shared")
 		if err != nil {
-			log.Print(err)
-			return sqlx.DB{}, err
+			if i == 5 {
+				return sqlx.DB{}, err
+			}
+			continue
 		}
-	}
 
-	checkAndUpdate(*db)
-	return *db, nil
+		if needToInit == true {
+			err = initDatabase(*db)
+			if err != nil {
+				log.Print(err)
+				return sqlx.DB{}, err
+			}
+		}
+
+		checkAndUpdate(*db)
+		return *db, nil
+	}
+	return sqlx.DB{}, nil
 }

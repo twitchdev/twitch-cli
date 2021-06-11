@@ -4,10 +4,7 @@ package database
 
 import (
 	"database/sql"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 	"time"
@@ -204,41 +201,4 @@ func generateUpdateSQL(table string, pk []string, i interface{}) string {
 		whereClause = append(whereClause, fmt.Sprintf("%v=:%v", key, key))
 	}
 	return fmt.Sprintf("%v where %v", s, strings.Join(whereClause, " AND "))
-}
-
-// Generates the respective pagination token
-func generatePaginationSQLAndResponse(limit int, prev_cursor string, is_before bool) InternalPagination {
-	ic := InternalCursor{}
-	if limit == 0 {
-		limit = 20
-	}
-
-	if prev_cursor != "" {
-		b, err := base64.RawStdEncoding.DecodeString(prev_cursor)
-		if err != nil {
-			log.Print(err)
-		}
-		json.Unmarshal(b, &ic)
-		if is_before {
-			ic.Offset -= limit
-		} else {
-			ic.Offset += limit
-		}
-	}
-
-	ic.Limit = limit
-
-	if ic.Offset < 0 {
-		return InternalPagination{}
-	}
-
-	b, _ := json.Marshal(ic)
-
-	ip := InternalPagination{
-		InternalCursor:   ic,
-		PaginationCursor: base64.RawURLEncoding.EncodeToString(b),
-		SQL:              fmt.Sprintf(" LIMIT %v OFFSET %v", ic.Limit, ic.Offset),
-	}
-
-	return ip
 }

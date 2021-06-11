@@ -8,15 +8,19 @@ create table categories(
   id text not null primary key, category_name text not null
 );
 create table users(
-  id text not null primary key, user_login text not null, 
-  display_name text not null, email text not null, 
-  user_type text, broadcaster_type text, 
-  user_description text, created_at text not null, 
+  id text not null primary key, 
+  user_login text not null, 
+  display_name text not null, 
+  email text not null, 
+  user_type text, 
+  broadcaster_type text, 
+  user_description text, 
+  created_at text not null, 
   category_id text, 
-  modified_at text,
+  modified_at text, 
   stream_language text not null default 'en', 
   title text not null default '', 
-  delay int not null default 0,
+  delay int not null default 0, 
   foreign key (category_id) references categories(id)
 );
 create table follows (
@@ -39,21 +43,21 @@ create table bans (
   broadcaster_id text not null, 
   user_id text not null, 
   created_at text not null, 
-  expires_at text,
+  expires_at text, 
   primary key (broadcaster_id, user_id), 
   foreign key (broadcaster_id) references users(id), 
   foreign key (user_id) references users(id)
 );
 create table ban_events (
-    id text not null primary key, 
-    event_timestamp text not null,
-    event_type text not null, 
-    event_version text not null default '1.0',
-    broadcaster_id text not null, 
-    user_id text not null, 
-    expires_at text,
-    foreign key (broadcaster_id) references users(id), 
-    foreign key (user_id) references users(id)
+  id text not null primary key, 
+  event_timestamp text not null, 
+  event_type text not null, 
+  event_version text not null default '1.0', 
+  broadcaster_id text not null, 
+  user_id text not null, 
+  expires_at text, 
+  foreign key (broadcaster_id) references users(id), 
+  foreign key (user_id) references users(id)
 );
 create table moderators (
   broadcaster_id text not null, 
@@ -65,7 +69,7 @@ create table moderators (
 );
 create table moderator_actions (
   id text not null primary key, 
-  event_timestamp text not null,
+  event_timestamp text not null, 
   event_type text not null, 
   event_version text not null default '1.0', 
   broadcaster_id text not null, 
@@ -108,12 +112,12 @@ create table channel_points_redemptions(
   id text not null primary key, 
   reward_id text not null, 
   broadcaster_id text not null, 
-  user_id text not null,
+  user_id text not null, 
   user_input text, 
   redemption_status text not null, 
   redeemed_at text, 
   foreign key (reward_id) references channel_points_rewards(id), 
-  foreign key (broadcaster_id) references users(id),
+  foreign key (broadcaster_id) references users(id), 
   foreign key (user_id) references users(id)
 );
 create table streams(
@@ -160,12 +164,12 @@ create table videos(
   view_count int not null default 0, 
   duration text not null, 
   video_language text not null default 'en', 
-  category_id text,
+  category_id text, 
   type text default 'archive', 
   foreign key (stream_id) references streams(id), 
-  foreign key (broadcaster_id) references users(id),
-  foreign key (category_id) references categories(id)
-};
+  foreign key (broadcaster_id) references users(id), 
+  foreign key (category_id) references categories(id) 
+  );
 create table stream_markers(
   id text not null primary key, 
   video_id text not null, 
@@ -189,7 +193,7 @@ create table subscriptions (
   is_gift boolean not null default false, 
   gifter_id text, 
   tier text not null default '1000', 
-  created_at text not null,
+  created_at text not null, 
   primary key (broadcaster_id, user_id), 
   foreign key (broadcaster_id) references users(id), 
   foreign key (user_id) references users(id), 
@@ -229,7 +233,7 @@ create table polls (
   status text not null, 
   duration int not null, 
   started_at text not null, 
-  ended_at text not null, 
+  ended_at text, 
   foreign key (broadcaster_id) references users(id)
 );
 create table poll_choices (
@@ -242,41 +246,46 @@ create table poll_choices (
   foreign key (poll_id) references polls(id)
 );
 create table predictions (
-  id text not null, 
+  id text not null primary key, 
   broadcaster_id text not null, 
   title text not null, 
   winning_outcome_id text, 
   prediction_window int, 
   status text not null, 
   created_at text not null, 
-  ended_at text not null, 
-  locked_at text not null, 
+  ended_at text, 
+  locked_at text, 
   foreign key (broadcaster_id) references users(id)
 );
 create table prediction_outcomes (
-  id text not null, title text not null, 
-  users int not null default 0, channel_points int not null default 0, 
-  color text not null
+  id text not null primary key, 
+  title text not null, 
+  users int not null default 0, 
+  channel_points int not null default 0, 
+  color text not null, 
+  prediction_id text not null, 
+  foreign key (prediction_id) references predictions(id)
 );
 create table prediction_predictions (
   prediction_id text not null, 
   user_id text not null, 
   amount int not null, 
-  color text not null, 
+  outcome_id text not null, 
   primary key(prediction_id, user_id), 
   foreign key(user_id) references users(id), 
-  foreign key(prediction_id) references predictions(id)
+  foreign key(prediction_id) references predictions(id), 
+  foreign key(outcome_id) references prediction_outcomes(id)
 );
 create table clips (
   id text not null primary key, 
-  broadcaster_id text not null,
-  creator_id text not null,
-  video_id text not null,
-  game_id text not null,
-  title text not null,
+  broadcaster_id text not null, 
+  creator_id text not null, 
+  video_id text not null, 
+  game_id text not null, 
+  title text not null, 
   view_count int default 0, 
-  created_at text not null,
-  duration real not null,
-  foreign key (broadcaster_id) references users(id),
+  created_at text not null, 
+  duration real not null, 
+  foreign key (broadcaster_id) references users(id), 
   foreign key (creator_id) references users(id)
 );

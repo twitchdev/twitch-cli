@@ -83,7 +83,6 @@ func getClips(w http.ResponseWriter, r *http.Request) {
 	if startedAt != "" && endedAt == "" {
 		sa, _ := time.Parse(time.RFC3339, startedAt)
 		endedAt = sa.Add(7 * 24 * time.Hour).Format(time.RFC3339)
-		println(startedAt, endedAt)
 	}
 
 	dbr, err := db.NewQuery(r, 100).GetClips(database.Clip{ID: id, BroadcasterID: broadcasterID, GameID: gameID}, startedAt, endedAt)

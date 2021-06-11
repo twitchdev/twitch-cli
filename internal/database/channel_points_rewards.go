@@ -16,7 +16,7 @@ type ChannelPointsReward struct {
 	BackgroundColor                  string         `db:"background_color" json:"background_color"`
 	IsEnabled                        *bool          `db:"is_enabled" json:"is_enabled"`
 	Cost                             int            `db:"cost" json:"cost"`
-	Title                            string         `db:"title" json:"title"`
+	Title                            string         `db:"title" dbs:"cpr.title" json:"title"`
 	RewardPrompt                     string         `db:"reward_prompt" json:"prompt"`
 	IsUserInputRequired              bool           `db:"is_user_input_required" json:"is_user_input_requird"`
 	MaxPerStream                     `json:"max_per_stream_setting"`

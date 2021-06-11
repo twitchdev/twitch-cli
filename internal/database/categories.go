@@ -73,7 +73,7 @@ func (q *Query) SearchCategories(query string) (*DBResponse, error) {
 func (q *Query) GetTopGames() (*DBResponse, error) {
 	r := []Category{}
 
-	err := q.DB.Select(&r, "select c.id, c.category_name, SUM(s.viewer_count) as vc from users u join streams s on s.broadcaster_id = u.id left join categories c on u.category_id = c.id group by c.id, c.category_name order by vc desc")
+	err := q.DB.Select(&r, "select c.id, c.category_name, IFNULL(SUM(s.viewer_count),0) as vc from categories c left join users u on c.id = u.category_id left join streams s on s.broadcaster_id = u.id  group by c.id, c.category_name order by vc desc")
 	if err != nil {
 		return nil, err
 	}

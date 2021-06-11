@@ -8,14 +8,14 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 var fromUser = "1234"
 var toUser = "4567"
 
 func TestEventSub(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
 		Transport:  models.TransportEventSub,
@@ -57,7 +57,7 @@ func TestEventSub(t *testing.T) {
 	a.NotNil(body.Event.Reward.ID)
 }
 func TestWebsubRedemption(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
 		Transport: models.TransportWebSub,
@@ -68,7 +68,7 @@ func TestWebsubRedemption(t *testing.T) {
 }
 
 func TestFakeTransport(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
 		FromUserID: fromUser,
@@ -82,7 +82,7 @@ func TestFakeTransport(t *testing.T) {
 	a.Empty(r)
 }
 func TestValidTrigger(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.ValidTrigger("add-redemption")
 	a.Equal(true, r)
@@ -92,7 +92,7 @@ func TestValidTrigger(t *testing.T) {
 }
 
 func TestValidTransport(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.ValidTransport(models.TransportEventSub)
 	a.Equal(true, r)
@@ -101,7 +101,7 @@ func TestValidTransport(t *testing.T) {
 	a.Equal(false, r)
 }
 func TestGetTopic(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.GetTopic(models.TransportEventSub, "add-redemption")
 	a.NotNil(r)

@@ -54,13 +54,10 @@ func (q *Query) InsertOrUpdateAuthenticationClient(client AuthenticationClient, 
 	client.Secret = generateString(30)
 
 	for {
-		tx := db.MustBegin()
-		tx.NamedExec(stmt, client)
-		err := tx.Commit()
+		_, err := db.NamedExec(generateInsertSQL("clients", "id", client, upsert), client)
 		if err == nil {
 			return client, err
 		}
-
 		client.ID = util.RandomClientID()
 	}
 }

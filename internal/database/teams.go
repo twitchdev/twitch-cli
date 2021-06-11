@@ -39,10 +39,10 @@ func (q *Query) GetTeam(t Team) (*DBResponse, error) {
 			return nil, err
 		}
 
-		if *t.BackgroundImageUrl == "" {
+		if t.BackgroundImageUrl == nil {
 			t.BackgroundImageUrl = nil
 		}
-		if *t.Banner == "" {
+		if t.Banner == nil {
 			t.Banner = nil
 		}
 
@@ -92,10 +92,10 @@ func (q *Query) GetTeamByBroadcaster(broadcasterID string) (*DBResponse, error) 
 	}
 
 	for i, t := range r {
-		if *t.BackgroundImageUrl == "" {
+		if t.BackgroundImageUrl == nil {
 			r[i].BackgroundImageUrl = nil
 		}
-		if *t.Banner == "" {
+		if t.Banner == nil {
 			r[i].Banner = nil
 		}
 		r[i].ThumbnailURL = fmt.Sprintf("https://static-cdn.jtvnw.net/jtv_user_pictures/team-%v-team_logo_image-bf1d9a87ca81432687de60e24ad9593d-600x600.png", t.TeamName)

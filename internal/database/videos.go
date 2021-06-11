@@ -23,7 +23,6 @@ type Video struct {
 	VideoLanguage    string              `db:"video_language" json:"video_language"`
 	MutedSegments    []VideoMutedSegment `json:"muted_segments"`
 	CategoryID       *string             `db:"category_id" dbs:"v.category_id" json:"-"`
-	OldCat           *string             `db:"old_cat" json:"-"` // temp
 	Type             string              `db:"type" json:"type"`
 	// calculated fields
 	URL          string `json:"url"`

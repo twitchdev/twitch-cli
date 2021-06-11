@@ -5,7 +5,7 @@ package database
 import "log"
 
 type DropsEntitlement struct {
-	ID        string `db:"id" json:"id" dbs:"c.id"`
+	ID        string `db:"id" json:"id" dbs:"de.id"`
 	UserID    string `db:"user_id" json:"user_id"`
 	BenefitID string `db:"benefit_id" json:"benefit_id"`
 	GameID    string `db:"game_id" json:"game_id"`
@@ -14,7 +14,7 @@ type DropsEntitlement struct {
 
 func (q *Query) GetDropsEntitlements(de DropsEntitlement) (*DBResponse, error) {
 	var r []DropsEntitlement
-	stmt := generateSQL("select * from drops_entitlements", de, SEP_AND)
+	stmt := generateSQL("select * from drops_entitlements de", de, SEP_AND)
 	stmt += " order by timestamp desc " + q.SQL
 	rows, err := q.DB.NamedQuery(stmt, de)
 	if err != nil {

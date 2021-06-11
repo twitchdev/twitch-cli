@@ -109,7 +109,6 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			break
 		}
 
-		// log.Printf("%v", apiResponse)
 		if autopaginate == false {
 			data.Pagination.Cursor = apiResponse.Pagination.Cursor
 			break
@@ -123,7 +122,6 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	}
 
 	if data.Data == nil {
-		log.Println("here")
 		data.Data = make([]interface{}, 0)
 	}
 	// handle json marshalling better; returns empty slice vs. null

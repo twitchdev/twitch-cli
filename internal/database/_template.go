@@ -11,7 +11,6 @@ func (q *Query) GetPrinciple(p Principle) (*DBResponse, error) {
 	var r Principle
 
 	sql := generateSQL("select * from principle", u, SEP_AND)
-	sql = fmt.Sprintf("%v LIMIT 1", sql)
 	rows, err := q.DB.NamedQuery(sql, u)
 	if err != nil {
 		return r, err

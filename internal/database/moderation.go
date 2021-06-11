@@ -72,7 +72,6 @@ func (q *Query) GetModerationActionsByBroadcaster(broadcaster string) (*DBRespon
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("%#v", r)
 
 	dbr := DBResponse{
 		Data:  r,

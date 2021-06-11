@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package request
+package generate
 
 import (
 	"testing"
@@ -8,10 +8,19 @@ import (
 	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
-func TestNewRequest(t *testing.T) {
+func TestGenerateUsername(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r, err := NewRequest("GET", "https://api.twitch.tv/helix/users", nil)
+	un := generateUsername()
+	a.NotEmpty(un)
+}
+
+func TestGenerate(t *testing.T) {
+	a := test_setup.SetupTestEnv(t)
+
+	err := Generate(0)
 	a.Nil(err)
-	a.Contains(r.Header.Get("User-Agent"), "twitch-cli/")
+
+	err = Generate(30)
+	a.Nil(err)
 }

@@ -96,8 +96,8 @@ func getBitsLeaderboard(w http.ResponseWriter, r *http.Request) {
 
 	// check if provided period is not valid (not one of the valid values)
 	if isValidPeriod(period) == false {
-		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Invalid Request"), "Period is invalid"))
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Invalid Request"), "Period is invalid"))
 		return
 	}
 
@@ -109,14 +109,14 @@ func getBitsLeaderboard(w http.ResponseWriter, r *http.Request) {
 	// validate count param
 	c, err := strconv.Atoi(count)
 	if err != nil {
-		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Invalid Request"), "count is not a valid integer"))
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Invalid Request"), "count is not a valid integer"))
 		return
 	}
 
 	if c < 0 || c > 100 {
-		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Invalid Request"), "count must be between 1 and 100"))
 		w.WriteHeader(http.StatusBadRequest)
+		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Invalid Request"), "count must be between 1 and 100"))
 		return
 
 	}
@@ -174,8 +174,8 @@ func getBitsLeaderboard(w http.ResponseWriter, r *http.Request) {
 
 	u, err := db.NewQuery(r, 100).GetUsers(p)
 	if err != nil {
-		w.Write(mock_errors.GetErrorBytes(http.StatusInternalServerError, err, "Error getting users for mock."))
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(mock_errors.GetErrorBytes(http.StatusInternalServerError, err, "Error getting users for mock."))
 		return
 	}
 	users := u.Data.([]database.User)
