@@ -24,9 +24,10 @@ var (
 	secret         string
 	status         string
 	itemID         string
+	itemName       string
 	cost           int64
 	count          int
-	streamTitle	   string
+	description    string
 )
 
 var eventCmd = &cobra.Command{
@@ -58,7 +59,7 @@ var verifyCmd = &cobra.Command{
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: events.ValidTriggers(),
 	Run:       verifyCmdRun,
-	Example:   `twitch verify-subscribe subscribe`,
+	Example:   `twitch event verify-subscription subscribe`,
 }
 
 var retriggerCmd = &cobra.Command{
@@ -73,18 +74,22 @@ func init() {
 	eventCmd.AddCommand(triggerCmd, retriggerCmd, verifyCmd)
 
 	// trigger flags
+	// flags for forwarding functionality/changing payloads
 	triggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
-	triggerCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to Webhooks 2/EventSub.\nSupported values: %s", events.ValidTransports()))
+	triggerCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to /EventSub.\nSupported values: %s", events.ValidTransports()))
+	triggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.")
+
+	// per-topic flags
 	triggerCmd.Flags().StringVarP(&toUser, "to-user", "t", "", "User ID of the receiver of the event. For example, the user that receives a follow. In most contexts, this is the broadcaster.")
 	triggerCmd.Flags().StringVarP(&fromUser, "from-user", "f", "", "User ID of the user sending the event, for example the user following another user.")
 	triggerCmd.Flags().StringVarP(&giftUser, "gift-user", "g", "", "Used only for \"gift\" events. Denotes the User ID of the gifting user.")
 	triggerCmd.Flags().BoolVarP(&isAnonymous, "anonymous", "a", false, "Denotes if the event is anonymous. Only applies to Gift and Sub events.")
 	triggerCmd.Flags().IntVarP(&count, "count", "c", 1, "Count of events to events. This will simulate a sub gift, or large number of cheers.")
-	triggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.")
 	triggerCmd.Flags().StringVarP(&status, "status", "S", "", "Status of the event object, currently applies to channel points redemptions.")
-	triggerCmd.Flags().StringVarP(&itemID, "item-id", "i", "", "Manually set the ID of the event payload item (for example the reward ID in redemption events).")
+	triggerCmd.Flags().StringVarP(&itemID, "item-id", "i", "", "Manually set the ID of the event payload item (for example the reward ID in redemption events). For stream events, this is the game ID.")
+	triggerCmd.Flags().StringVarP(&itemName, "item-name", "n", "", "Manually set the name of the event payload item (for example the reward ID in redemption events). For stream events, this is the game title.")
 	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of bits or channel points redeemed/used in the event.")
-	triggerCmd.Flags().StringVarP(&streamTitle, "description", "d", "", "Title the stream should be updated with.")
+	triggerCmd.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
@@ -94,7 +99,7 @@ func init() {
 
 	// verify-subscription flags
 	verifyCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
-	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to Webhooks 2/EventSub.\nSupported values: %s", events.ValidTransports()))
+	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.")
 	verifyCmd.MarkFlagRequired("forward-address")
 }
@@ -127,7 +132,8 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 			Status:         status,
 			ItemID:         itemID,
 			Cost:           cost,
-			StreamTitle:	streamTitle,
+			Description:    description,
+			ItemName:       itemName,
 		})
 
 		if err != nil {

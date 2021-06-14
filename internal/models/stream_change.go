@@ -10,7 +10,7 @@ type ChannelUpdateEventSubEvent struct {
 	StreamLanguage       string `json:"language"`
 	StreamCategoryID     string `json:"category_id"`
 	StreamCategoryName   string `json:"category_name"`
-	IsMature             string `json:"is_mature"`
+	IsMature             bool   `json:"is_mature"`
 }
 
 type StreamChangeWebSubResponse struct {

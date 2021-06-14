@@ -32,7 +32,7 @@ type RewardMax struct {
 
 type RewardGlobalCooldown struct {
 	IsEnabled bool  `json:"is_enabled"`
-	Value     int64 `json:"value"`
+	Seconds   int64 `json:"seconds"`
 }
 
 type RewardImage struct {

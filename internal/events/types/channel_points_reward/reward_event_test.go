@@ -25,6 +25,7 @@ func TestEventSub(t *testing.T) {
 		Status:     "tested",
 		ItemID:     "12345678-1234-abcd-5678-000000000000",
 		Cost:       1337,
+		ItemName:   "Testing",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -36,6 +37,7 @@ func TestEventSub(t *testing.T) {
 
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 	a.Equal(params.Cost, body.Event.Cost, "Expected cost %v, got %v", params.Cost, body.Event.Cost)
+	a.Equal(params.ItemName, body.Event.Title)
 }
 
 func TestWebSub(t *testing.T) {
