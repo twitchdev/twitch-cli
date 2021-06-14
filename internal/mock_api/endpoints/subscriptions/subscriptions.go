@@ -56,7 +56,7 @@ func getBroadcasterSubscriptions(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 
 	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 

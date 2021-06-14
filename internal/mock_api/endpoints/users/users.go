@@ -9,6 +9,7 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/authentication"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/mock_errors"
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
@@ -120,7 +121,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// filter out emails for everyone but the authorized user
-	for i, _ := range users {
+	for i := range users {
 		if users[i].ID != userCtx.UserID {
 			users[i].Email = ""
 		} else if !shouldIncludeEmail {
@@ -142,12 +143,12 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 func putUsers(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
-	description := q["description"]
+	description := q.Get("description")
 
 	shouldIncludeEmail := userCtx.HasScope("user:read:email")
 
 	if userCtx.UserID == "" || len(description) == 0 {
-		w.WriteHeader(400)
+		mock_errors.WriteBadRequest(w, "description is required")
 		return
 	}
 
@@ -158,7 +159,7 @@ func putUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u.UserDescription = description[len(description)-1]
+	u.UserDescription = description
 
 	err = db.NewQuery(r, 100).InsertUser(u, true)
 	if err != nil {
@@ -168,7 +169,7 @@ func putUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	users := convertUsers([]database.User{u})
 
-	for i, _ := range users {
+	for i := range users {
 		if users[i].ID != userCtx.UserID {
 			users[i].Email = ""
 		} else if !shouldIncludeEmail {

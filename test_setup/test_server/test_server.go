@@ -23,6 +23,9 @@ func SetupTestServer(next mock_api.MockEndpoint) *httptest.Server {
 			log.Fatalf("Error connecting to database: %v", err.Error())
 			return
 		}
+
+		defer db.DB.Close()
+
 		ctx = context.WithValue(ctx, "db", db)
 		ctx = context.WithValue(ctx, "auth", authentication.UserAuthentication{Scopes: []string{
 			"analytics:read:extensions",

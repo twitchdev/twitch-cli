@@ -60,19 +60,19 @@ func (e AutomodStatus) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPost:
-		getAutomodStatus(w, r)
+		postAutomodStatus(w, r)
 		break
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
-func getAutomodStatus(w http.ResponseWriter, r *http.Request) {
+func postAutomodStatus(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 	var body PostAutomodStatusBody
 	response := []PostAutomodStatusResponse{}
 	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 

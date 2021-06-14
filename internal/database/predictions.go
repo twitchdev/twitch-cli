@@ -48,11 +48,16 @@ func (q *Query) GetPredictions(p Prediction) (*DBResponse, error) {
 
 	for rows.Next() {
 		p := Prediction{}
-		outcomes := []PredictionOutcome{}
 		err := rows.StructScan(&p)
 		if err != nil {
 			return nil, err
 		}
+
+		r = append(r, p)
+	}
+
+	for i, p := range r {
+		outcomes := []PredictionOutcome{}
 		err = q.DB.Select(&outcomes, "select po.id, po.title, po.color, COUNT(pp.prediction_id) as users, IFNULL(SUM(pp.amount),0) as channel_points from prediction_outcomes po left join prediction_predictions pp on po.id = pp.outcome_id where po.prediction_id = $1 group by po.id, po.title, po.color", p.ID)
 		if err != nil {
 			return nil, err
@@ -76,8 +81,7 @@ func (q *Query) GetPredictions(p Prediction) (*DBResponse, error) {
 				outcomes[i].TopPredictors = nil
 			}
 		}
-		p.Outcomes = outcomes
-		r = append(r, p)
+		r[i].Outcomes = outcomes
 	}
 
 	dbr := DBResponse{

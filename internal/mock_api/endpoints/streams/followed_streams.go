@@ -56,7 +56,7 @@ func getFollowedStreams(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 
 	if userCtx.UserID != r.URL.Query().Get("user_id") {
-		mock_errors.WriteBadRequest(w, "user_id must match the token user")
+		mock_errors.WriteUnauthorized(w, "user_id must match the token user")
 		return
 	}
 

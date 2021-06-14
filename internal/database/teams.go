@@ -46,6 +46,10 @@ func (q *Query) GetTeam(t Team) (*DBResponse, error) {
 			t.Banner = nil
 		}
 
+		r = append(r, t)
+	}
+
+	for i, t := range r {
 		p := TeamMember{TeamID: t.ID}
 		tms := []TeamMember{}
 
@@ -53,10 +57,8 @@ func (q *Query) GetTeam(t Team) (*DBResponse, error) {
 		if err != nil {
 			return nil, err
 		}
-		t.Users = tms
-		r = append(r, t)
+		r[i].Users = tms
 	}
-
 	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,

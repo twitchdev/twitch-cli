@@ -21,6 +21,6 @@ func TestGenerate(t *testing.T) {
 	err := Generate(0)
 	a.Nil(err)
 
-	err = Generate(30)
+	err = Generate(10)
 	a.Nil(err)
 }

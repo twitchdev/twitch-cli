@@ -93,7 +93,7 @@ func getFollows(w http.ResponseWriter, r *http.Request) {
 		Data:  f,
 		Total: &dbr.Total,
 	}
-	if dbr.Cursor != "" {
+	if dbr != nil && dbr.Cursor != "" {
 		log.Printf("%#v", &dbr)
 		body.Pagination = &models.APIPagination{
 			Cursor: dbr.Cursor,

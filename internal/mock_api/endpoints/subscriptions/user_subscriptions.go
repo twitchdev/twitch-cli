@@ -57,7 +57,7 @@ func getUserSubscriptions(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 
 	if userCtx.UserID != r.URL.Query().Get("user_id") {
-		mock_errors.WriteBadRequest(w, "user_id does not match token")
+		mock_errors.WriteUnauthorized(w, "user_id does not match token")
 		return
 	}
 

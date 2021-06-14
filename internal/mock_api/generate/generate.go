@@ -83,6 +83,10 @@ func generateUsers(ctx context.Context, count int) error {
 		// status check
 		t := util.RandomInt(3)
 
+		if i == 0 {
+			t = 2
+		}
+
 		if t == 1 {
 			bt = "affiliate"
 		} else if t == 2 {
@@ -135,6 +139,8 @@ func generateUsers(ctx context.Context, count int) error {
 	log.Printf("Creating channel points rewards and redemptions, follows, blocks, mods, bans, editors, and team members...")
 	for i, broadcaster := range users {
 		copoReward := database.ChannelPointsReward{}
+		prediction := database.Prediction{}
+		poll := database.Poll{}
 		if broadcaster.Type != "" {
 			copoReward = database.ChannelPointsReward{
 				ID:                  util.RandomGUID(),
@@ -183,7 +189,65 @@ func generateUsers(ctx context.Context, count int) error {
 			log.Print(err.Error())
 		}
 
+		// create fake polls
+		poll = database.Poll{
+			ID:                         util.RandomGUID(),
+			Title:                      "Test title",
+			BroadcasterID:              broadcaster.ID,
+			BitsVotingEnabled:          false,
+			ChannelPointsVotingEnabled: false,
+			Status:                     "ACTIVE",
+			Duration:                   300,
+			StartedAt:                  util.GetTimestamp().Format(time.RFC3339),
+		}
+
+		poll.Choices = []database.PollsChoice{
+			{Title: "Choice 1", Votes: 0, ChannelPointsVotes: 0, BitsVotes: 0, PollID: poll.ID, ID: util.RandomGUID()},
+			{Title: "Choice 2", Votes: 0, ChannelPointsVotes: 0, BitsVotes: 0, PollID: poll.ID, ID: util.RandomGUID()},
+		}
+
+		err = db.NewQuery(nil, 100).InsertPoll(poll)
+		if err != nil {
+			log.Print(err.Error())
+		}
+
+		// create fake predictions
+		prediction = database.Prediction{
+			ID:               util.RandomGUID(),
+			BroadcasterID:    broadcaster.ID,
+			Title:            "Test Prediction",
+			PredictionWindow: 1000,
+			Status:           "ACTIVE",
+			StartedAt:        util.GetTimestamp().Format(time.RFC3339),
+		}
+
+		prediction.Outcomes = []database.PredictionOutcome{
+			{
+				ID:            util.RandomGUID(),
+				Title:         "Choice1",
+				Color:         "BLUE",
+				Users:         0,
+				ChannelPoints: 0,
+				PredictionID:  prediction.ID,
+			},
+			{
+				ID:            util.RandomGUID(),
+				Title:         "Choice1",
+				Color:         "PINK",
+				Users:         0,
+				ChannelPoints: 0,
+				PredictionID:  prediction.ID,
+			},
+		}
+
+		err = db.NewQuery(nil, 100).InsertPrediction(prediction)
+		if err != nil {
+			log.Print(err.Error())
+		}
+
 		for j, user := range users {
+			// create a seed used for the below determination on if a user should follow one another- this simply simulates a social mesh
+			userSeed := util.RandomInt(100 * 100)
 			if copoReward.ID != "" {
 				copoRedemption := database.ChannelPointsRedemption{
 					ID:            util.RandomGUID(),
@@ -206,13 +270,26 @@ func generateUsers(ctx context.Context, count int) error {
 				}
 			}
 
+			if poll.ID != "" {
+				choice := util.RandomInt(2)
+				err = db.NewQuery(nil, 100).UpdatePollChoice(database.PollsChoice{ID: poll.Choices[choice].ID})
+				if err != nil {
+					log.Print(err.Error())
+				}
+			}
+
+			if prediction.ID != "" {
+				option := util.RandomInt(2)
+				err = db.NewQuery(nil, 100).InsertPredictionPrediction(database.PredictionPrediction{PredictionID: prediction.ID, UserID: user.ID, Amount: int(util.RandomInt(10 * 1000)), OutcomeID: prediction.Outcomes[option].ID})
+				if err != nil {
+					log.Print(err.Error())
+				}
+			}
 			// can't follow/block yourself :)
 			if i == j {
 				continue
 			}
 
-			// create a seed used for the below determination on if a user should follow one another- this simply simulates a social mesh
-			userSeed := util.RandomInt(100 * 100)
 			// 1 in 25 chance roughly to block one another
 			shouldBlock := userSeed%25 == 0
 			if shouldBlock {
@@ -233,7 +310,7 @@ func generateUsers(ctx context.Context, count int) error {
 				continue
 			}
 
-			shouldFollow := userSeed%5 == 0
+			shouldFollow := userSeed%5 == 0 || i == 0
 			if shouldFollow {
 				err := db.NewQuery(nil, 100).AddFollow(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
 				if err != nil {
@@ -241,7 +318,7 @@ func generateUsers(ctx context.Context, count int) error {
 				}
 			}
 
-			shouldSub := userSeed%10 == 0
+			shouldSub := userSeed%10 == 0 || i == 0
 			if shouldSub && broadcaster.Type != "" {
 				err := db.NewQuery(nil, 100).InsertSubscription(database.SubscriptionInsert{
 					UserID:        user.ID,
@@ -255,7 +332,7 @@ func generateUsers(ctx context.Context, count int) error {
 				}
 			}
 
-			shouldMod := userSeed%10 == 0
+			shouldMod := userSeed%10 == 0 || i == 0
 			if shouldMod {
 				err := db.NewQuery(nil, 100).AddModerator(database.UserRequestParams{UserID: user.ID, BroadcasterID: broadcaster.ID})
 				if err != nil {
@@ -263,7 +340,7 @@ func generateUsers(ctx context.Context, count int) error {
 				}
 			}
 
-			shouldAddEditor := userSeed%20 == 0
+			shouldAddEditor := userSeed%20 == 0 || i == 0
 			if shouldAddEditor {
 				err := db.NewQuery(nil, 100).AddEditor(database.UserRequestParams{BroadcasterID: broadcaster.ID, UserID: user.ID})
 				if err != nil {
@@ -275,6 +352,9 @@ func generateUsers(ctx context.Context, count int) error {
 
 		shouldBeTeamMember := util.RandomInt(100*100)%20 == 0
 
+		if i == 0 {
+			shouldBeTeamMember = true
+		}
 		if shouldBeTeamMember {
 			err := db.NewQuery(nil, 100).InsertTeamMember(database.TeamMember{
 				TeamID: team.ID,
@@ -289,8 +369,8 @@ func generateUsers(ctx context.Context, count int) error {
 
 	// create fake streams
 	log.Printf("Creating streams...")
-	for _, u := range users {
-		if util.RandomInt(100)%10 != 0 {
+	for i, u := range users {
+		if util.RandomInt(100)%10 != 0 && i != 0 {
 			continue
 		}
 		s := database.Stream{
@@ -393,9 +473,10 @@ func generateUsers(ctx context.Context, count int) error {
 		}
 	}
 
-	// create fake polls
-
-	// create fake predictions
+	if len(users) > 0 {
+		// log out that the user X has all units for easier getting started
+		log.Printf("User ID %v has all applicable units (streams, subs, and the like) and is a partner for use with the API", users[0].ID)
+	}
 
 	return nil
 }

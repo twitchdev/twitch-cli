@@ -87,7 +87,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 	polls := []database.Poll{}
 
 	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 
@@ -114,7 +114,7 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 		Data: polls,
 	}
 
-	if dbr.Cursor != "" {
+	if dbr != nil && dbr.Cursor != "" {
 		apiResposne.Pagination = &models.APIPagination{
 			Cursor: dbr.Cursor,
 		}
@@ -142,7 +142,7 @@ func postPolls(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.BroadcasterID != userCtx.UserID {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 
@@ -157,7 +157,7 @@ func postPolls(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.Duration < 15 || body.Duration > 1800 {
-		mock_errors.WriteBadRequest(w, "duation must be at least15 and at most 1800")
+		mock_errors.WriteBadRequest(w, "duation must be at least 15 and at most 1800")
 		return
 	}
 	poll := database.Poll{
@@ -211,7 +211,7 @@ func patchPolls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if body.BroadcasterID != userCtx.UserID {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 	if body.ID == "" {

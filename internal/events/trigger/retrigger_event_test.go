@@ -5,6 +5,7 @@ package trigger
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -41,7 +42,7 @@ func TestRefireEvent(t *testing.T) {
 
 	response, err := Fire(params)
 	a.Nil(err)
-
+	log.Print(err)
 	var body models.SubEventSubResponse
 	err = json.Unmarshal([]byte(response), &body)
 	a.Nil(err)

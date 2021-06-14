@@ -57,7 +57,7 @@ func getBanEvents(w http.ResponseWriter, r *http.Request) {
 	dbr := &database.DBResponse{}
 	var err error
 	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 	bans := []database.BanEvent{}

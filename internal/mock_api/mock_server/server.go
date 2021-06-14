@@ -8,6 +8,9 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/authentication"
@@ -51,10 +54,27 @@ func StartServer(port int) {
 			return ctx
 		},
 	}
-	log.Print("Mock server started")
-	if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	stop := make(chan os.Signal)
+	signal.Notify(stop, os.Interrupt)
+
+	go func() {
+		log.Print("Mock server started")
+		if err := s.ListenAndServe(); err != nil {
+			if err != http.ErrServerClosed {
+				log.Fatal(err)
+			}
+		}
+	}()
+
+	<-stop
+
+	log.Print("shutting down ...\n")
+	db.DB.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second*5))
+	defer cancel()
+
+	if err := s.Shutdown(ctx); err != nil {
 		log.Fatal(err)
-		return
 	}
 }
 

@@ -68,7 +68,7 @@ func getAutomodHeld(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userCtx.UserID != body.UserID {
-		mock_errors.WriteBadRequest(w, "user_id must match token")
+		mock_errors.WriteUnauthorized(w, "user_id must match token")
 		return
 	}
 

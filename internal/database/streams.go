@@ -72,7 +72,6 @@ func (q *Query) GetStream(s Stream) (*DBResponse, error) {
 
 	for rows.Next() {
 		var s Stream
-		st := []string{}
 		err := rows.StructScan(&s)
 
 		if err != nil {
@@ -84,12 +83,16 @@ func (q *Query) GetStream(s Stream) (*DBResponse, error) {
 		if s.CategoryName.Valid {
 			s.RealCategoryName = s.CategoryName.String
 		}
+		r = append(r, s)
+	}
+
+	for i, s := range r {
+		st := []string{}
 		err = q.DB.Select(&st, "select tag_id from stream_tags where user_id=$1", s.UserID)
 		if err != nil {
 			return nil, err
 		}
-		s.TagIDs = st
-		r = append(r, s)
+		r[i].TagIDs = st
 	}
 
 	dbr := DBResponse{

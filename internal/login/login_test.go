@@ -151,8 +151,9 @@ func TestUserAuthServer(t *testing.T) {
 		userResponse <- res
 	}()
 
+	time.Sleep(25)
 	_, err = loginRequest(http.MethodGet, fmt.Sprintf("http://localhost:3000?code=%s&state=%s", code, state), nil)
-	a.Nil(err)
+	a.Nil(err, err)
 
 	ur := <-userResponse
 	a.Equal(state, ur.State, "State mismatch")

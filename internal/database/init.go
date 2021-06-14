@@ -74,7 +74,8 @@ func initDatabase(db sqlx.DB) error {
 			if i == 5 {
 				return err
 			}
-			log.Print(err)
+			tx.Rollback()
+			log.Printf("%#v", err)
 			continue
 		}
 		if err == nil {

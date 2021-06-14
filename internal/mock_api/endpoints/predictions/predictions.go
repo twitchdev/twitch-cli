@@ -86,7 +86,7 @@ func getPredictions(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 
@@ -114,7 +114,7 @@ func getPredictions(w http.ResponseWriter, r *http.Request) {
 		Data: predictions,
 	}
 
-	if dbr.Cursor != "" {
+	if dbr != nil && dbr.Cursor != "" {
 		apiResposne.Pagination = &models.APIPagination{
 			Cursor: dbr.Cursor,
 		}
@@ -141,7 +141,7 @@ func postPredictions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userCtx.UserID != body.BroadcasterID {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 
@@ -150,8 +150,13 @@ func postPredictions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if body.PredictionWindow < 1 || body.PredictionWindow > 1800 {
+		mock_errors.WriteBadRequest(w, "prediction_window is required and must between 1 and 1800")
+		return
+	}
+
 	if len(body.Outcomes) != 2 {
-		mock_errors.WriteBadRequest(w, "outcomes must be exactly two items")
+		mock_errors.WriteBadRequest(w, "outcomes must be exactly 2 items")
 		return
 	}
 
@@ -205,7 +210,7 @@ func patchPredictions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userCtx.UserID != body.BroadcasterID {
-		mock_errors.WriteBadRequest(w, "broadcaster_id does not match token")
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 

@@ -39,19 +39,21 @@ func (q *Query) GetPolls(p Poll) (*DBResponse, error) {
 
 	for rows.Next() {
 		var p Poll
-		var pc []PollsChoice
 		err := rows.StructScan(&p)
 		if err != nil {
 			return nil, err
 		}
+		r = append(r, p)
+	}
 
+	for i, p := range r {
+		var pc []PollsChoice
 		err = q.DB.Select(&pc, "select * from poll_choices where poll_id=$1", p.ID)
 		if err != nil {
 			return nil, err
 		}
 
-		p.Choices = pc
-		r = append(r, p)
+		r[i].Choices = pc
 	}
 
 	dbr := DBResponse{
@@ -80,5 +82,10 @@ func (q *Query) InsertPoll(p Poll) error {
 
 func (q *Query) UpdatePoll(p Poll) error {
 	_, err := q.DB.NamedExec(generateUpdateSQL("polls", []string{"id"}, p), p)
+	return err
+}
+
+func (q *Query) UpdatePollChoice(p PollsChoice) error {
+	_, err := q.DB.Exec("update poll_choices set votes = votes + 1 where id = $1", p.ID)
 	return err
 }

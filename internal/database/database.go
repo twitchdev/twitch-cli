@@ -50,6 +50,7 @@ func getDatabase() (sqlx.DB, error) {
 		// open and force Foreign Key support ("fk=true")
 		db, err := sqlx.Open("sqlite3", path+"?_fk=true&cache=shared")
 		if err != nil {
+			log.Print(i)
 			if i == 5 {
 				return sqlx.DB{}, err
 			}
@@ -59,11 +60,11 @@ func getDatabase() (sqlx.DB, error) {
 		if needToInit == true {
 			err = initDatabase(*db)
 			if err != nil {
-				log.Print(err)
+				log.Printf("%#v", err)
 				return sqlx.DB{}, err
 			}
 		}
-
+		db.SetMaxOpenConns(1)
 		checkAndUpdate(*db)
 		return *db, nil
 	}

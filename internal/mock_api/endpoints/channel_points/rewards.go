@@ -248,7 +248,7 @@ func patchRewards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if *body.Cost == 0 {
+	if body.Cost == nil || *body.Cost == 0 {
 		mock_errors.WriteBadRequest(w, "Cost must be greater than 0")
 		return
 	}

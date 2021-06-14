@@ -79,21 +79,25 @@ func (q *Query) GetVideos(v Video, period string, sort string) (*DBResponse, err
 	}
 	for rows.Next() {
 		var v Video
-		vms := []VideoMutedSegment{}
 		err := rows.StructScan(&v)
 		if err != nil {
 			log.Print(err)
 			return nil, err
 		}
+
+		v.ThumbnailURL = "https://static-cdn.jtvnw.net/cf_vods/d2nvs31859zcd8/twitchdev/335921245/ce0f3a7f-57a3-4152-bc06-0c6610189fb3/thumb/index-0000000000-%{width}x%{height}.jpg"
+		v.URL = fmt.Sprintf("https://www.twitch.tv/videos/%v", v.ID)
+		r = append(r, v)
+	}
+
+	for i, v := range r {
+		vms := []VideoMutedSegment{}
 		err = q.DB.Select(&vms, "select * from video_muted_segments where video_id=$1", v.ID)
 		if err != nil {
 			log.Print(err)
 			return nil, err
 		}
-		v.ThumbnailURL = "https://static-cdn.jtvnw.net/cf_vods/d2nvs31859zcd8/twitchdev/335921245/ce0f3a7f-57a3-4152-bc06-0c6610189fb3/thumb/index-0000000000-%{width}x%{height}.jpg"
-		v.URL = fmt.Sprintf("https://www.twitch.tv/videos/%v", v.ID)
-		v.MutedSegments = vms
-		r = append(r, v)
+		r[i].MutedSegments = vms
 	}
 
 	dbr := DBResponse{

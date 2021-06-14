@@ -5,6 +5,7 @@ package channels
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/mattn/go-sqlite3"
@@ -114,6 +115,7 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Print("here")
 	var params PatchInformationEndpointRequest
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
@@ -134,12 +136,19 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 		mock_errors.WriteBadRequest(w, "Delay is partner only")
 		return
 	}
+
+	var delay int
+	if params.Delay == nil {
+		delay = u.Delay
+	} else {
+		delay = *params.Delay
+	}
 	err = db.NewQuery(r, 100).UpdateChannel(broadcasterID, database.User{
 		ID:         broadcasterID,
 		Title:      params.Title,
 		Language:   params.BroadcasterLanguage,
 		CategoryID: gameID,
-		Delay:      *params.Delay,
+		Delay:      delay,
 	})
 	if err != nil {
 		if database.DatabaseErrorIs(err, sqlite3.ErrConstraintForeignKey) {
@@ -147,6 +156,7 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		mock_errors.WriteServerError(w, err.Error())
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)

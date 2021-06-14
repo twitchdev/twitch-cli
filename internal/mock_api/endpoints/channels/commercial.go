@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/authentication"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/mock_errors"
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
@@ -70,6 +71,7 @@ func (e CommercialEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func postCommercial(w http.ResponseWriter, r *http.Request) {
 	var body CommercialEndpointRequest
+	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
@@ -79,6 +81,11 @@ func postCommercial(w http.ResponseWriter, r *http.Request) {
 
 	if body.BroadcasterID == "" || body.Length == nil {
 		mock_errors.WriteBadRequest(w, "Body missing one of broadcaster_id or length")
+		return
+	}
+
+	if body.BroadcasterID != userCtx.UserID {
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
 

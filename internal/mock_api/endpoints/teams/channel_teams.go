@@ -78,8 +78,8 @@ func getChannelTeams(w http.ResponseWriter, r *http.Request) {
 		dbr.Data = make([]database.Team, 0)
 	}
 	response := []ChannelTeamResposne{}
-	for i, t := range team {
-		response[i] = ChannelTeamResposne{
+	for _, t := range team {
+		response = append(response, ChannelTeamResposne{
 			ID:                 t.ID,
 			Info:               t.Info,
 			BackgroundImageUrl: t.BackgroundImageUrl,
@@ -89,7 +89,7 @@ func getChannelTeams(w http.ResponseWriter, r *http.Request) {
 			ThumbnailURL:       t.ThumbnailURL,
 			TeamName:           t.TeamName,
 			TeamDisplayName:    t.TeamDisplayName,
-		}
+		})
 	}
 
 	bytes, _ := json.Marshal(models.APIResponse{Data: response})

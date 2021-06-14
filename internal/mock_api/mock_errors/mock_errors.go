@@ -29,7 +29,6 @@ func WriteBadRequest(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusBadRequest)
 	w.Write(GetErrorBytes(http.StatusBadRequest, errors.New("Bad Request"), message))
 }
-
 func WriteServerError(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusInternalServerError)
 	w.Write(GetErrorBytes(http.StatusInternalServerError, errors.New("Error processing request"), message))
