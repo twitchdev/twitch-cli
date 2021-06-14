@@ -31,20 +31,13 @@ func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
-		if len(r.URL.Query()["skip_auth"]) > 0 && r.URL.Query()["skip_auth"][0] == "true" {
-			fakeAuth := UserAuthentication{}
-			r = r.WithContext(context.WithValue(r.Context(), "auth", fakeAuth))
-			next.ServeHTTP(w, r)
-			log.Printf("Skipping auth...")
-			return
-		}
 
 		clientID := r.Header.Get("Client-ID")
 		bearerToken := r.Header.Get("Authorization")
 		unauthroizedError := mock_errors.GetErrorBytes(http.StatusUnauthorized, errors.New("Unauthorized"), "Missing Client ID or OAuth token")
 		if clientID == "" || bearerToken == "" || len(bearerToken) < 7 {
-			w.Write(unauthroizedError)
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write(unauthroizedError)
 			return
 		}
 
@@ -53,8 +46,8 @@ func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 
 		// check if the client ID is invalid or missing the proper token prefix
 		if len(clientID) < 30 || prefix != "bearer" {
-			w.Write(unauthroizedError)
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write(unauthroizedError)
 			return
 		}
 

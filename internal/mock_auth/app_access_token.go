@@ -4,8 +4,6 @@ package mock_auth
 
 import (
 	"encoding/json"
-	"errors"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -53,19 +51,19 @@ func (e AppAccessTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 
 	if !areValidScopes(scopes, APP_ACCES_TOKEN) {
-		log.Printf("%v", scopes)
-		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Unauthorized"), "Invalid scopes requested"))
+		mock_errors.WriteBadRequest(w, "Invalid scopes requested")
 		return
 	}
 
 	res, err := db.NewQuery(r, 10).GetAuthenticationClient(database.AuthenticationClient{ID: clientID, Secret: clientSecret})
 	if err != nil {
-		w.Write(mock_errors.GetErrorBytes(http.StatusInternalServerError, err, err.Error()))
+		mock_errors.WriteServerError(w, err.Error())
+		return
 	}
 
 	ac := res.Data.([]database.AuthenticationClient)
 	if len(ac) == 0 {
-		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Unauthorized"), "Client ID/Secret invalid"))
+		mock_errors.WriteBadRequest(w, "Client ID/Secret invalid")
 		return
 	}
 

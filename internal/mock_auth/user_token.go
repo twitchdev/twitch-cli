@@ -4,7 +4,6 @@ package mock_auth
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -32,36 +31,36 @@ func (e UserTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	scopes := strings.Split(scope, " ")
 
 	if clientID == "" || clientSecret == "" || grantType != "user_token" || userID == "" {
-		w.WriteHeader(http.StatusBadRequest)
+		mock_errors.WriteBadRequest(w, "missing required parameter")
 		return
 	}
 
 	if areValidScopes(scopes, USER_ACCESS_TOKEN) != true {
-		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Unauthorized"), "Invalid scopes requested"))
+		mock_errors.WriteBadRequest(w, "Invalid scopes requested")
 		return
 	}
 
 	res, err := db.NewQuery(r, 10).GetAuthenticationClient(database.AuthenticationClient{ID: clientID, Secret: clientSecret})
 	if err != nil {
-		w.Write(mock_errors.GetErrorBytes(http.StatusInternalServerError, err, err.Error()))
+		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
 
 	ac := res.Data.([]database.AuthenticationClient)
 	if len(ac) == 0 {
-		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Unauthorized"), "Client ID/Secret invalid"))
+		mock_errors.WriteBadRequest(w, "Client ID/Secret invalid")
 		return
 	}
 
 	res, err = db.NewQuery(r, 10).GetUsers(database.User{ID: userID})
 	if err != nil {
-		w.Write(mock_errors.GetErrorBytes(http.StatusInternalServerError, err, err.Error()))
+		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
 
 	users := res.Data.([]database.User)
 	if len(users) == 0 {
-		w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Unauthorized"), "User ID invalid"))
+		mock_errors.WriteBadRequest(w, "User ID invalid")
 		return
 	}
 
