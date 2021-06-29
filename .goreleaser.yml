@@ -5,7 +5,8 @@ before:
     - go mod download
 builds:
   - id: twitch-darwin
-    ldflags: -X main.buildVersion={{ .Version }}
+    ldflags: 
+      - -s -w -X main.buildVersion={{ .Version }} 
     binary: twitch
     env:
       - CGO_ENABLED=1  
@@ -16,7 +17,8 @@ builds:
     goarch:
       - amd64
   - id: twitch-linux
-    ldflags: -X main.buildVersion={{ .Version }}
+    ldflags:
+      - -s -w -X main.buildVersion={{ .Version }}
     binary: twitch
     env:
       - CGO_ENABLED=1
@@ -25,7 +27,8 @@ builds:
     goarch:
       - amd64
   - id: twitch-windows-x64
-    ldflags: -X main.buildVersion={{ .Version }}
+    ldflags: 
+    - -s -w -X main.buildVersion={{ .Version }} 
     binary: twitch
     main: ./main.go
     env:
@@ -37,7 +40,8 @@ builds:
     goarch:
       - amd64
   - id: twitch-windows-i386
-    ldflags: -X main.buildVersion={{ .Version }}
+    ldflags:
+      - -s -w -X main.buildVersion={{ .Version }} 
     binary: twitch
     main: ./main.go
     env:

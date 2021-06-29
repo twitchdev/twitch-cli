@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 	"golang.org/x/time/rate"
 )
 
 func TestNewClient(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	var ok = "{\"status\":\"ok\"}"
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

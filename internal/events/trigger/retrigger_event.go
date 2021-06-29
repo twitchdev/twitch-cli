@@ -5,11 +5,15 @@ package trigger
 import (
 	"fmt"
 
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/internal/database"
 )
 
 func RefireEvent(id string, p TriggerParameters) (string, error) {
-	res, err := util.GetEventByID(id)
+	db, err := database.NewConnection()
+	if err != nil {
+		return "", err
+	}
+	res, err := db.NewQuery(nil, 100).GetEventByID(id)
 	if err != nil {
 		return "", err
 	}

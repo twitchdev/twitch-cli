@@ -3,11 +3,14 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
 
 	"github.com/twitchdev/twitch-cli/internal/api"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/generate"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/mock_server"
 
 	"github.com/spf13/cobra"
 )
@@ -17,6 +20,7 @@ var queryParameters []string
 var body string
 var prettyPrint bool
 var autoPaginate bool
+var port int
 
 var apiCmd = &cobra.Command{
 	Use:   "api",
@@ -59,8 +63,25 @@ var putCmd = &cobra.Command{
 	Run:       cmdRun,
 }
 
+var mockCmd = &cobra.Command{
+	Use:   "mock-api",
+	Short: "Used to interface with the mock Twitch API.",
+}
+
+var startCmd = &cobra.Command{
+	Use:   "start",
+	Short: "Used to start the server for the mock API.",
+	Run:   mockStartRun,
+}
+
+var generateCmd = &cobra.Command{
+	Use:   "generate",
+	Short: "Used to randomly generate data for use with the mock API. By default, this is run on the first invocation of the start command, however this allows you to generate further primitives.",
+	Run:   generateMockRun,
+}
+
 func init() {
-	rootCmd.AddCommand(apiCmd)
+	rootCmd.AddCommand(apiCmd, mockCmd)
 
 	apiCmd.AddCommand(getCmd, postCmd, patchCmd, deleteCmd, putCmd)
 
@@ -75,6 +96,11 @@ func init() {
 
 	getCmd.PersistentFlags().BoolVarP(&autoPaginate, "autopaginate", "P", false, "Whether to have API requests automatically paginate. Default is false.")
 
+	mockCmd.AddCommand(startCmd, generateCmd)
+
+	startCmd.Flags().IntVarP(&port, "port", "p", 8080, "Defines the port that the mock API will run on.")
+
+	generateCmd.Flags().IntVarP(&count, "count", "c", 10, "Defines the number of fake users to generate.")
 }
 
 func cmdRun(cmd *cobra.Command, args []string) {
@@ -98,4 +124,13 @@ func getBodyFromFile(filename string) string {
 	}
 
 	return string(content)
+}
+
+func mockStartRun(cmd *cobra.Command, args []string) {
+	log.Println(fmt.Sprintf("Starting mock API server on http://localhost:%v", port))
+	mock_server.StartServer(port)
+}
+
+func generateMockRun(cmd *cobra.Command, args []string) {
+	generate.Generate(count)
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 var params = LoginParameters{
@@ -34,7 +35,7 @@ var response = LoginResponse{
 }
 
 func TestClientCredentialsLogin(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		qp := r.URL.Query()
@@ -55,7 +56,7 @@ func TestClientCredentialsLogin(t *testing.T) {
 }
 
 func TestCredentialsLogout(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		qp := r.URL.Query()
@@ -84,7 +85,7 @@ func TestCredentialsLogout(t *testing.T) {
 }
 
 func TestGenerateState(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	state, err := generateState()
 
@@ -93,7 +94,7 @@ func TestGenerateState(t *testing.T) {
 }
 
 func TestStoreInConfig(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := response.Response
 	storeInConfig(r.AccessToken, r.RefreshToken, r.Scope, response.ExpiresAt)
@@ -105,7 +106,7 @@ func TestStoreInConfig(t *testing.T) {
 }
 
 func TestRefreshUserToken(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		qp := r.URL.Query()
@@ -134,7 +135,7 @@ func TestRefreshUserToken(t *testing.T) {
 }
 
 func TestUserAuthServer(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	state, err := generateState()
 	a.Nil(err)
@@ -150,8 +151,9 @@ func TestUserAuthServer(t *testing.T) {
 		userResponse <- res
 	}()
 
+	time.Sleep(25)
 	_, err = loginRequest(http.MethodGet, fmt.Sprintf("http://localhost:3000?code=%s&state=%s", code, state), nil)
-	a.Nil(err)
+	a.Nil(err, err)
 
 	ur := <-userResponse
 	a.Equal(state, ur.State, "State mismatch")

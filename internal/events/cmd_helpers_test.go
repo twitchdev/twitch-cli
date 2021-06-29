@@ -5,18 +5,18 @@ package events
 import (
 	"testing"
 
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 func TestValidTriggers(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	t1 := ValidTriggers()
 	a.NotEmpty(t1)
 }
 
 func TestValidTransports(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	t1 := ValidTransports()
 	a.NotEmpty(t1)

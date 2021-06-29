@@ -8,14 +8,14 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 var fromUser = "1234"
 var toUser = "4567"
 
 func TestEventSub(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	params := *&events.MockEventParameters{
 		FromUserID: fromUser,
@@ -55,7 +55,7 @@ func TestEventSub(t *testing.T) {
 }
 
 func TestWebSubStreamChange(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	newStreamTitle := "Awesome new title from the CLI!"
 
@@ -81,7 +81,7 @@ func TestWebSubStreamChange(t *testing.T) {
 	a.Equal("1234", body.Data[0].StreamCategoryID)
 }
 func TestFakeTransport(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
 		FromUserID: fromUser,
@@ -95,7 +95,7 @@ func TestFakeTransport(t *testing.T) {
 	a.Empty(r)
 }
 func TestValidTrigger(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.ValidTrigger("stream-change")
 	a.Equal(true, r)
@@ -105,7 +105,7 @@ func TestValidTrigger(t *testing.T) {
 }
 
 func TestValidTransport(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.ValidTransport(models.TransportEventSub)
 	a.Equal(true, r)
@@ -114,7 +114,7 @@ func TestValidTransport(t *testing.T) {
 	a.Equal(false, r)
 }
 func TestGetTopic(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.GetTopic(models.TransportEventSub, "stream-change")
 	a.NotNil(r)
