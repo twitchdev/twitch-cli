@@ -110,7 +110,9 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		}
 
 		if autopaginate == false {
-			data.Pagination.Cursor = apiResponse.Pagination.Cursor
+			data.Pagination = &models.APIPagination{
+				Cursor: apiResponse.Pagination.Cursor,
+			}
 			break
 		}
 
