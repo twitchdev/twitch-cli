@@ -23,6 +23,7 @@ type EventsubCondition struct {
 	ToBroadcasterUserID   string `json:"to_broadcaster_user_id,omitempty"`
 	FromBroadcasterUserID string `json:"from_broadcaster_user_id,omitempty"`
 	ClientID              string `json:"client_id,omitempty"`
+	ExtensionClientID     string `json:"extension_client_id,omitempty"`
 }
 
 type EventsubResponse struct {
