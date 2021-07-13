@@ -172,7 +172,8 @@ func TestFire(t *testing.T) {
 		Count:          0,
 	}
 	res, err = Fire(params)
-	a.NotNil(err)
+	a.Nil(err)
+	a.NotEmpty(res)
 
 	params = *&TriggerParameters{
 		Event:          "add-reward",

@@ -2,6 +2,30 @@
 // SPDX-License-Identifier: Apache-2.0
 package models
 
+type TransactionEventSubEvent struct {
+	ID                   string                     `json:"id"`
+	ExtensionClientID    string                     `json:"extension_client_id"`
+	BroadcasterUserID    string                     `json:"broadcaster_user_id"`
+	BroadcasterUserLogin string                     `json:"broadcaster_user_login"`
+	BroadcasterUserName  string                     `json:"broadcaster_user_name"`
+	UserName             string                     `json:"user_name"`
+	UserLogin            string                     `json:"user_login"`
+	UserID               string                     `json:"user_id"`
+	Product              TransactionEventSubProduct `json:"product"`
+}
+
+type TransactionEventSubProduct struct {
+	Name          string `json:"name"`
+	Sku           string `json:"sku"`
+	Bits          int64  `json:"bits"`
+	InDevelopment bool   `json:"in_development"`
+}
+
+type TransactionEventSubResponse struct {
+	Subscription EventsubSubscription     `json:"subscription"`
+	Event        TransactionEventSubEvent `json:"event"`
+}
+
 type TransactionWebsubEvent struct {
 	ID              string             `json:"id"`
 	Timestamp       string             `json:"timestamp"`
