@@ -4,9 +4,9 @@ package extension_transaction
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
 
+	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
@@ -14,7 +14,7 @@ import (
 
 var transportsSupported = map[string]bool{
 	models.TransportWebSub:   true,
-	models.TransportEventSub: false,
+	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"transaction"}
@@ -22,6 +22,9 @@ var triggerSupported = []string{"transaction"}
 var triggerMapping = map[string]map[string]string{
 	models.TransportWebSub: {
 		"transaction": "transaction",
+	},
+	models.TransportEventSub: {
+		"transaction": "extension.bits_transaction.create",
 	},
 }
 
@@ -31,12 +34,55 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var event []byte
 	var err error
 
+	clientID := viper.GetString("clientId")
+
+	// if not configured, generate a random one
+	if clientID == "" {
+		clientID = util.RandomClientID()
+	}
+
 	if params.Cost == 0 {
 		params.Cost = 100
 	}
 	switch params.Transport {
 	case models.TransportEventSub:
-		return events.MockEventResponse{}, errors.New("Extension transactions are unsupported on Eventsub")
+		body := &models.TransactionEventSubResponse{
+			Subscription: models.EventsubSubscription{
+				ID:      params.ID,
+				Status:  "enabled",
+				Type:    triggerMapping[params.Transport][params.Trigger],
+				Version: "1",
+				Condition: models.EventsubCondition{
+					ExtensionClientID: clientID,
+				},
+				Transport: models.EventsubTransport{
+					Method:   "webhook",
+					Callback: "null",
+				},
+				Cost:      1,
+				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+			},
+			Event: models.TransactionEventSubEvent{
+				ID:                   params.ID,
+				ExtensionClientID:    clientID,
+				BroadcasterUserID:    params.ToUserID,
+				BroadcasterUserLogin: "testBroadcaster",
+				BroadcasterUserName:  "testBroadcaster",
+				UserName:             "testUser",
+				UserLogin:            "testUser",
+				UserID:               params.FromUserID,
+				Product: models.TransactionEventSubProduct{
+					Name:          "Test Trigger Item from CLI",
+					Sku:           "testItemSku",
+					Bits:          params.Cost,
+					InDevelopment: true,
+				},
+			},
+		}
+		event, err = json.Marshal(body)
+		if err != nil {
+			return events.MockEventResponse{}, err
+		}
 	case models.TransportWebSub:
 		body := *&models.TransactionWebSubResponse{
 			Data: []models.TransactionWebsubEvent{
