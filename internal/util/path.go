@@ -29,6 +29,10 @@ func GetApplicationDir() (string, error) {
 
 	if !legacyFolder {
 		path = filepath.Join(home, ".config", subFolder) // issue #33- putting into a subfolder to avoid clutter
+		subpath := filepath.Join(home, ".config")
+		if _, err := os.Stat(subpath); os.IsNotExist(err) {
+			os.Mkdir(subpath, 0700)
+		}
 	}
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
