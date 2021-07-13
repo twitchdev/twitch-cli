@@ -12,11 +12,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 func TestForwardEventEventsub(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	secret := "potaytoes"
 
@@ -51,7 +51,7 @@ func TestForwardEventEventsub(t *testing.T) {
 }
 
 func TestForwardEventWebsub(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	secret := "potaytoes"
 

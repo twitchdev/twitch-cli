@@ -8,14 +8,14 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 var fromUser = "1234"
 var toUser = "4567"
 
 func TestEventSub(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	params := *&events.MockEventParameters{
 		FromUserID: fromUser,
@@ -40,6 +40,7 @@ func TestEventSub(t *testing.T) {
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
 		Trigger:    "stream_change",
+		ItemID:     "1234",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
@@ -50,19 +51,21 @@ func TestEventSub(t *testing.T) {
 
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected Stream Channel %v, got %v", toUser, body.Event.BroadcasterUserID)
 	a.Equal("Example title from the CLI!", body.Event.StreamTitle, "Expected new stream title, got %v", body.Event.StreamTitle)
+	a.Equal("1234", body.Event.StreamCategoryID)
 }
 
 func TestWebSubStreamChange(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	newStreamTitle := "Awesome new title from the CLI!"
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		FromUserID:  fromUser,
 		ToUserID:    toUser,
 		Transport:   models.TransportWebSub,
 		Trigger:     "stream-change",
-		StreamTitle: newStreamTitle,
+		Description: newStreamTitle,
+		ItemID:      "1234",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -75,11 +78,12 @@ func TestWebSubStreamChange(t *testing.T) {
 	// write tests here for websub
 	a.Equal(toUser, body.Data[0].BroadcasterUserID, "Expected Stream Channel %v, got %v", toUser, body.Data[0].BroadcasterUserID)
 	a.Equal(newStreamTitle, body.Data[0].StreamTitle, "Expected new stream title, got %v", body.Data[0].StreamTitle)
+	a.Equal("1234", body.Data[0].StreamCategoryID)
 }
 func TestFakeTransport(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
@@ -91,7 +95,7 @@ func TestFakeTransport(t *testing.T) {
 	a.Empty(r)
 }
 func TestValidTrigger(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.ValidTrigger("stream-change")
 	a.Equal(true, r)
@@ -101,7 +105,7 @@ func TestValidTrigger(t *testing.T) {
 }
 
 func TestValidTransport(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.ValidTransport(models.TransportEventSub)
 	a.Equal(true, r)
@@ -110,7 +114,7 @@ func TestValidTransport(t *testing.T) {
 	a.Equal(false, r)
 }
 func TestGetTopic(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.GetTopic(models.TransportEventSub, "stream-change")
 	a.NotNil(r)

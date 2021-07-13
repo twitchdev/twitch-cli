@@ -9,11 +9,11 @@ import (
 	"testing"
 
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 func TestFire(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 
@@ -172,7 +172,8 @@ func TestFire(t *testing.T) {
 		Count:          0,
 	}
 	res, err = Fire(params)
-	a.NotNil(err)
+	a.Nil(err)
+	a.NotEmpty(res)
 
 	params = *&TriggerParameters{
 		Event:          "add-reward",

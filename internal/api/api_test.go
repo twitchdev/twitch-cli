@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 var params = apiRequestParameters{
@@ -19,7 +20,7 @@ var params = apiRequestParameters{
 }
 
 func TestNewRequest(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 	viper.Set("clientid", "1111")
 	viper.Set("clientsecret", "2222")
 	viper.Set("accesstoken", "4567")
@@ -68,7 +69,7 @@ func TestNewRequest(t *testing.T) {
 }
 
 func TestValidOptions(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	get := ValidOptions("GET")
 	a.NotEmpty(get)
@@ -78,7 +79,7 @@ func TestValidOptions(t *testing.T) {
 }
 
 func TestGetClientInformation(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	viper.Set("clientid", "1111")
 	viper.Set("clientsecret", "2222")

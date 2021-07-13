@@ -35,6 +35,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	var err error
 	var cursor string
 
+	data.Data = make([]interface{}, 0)
 	client, err := GetClientInformation()
 
 	if viper.GetString("BASE_URL") != "" {
@@ -101,14 +102,17 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			break
 		}
 
-		data.Data = append(data.Data, apiResponse.Data...)
+		d := data.Data.([]interface{})
+		data.Data = append(d, apiResponse.Data)
 
-		if autopaginate == false {
-			data.Pagination.Cursor = apiResponse.Pagination.Cursor
+		if apiResponse.Pagination == nil || *&apiResponse.Pagination.Cursor == "" {
 			break
 		}
 
-		if apiResponse.Pagination.Cursor == "" {
+		if autopaginate == false {
+			data.Pagination = &models.APIPagination{
+				Cursor: apiResponse.Pagination.Cursor,
+			}
 			break
 		}
 
@@ -119,8 +123,11 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 
 	}
 
+	if data.Data == nil {
+		data.Data = make([]interface{}, 0)
+	}
 	// handle json marshalling better; returns empty slice vs. null
-	if len(data.Data) == 0 && data.Error == "" {
+	if len(data.Data.([]interface{})) == 0 && data.Error == "" {
 		data.Data = make([]interface{}, 0)
 	}
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
 	"github.com/twitchdev/twitch-cli/internal/util"
@@ -26,7 +27,8 @@ type TriggerParameters struct {
 	Secret         string
 	Verbose        bool
 	Count          int
-	StreamTitle    string
+	Description    string
+	ItemName       string
 }
 
 type TriggerResponse struct {
@@ -62,7 +64,8 @@ func Fire(p TriggerParameters) (string, error) {
 		Cost:         p.Cost,
 		Status:       p.Status,
 		ItemID:       p.ItemID,
-		StreamTitle:  p.StreamTitle,
+		Description:  p.Description,
+		ItemName:     p.ItemName,
 	}
 
 	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
@@ -75,7 +78,12 @@ func Fire(p TriggerParameters) (string, error) {
 		return "", err
 	}
 
-	err = util.InsertIntoDB(util.EventCacheParameters{
+	db, err := database.NewConnection()
+	if err != nil {
+		return "", err
+	}
+
+	err = db.NewQuery(nil, 100).InsertIntoDB(database.EventCacheParameters{
 		ID:        resp.ID,
 		Event:     p.Event,
 		JSON:      string(resp.JSON),

@@ -8,14 +8,14 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 var fromUser = "1234"
 var toUser = "4567"
 
 func TestEventSub(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
 		Transport:  models.TransportEventSub,
@@ -25,6 +25,7 @@ func TestEventSub(t *testing.T) {
 		Status:     "tested",
 		ItemID:     "12345678-1234-abcd-5678-000000000000",
 		Cost:       1337,
+		ItemName:   "Testing",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -36,10 +37,11 @@ func TestEventSub(t *testing.T) {
 
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 	a.Equal(params.Cost, body.Event.Cost, "Expected cost %v, got %v", params.Cost, body.Event.Cost)
+	a.Equal(params.ItemName, body.Event.Title)
 }
 
 func TestWebSub(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
 		Transport: models.TransportWebSub,
@@ -51,7 +53,7 @@ func TestWebSub(t *testing.T) {
 }
 
 func TestFakeTransport(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
 		FromUserID: fromUser,
@@ -66,7 +68,7 @@ func TestFakeTransport(t *testing.T) {
 }
 
 func TestValidTrigger(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.ValidTrigger("add-reward")
 	a.Equal(true, r)
@@ -76,7 +78,7 @@ func TestValidTrigger(t *testing.T) {
 }
 
 func TestValidTransport(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.ValidTransport(models.TransportEventSub)
 	a.Equal(true, r)
@@ -85,7 +87,7 @@ func TestValidTransport(t *testing.T) {
 	a.Equal(false, r)
 }
 func TestGetTopic(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 
 	r := Event{}.GetTopic(models.TransportEventSub, "add-reward")
 	a.NotNil(r)

@@ -21,10 +21,10 @@ var triggerSupported = []string{"stream-change"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportWebSub: {
-		"stream_change": "streams",
+		"stream-change": "streams",
 	},
 	models.TransportEventSub: {
-		"stream_change": "channel.update",
+		"stream-change": "channel.update",
 	},
 }
 
@@ -34,8 +34,14 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var event []byte
 	var err error
 
-	if params.StreamTitle == "" {
-		params.StreamTitle = "Example title from the CLI!"
+	if params.Description == "" {
+		params.Description = "Example title from the CLI!"
+	}
+	if params.ItemID == "" {
+		params.ItemID = "509658"
+	}
+	if params.ItemName == "" {
+		params.ItemName = "Just Chatting"
 	}
 
 	switch params.Transport {
@@ -61,11 +67,11 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
-				StreamTitle:          params.StreamTitle,
+				StreamTitle:          params.Description,
 				StreamLanguage:       "en",
-				StreamCategoryID:     "509658",
-				StreamCategoryName:   "Just Chatting",
-				IsMature:             "true",
+				StreamCategoryID:     params.ItemID,
+				StreamCategoryName:   params.ItemName,
+				IsMature:             false,
 			},
 		}
 		event, err = json.Marshal(body)
@@ -80,10 +86,10 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					BroadcasterUserID:    params.ToUserID,
 					BroadcasterUserLogin: params.ToUserName,
 					BroadcasterUserName:  params.ToUserName,
-					StreamCategoryID:     "509658",
+					StreamCategoryID:     params.ItemID,
 					StreamCategoryName:   "Just Chatting",
 					StreamType:           "live",
-					StreamTitle:          params.StreamTitle,
+					StreamTitle:          params.Description,
 					StreamViewerCount:    9848,
 					StreamStartedAt:      util.GetTimestamp().Format(time.RFC3339),
 					StreamLanguage:       "en",

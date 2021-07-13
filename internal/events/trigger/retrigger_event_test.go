@@ -5,16 +5,17 @@ package trigger
 import (
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
+	"github.com/twitchdev/twitch-cli/test_setup"
 )
 
 func TestRefireEvent(t *testing.T) {
-	a := util.SetupTestEnv(t)
+	a := test_setup.SetupTestEnv(t)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 
@@ -41,7 +42,7 @@ func TestRefireEvent(t *testing.T) {
 
 	response, err := Fire(params)
 	a.Nil(err)
-
+	log.Print(err)
 	var body models.SubEventSubResponse
 	err = json.Unmarshal([]byte(response), &body)
 	a.Nil(err)
