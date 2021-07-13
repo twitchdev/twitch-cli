@@ -18,7 +18,18 @@ func GetApplicationDir() (string, error) {
 		return "", err
 	}
 
+	legacyFolder := false
+
+	// check if the home/.twitch-cli folder exists; if so, use that as the path
+	if _, err := os.Stat(filepath.Join(home, ".twitch-cli")); !os.IsNotExist(err) {
+		legacyFolder = true
+	}
+
 	path := filepath.Join(home, subFolder)
+
+	if !legacyFolder {
+		path = filepath.Join(home, ".config", subFolder) // issue #33- putting into a subfolder to avoid clutter
+	}
 
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		os.Mkdir(path, 0700)
