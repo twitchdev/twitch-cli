@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/test_setup"
@@ -13,6 +14,7 @@ import (
 
 var fromUser = "1234"
 var toUser = "4567"
+var clientId = "7890"
 
 func TestWebusbTransaction(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
@@ -46,8 +48,18 @@ func TestEventsubTransaction(t *testing.T) {
 		Trigger:    "transaction",
 	}
 
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
+	viper.Set("clientId", clientId)
+
+	r, err := Event{}.GenerateEvent(params)
+	a.Nil(err)
+
+	var body models.TransactionEventSubResponse
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
+	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", fromUser, body.Event.UserID)
+	a.Equal(clientId, body.Event.ExtensionClientID, "Expected client id %v, got %v", clientId, body.Event.ExtensionClientID)
 }
 
 func TestFakeTransport(t *testing.T) {
