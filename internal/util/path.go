@@ -9,7 +9,8 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-var subFolder = ".twitch-cli"
+var legacySubFolder = ".twitch-cli"
+var subFolder = "twitch-cli"
 
 // GetApplicationDir returns a string representation of the home path for use with configuration/data storage needs
 func GetApplicationDir() (string, error) {
@@ -25,7 +26,7 @@ func GetApplicationDir() (string, error) {
 		legacyFolder = true
 	}
 
-	path := filepath.Join(home, subFolder)
+	path := filepath.Join(home, legacySubFolder)
 
 	if !legacyFolder {
 		path = filepath.Join(home, ".config", subFolder) // issue #33- putting into a subfolder to avoid clutter
