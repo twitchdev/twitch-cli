@@ -9,10 +9,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-var isUserToken bool
-var userScopes string
-var revokeToken string
-var overrideClientId string
+var (
+    isUserToken      bool
+    userScopes       string
+    revokeToken      string
+    overrideClientId string
+)
 
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
