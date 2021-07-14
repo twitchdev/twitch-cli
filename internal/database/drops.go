@@ -10,6 +10,7 @@ type DropsEntitlement struct {
 	BenefitID string `db:"benefit_id" json:"benefit_id"`
 	GameID    string `db:"game_id" json:"game_id"`
 	Timestamp string `db:"timestamp" json:"timestamp"`
+	Status    string `db:"status" json:"fulfillment_status"`
 }
 
 func (q *Query) GetDropsEntitlements(de DropsEntitlement) (*DBResponse, error) {

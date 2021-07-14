@@ -5,6 +5,7 @@ package generate
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"strings"
@@ -232,7 +233,7 @@ func generateUsers(ctx context.Context, count int) error {
 			},
 			{
 				ID:            util.RandomGUID(),
-				Title:         "Choice1",
+				Title:         "Choice2",
 				Color:         "PINK",
 				Users:         0,
 				ChannelPoints: 0,
@@ -243,6 +244,34 @@ func generateUsers(ctx context.Context, count int) error {
 		err = db.NewQuery(nil, 100).InsertPrediction(prediction)
 		if err != nil {
 			log.Print(err.Error())
+		}
+
+		// create fake schedule event
+		segmentID := util.RandomGUID()
+
+		// just a years worth of recurring events; mock data
+		for i := 0; i < 52; i++ {
+			weekAdd := (i + 1) * 7 * 24
+			startTime := time.Now().Add(time.Duration(weekAdd) * time.Hour).UTC()
+			endTime := time.Now().Add(time.Duration(weekAdd) * time.Hour).UTC()
+			eventID := base64.RawStdEncoding.EncodeToString([]byte(fmt.Sprintf("%v\\%v", segmentID, startTime)))
+
+			segment := database.ScheduleSegment{
+				ID:          eventID,
+				StartTime:   startTime.Format(time.RFC3339),
+				EndTime:     endTime.Format(time.RFC3339),
+				IsRecurring: true,
+				IsVacation:  false,
+				CategoryID:  &dropsGameID,
+				Title:       "Test Title",
+				UserID:      broadcaster.ID,
+				Timezone:    "America/Los_Angeles",
+			}
+
+			err := db.NewQuery(nil, 100).InsertSchedule(segment)
+			if err != nil {
+				log.Print(err.Error())
+			}
 		}
 
 		for j, user := range users {
@@ -509,6 +538,10 @@ func generateAuthorization(ctx context.Context, c database.AuthenticationClient,
 	if err != nil {
 		return err
 	}
-	log.Printf("Created authorization for user %v with token %v", userID, auth.Token)
+	if userID != "" {
+		log.Printf("Created authorization for user %v with token %v", userID, auth.Token)
+	} else {
+		log.Printf("Created authorization with token %v", auth.Token)
+	}
 	return nil
 }

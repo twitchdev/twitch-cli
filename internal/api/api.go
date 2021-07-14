@@ -103,7 +103,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		}
 
 		d := data.Data.([]interface{})
-		data.Data = append(d, apiResponse.Data)
+		data.Data = append(d, apiResponse.Data.([]interface{})...)
 
 		if apiResponse.Pagination == nil || *&apiResponse.Pagination.Cursor == "" {
 			break

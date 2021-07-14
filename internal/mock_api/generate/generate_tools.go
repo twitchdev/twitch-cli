@@ -30,6 +30,8 @@ var usernamePossibilities = []string{
 	"Skateboard",
 	"Egg",
 	"Lion",
+	"Isaac",
+	"Jill",
 }
 
 func generateUsername() string {
