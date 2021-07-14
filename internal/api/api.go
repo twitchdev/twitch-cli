@@ -107,7 +107,11 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		}
 
 		d := data.Data.([]interface{})
-		data.Data = append(d, apiResponse.Data.([]interface{})...)
+		if strings.Contains(path, "schedule") {
+			data.Data = append(d, apiResponse.Data)
+		} else {
+			data.Data = append(d, apiResponse.Data.([]interface{})...)
+		}
 
 		if apiResponse.Pagination == nil || *&apiResponse.Pagination.Cursor == "" {
 			break
