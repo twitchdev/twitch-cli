@@ -107,7 +107,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		}
 
 		d := data.Data.([]interface{})
-		if strings.Contains(path, "schedule") {
+		if strings.Contains(path, "schedule") || apiResponse.Data == nil {
 			data.Data = append(d, apiResponse.Data)
 		} else {
 			data.Data = append(d, apiResponse.Data.([]interface{})...)
