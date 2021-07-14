@@ -44,6 +44,15 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	if params.Cost == 0 {
 		params.Cost = 100
 	}
+
+	if params.ItemID == "" {
+		params.ItemID = "testItemSku"
+	}
+
+	if params.ItemName == "" {
+		params.ItemName = "Test Trigger Item from CLI"
+	}
+
 	switch params.Transport {
 	case models.TransportEventSub:
 		body := &models.TransactionEventSubResponse{
@@ -72,8 +81,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				UserLogin:            "testUser",
 				UserID:               params.FromUserID,
 				Product: models.TransactionEventSubProduct{
-					Name:          "Test Trigger Item from CLI",
-					Sku:           "testItemSku",
+					Name:          params.ItemName,
+					Sku:           params.ItemID,
 					Bits:          params.Cost,
 					InDevelopment: true,
 				},
