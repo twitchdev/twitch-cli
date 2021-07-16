@@ -76,7 +76,7 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 	duration := 240
 
 	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "User token does not match broadcaster_id parameter")
+		mock_errors.WriteUnauthorized(w, "User token does not match broadcaster_id parameter")
 		return
 	}
 	var body SegmentPatchAndPostBody
@@ -184,7 +184,7 @@ func (e ScheduleSegment) deleteSegment(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 	id := r.URL.Query().Get("id")
 	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "User token does not match broadcaster_id parameter")
+		mock_errors.WriteUnauthorized(w, "User token does not match broadcaster_id parameter")
 		return
 	}
 
@@ -205,7 +205,11 @@ func (e ScheduleSegment) patchSegment(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 	id := r.URL.Query().Get("id")
 	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "User token does not match broadcaster_id parameter")
+		mock_errors.WriteUnauthorized(w, "User token does not match broadcaster_id parameter")
+		return
+	}
+	if id == "" {
+		mock_errors.WriteBadRequest(w, "Missing required parameter id")
 		return
 	}
 

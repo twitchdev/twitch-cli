@@ -4,6 +4,7 @@ package schedule
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -94,7 +95,9 @@ func (e Schedule) getSchedule(w http.ResponseWriter, r *http.Request) {
 		for _, id := range ids {
 			dbr, err := db.NewQuery(r, 25).GetSchedule(database.ScheduleSegment{ID: id, UserID: broadcasterID}, startTime)
 			if err != nil {
+				log.Print(err)
 				mock_errors.WriteServerError(w, err.Error())
+				return
 			}
 			response := dbr.Data.(database.Schedule)
 			schedule = response

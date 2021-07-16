@@ -16,7 +16,7 @@ var dropsEntitlementsMethodsSupported = map[string]bool{
 	http.MethodGet:    true,
 	http.MethodPost:   false,
 	http.MethodDelete: false,
-	http.MethodPatch:  false,
+	http.MethodPatch:  true,
 	http.MethodPut:    false,
 }
 
@@ -29,6 +29,16 @@ var dropsEntitlementsScopesByMethod = map[string][]string{
 }
 
 type DropsEntitlements struct{}
+
+type PatchEntitlementsBody struct {
+	FulfillmentStatus string   `json:"fulfillment_status"`
+	EntitlementIDs    []string `json:"entitlement_ids"`
+}
+
+type PatchEntitlementsResponse struct {
+	Status string   `json:"status"`
+	IDs    []string `json:"ids"`
+}
 
 func (e DropsEntitlements) Path() string { return "/entitlements/drops" }
 
@@ -46,7 +56,8 @@ func (e DropsEntitlements) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		getEntitlements(w, r)
-		break
+	case http.MethodPatch:
+		patchEntitlements(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -84,5 +95,71 @@ func getEntitlements(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	bytes, err := json.Marshal(apiResponse)
+	w.Write(bytes)
+}
+
+func patchEntitlements(w http.ResponseWriter, r *http.Request) {
+	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
+
+	var body PatchEntitlementsBody
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		mock_errors.WriteBadRequest(w, "Invalid body")
+		return
+	}
+
+	if body.FulfillmentStatus != "CLAIMED" && body.FulfillmentStatus != "FULFILLED" {
+		mock_errors.WriteBadRequest(w, "fulfillment_status must be one of CLAIMED or FULFILLED")
+		return
+	}
+
+	if len(body.EntitlementIDs) == 0 || len(body.EntitlementIDs) > 100 {
+		mock_errors.WriteBadRequest(w, "entitlement_ids must be at least 1 and at most 100")
+		return
+	}
+	s := PatchEntitlementsResponse{
+		Status: "SUCCESS",
+	}
+	ua := PatchEntitlementsResponse{Status: "UNAUTHORIZED"}
+	fail := PatchEntitlementsResponse{Status: "UPDATE_FAILED"}
+	notFound := PatchEntitlementsResponse{Status: "NOT_FOUND"}
+	for _, e := range body.EntitlementIDs {
+		dbr, err := db.NewQuery(nil, 100).GetDropsEntitlements(database.DropsEntitlement{ID: e})
+		if err != nil {
+			fail.IDs = append(fail.IDs, e)
+			continue
+		}
+		entitlement := dbr.Data.([]database.DropsEntitlement)
+		if len(entitlement) == 0 {
+			notFound.IDs = append(notFound.IDs, e)
+			continue
+		}
+
+		if userCtx.UserID != "" && userCtx.UserID != entitlement[0].UserID {
+			ua.IDs = append(ua.IDs, e)
+			continue
+		}
+
+		err = db.NewQuery(nil, 100).UpdateDropsEntitlement(database.DropsEntitlement{ID: e, UserID: entitlement[0].UserID, Status: body.FulfillmentStatus})
+		if err != nil {
+			fail.IDs = append(fail.IDs, e)
+			continue
+		}
+		s.IDs = append(s.IDs, e)
+	}
+	all := []PatchEntitlementsResponse{
+		s,
+		ua,
+		fail,
+		notFound,
+	}
+	resp := []PatchEntitlementsResponse{}
+	for _, r := range all {
+		if len(r.IDs) != 0 {
+			resp = append(resp, r)
+		}
+	}
+
+	bytes, _ := json.Marshal(resp)
 	w.Write(bytes)
 }

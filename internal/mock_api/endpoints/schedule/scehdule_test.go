@@ -48,8 +48,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	dbr, err := db.NewQuery(nil, 100).GetSchedule(database.ScheduleSegment{UserID: "1"}, time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC))
-	log.Printf("%v %#v", err, dbr.Data)
+	_, err = db.NewQuery(nil, 100).GetSchedule(database.ScheduleSegment{UserID: "1"}, time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC))
 
 	segment = s
 	db.DB.Close()
@@ -64,9 +63,14 @@ func TestSchedule(t *testing.T) {
 	// get
 	req, _ := http.NewRequest(http.MethodGet, ts.URL+Schedule{}.Path(), nil)
 	q := req.URL.Query()
-	q.Set("broadcaster_id", "1")
 	req.URL.RawQuery = q.Encode()
 	resp, err := http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	q.Set("broadcaster_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err)
 	a.Equal(200, resp.StatusCode)
 
@@ -74,10 +78,28 @@ func TestSchedule(t *testing.T) {
 	req.URL.RawQuery = q.Encode()
 	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err)
-	a.Equal(401, resp.StatusCode)
+	a.Equal(200, resp.StatusCode)
 
 	q.Set("broadcaster_id", "1")
 	q.Set("id", segment.ID)
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(200, resp.StatusCode)
+
+	q.Set("utc_offset", "60")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(200, resp.StatusCode)
+
+	q.Set("start_time", "test")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	q.Set("start_time", segment.StartTime)
 	req.URL.RawQuery = q.Encode()
 	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err)
@@ -93,6 +115,12 @@ func TestICal(t *testing.T) {
 	req.URL.RawQuery = q.Encode()
 	resp, err := http.DefaultClient.Do(req)
 	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	q.Set("broadcaster_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
 	a.Equal(200, resp.StatusCode)
 }
 
@@ -100,12 +128,15 @@ func TestSegment(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
 	ts := test_server.SetupTestServer(ScheduleSegment{})
+	tr := true
 
 	// post tests
 	body := SegmentPatchAndPostBody{
-		Title:     "hello",
-		Timezone:  "America/Los_Angeles",
-		StartTime: time.Now().Format(time.RFC3339),
+		Title:       "hello",
+		Timezone:    "America/Los_Angeles",
+		StartTime:   time.Now().Format(time.RFC3339),
+		IsRecurring: &tr,
+		Duration:    "60",
 	}
 
 	b, _ := json.Marshal(body)
@@ -145,6 +176,25 @@ func TestSegment(t *testing.T) {
 	a.Nil(err)
 	a.Equal(400, resp.StatusCode)
 
+	body.Timezone = "test"
+	b, _ = json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPost, ts.URL+ScheduleSegment{}.Path(), bytes.NewBuffer(b))
+	q.Set("broadcaster_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	body.Timezone = segment.Timezone
+	body.IsRecurring = nil
+	b, _ = json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPost, ts.URL+ScheduleSegment{}.Path(), bytes.NewBuffer(b))
+	q.Set("broadcaster_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
 	// patch
 	// no id
 	b, _ = json.Marshal(body)
@@ -175,8 +225,108 @@ func TestSegment(t *testing.T) {
 	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err)
 	a.Equal(200, resp.StatusCode)
+
+	// delete
+	req, _ = http.NewRequest(http.MethodDelete, ts.URL+ScheduleSegment{}.Path(), nil)
+	q.Set("broadcaster_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(204, resp.StatusCode)
+
+	q.Set("id", segment.ID)
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(204, resp.StatusCode)
+
+	q.Set("broadcaster_id", "2")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(401, resp.StatusCode)
 }
 
 func TestSettings(t *testing.T) {
+	a := test_setup.SetupTestEnv(t)
 
+	ts := test_server.SetupTestServer(ScheduleSettings{})
+	tr := true
+	f := false
+
+	// patch tests
+	body := PatchSettingsBody{
+		Timezone:          "America/Los_Angeles",
+		VacationStartTime: time.Now().Format(time.RFC3339),
+		VacationEndTime:   segment.EndTime,
+		IsVacationEnabled: &f,
+	}
+
+	b, _ := json.Marshal(body)
+	req, _ := http.NewRequest(http.MethodPatch, ts.URL+ScheduleSettings{}.Path(), bytes.NewBuffer(b))
+	q := req.URL.Query()
+	req.URL.RawQuery = q.Encode()
+	resp, err := http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.NotNil(resp)
+	a.Equal(401, resp.StatusCode)
+
+	b, _ = json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPatch, ts.URL+ScheduleSettings{}.Path(), bytes.NewBuffer(b))
+	q.Set("broadcaster_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(204, resp.StatusCode)
+
+	body.IsVacationEnabled = &tr
+	b, _ = json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPatch, ts.URL+ScheduleSettings{}.Path(), bytes.NewBuffer(b))
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(204, resp.StatusCode)
+
+	b, _ = json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPatch, ts.URL+ScheduleSettings{}.Path(), bytes.NewBuffer(b))
+	q.Set("broadcaster_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	body.IsVacationEnabled = &f
+	b, _ = json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPatch, ts.URL+ScheduleSettings{}.Path(), bytes.NewBuffer(b))
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(204, resp.StatusCode)
+
+	body.IsVacationEnabled = &tr
+	body.VacationStartTime = "123"
+	b, _ = json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPatch, ts.URL+ScheduleSettings{}.Path(), bytes.NewBuffer(b))
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	body.VacationStartTime = segment.StartTime
+	body.VacationEndTime = "123"
+	b, _ = json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPatch, ts.URL+ScheduleSettings{}.Path(), bytes.NewBuffer(b))
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	body.VacationEndTime = segment.EndTime
+	body.Timezone = "1"
+	b, _ = json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPatch, ts.URL+ScheduleSettings{}.Path(), bytes.NewBuffer(b))
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
 }

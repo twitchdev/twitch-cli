@@ -186,6 +186,7 @@ func generateUsers(ctx context.Context, count int) error {
 			GameID:    dropsGameID,
 			UserID:    broadcaster.ID,
 			Timestamp: util.GetTimestamp().Format(time.RFC3339Nano),
+			Status:    "CLAIMED",
 		}
 		err = db.NewQuery(nil, 1000).InsertDropsEntitlement(entitlement)
 		if err != nil {

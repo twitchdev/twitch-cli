@@ -3,10 +3,8 @@
 package schedule
 
 import (
-	"database/sql"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -58,22 +56,22 @@ func (e ScheduleSettings) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPatch:
 		e.patchSchedule(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
 func (e ScheduleSettings) patchSchedule(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 	if !userCtx.MatchesBroadcasterIDParam(r) {
-		mock_errors.WriteBadRequest(w, "User token does not match broadcaster_id parameter")
+		mock_errors.WriteUnauthorized(w, "User token does not match broadcaster_id parameter")
 		return
 	}
 
 	vacation, err := db.NewQuery(r, 100).GetVacations(database.ScheduleSegment{UserID: userCtx.UserID})
 	if err != nil {
-		if !errors.As(err, &sql.ErrNoRows) {
-			mock_errors.WriteServerError(w, err.Error())
-			return
-		}
+		mock_errors.WriteServerError(w, err.Error())
+		return
 	}
 
 	var body PatchSettingsBody
@@ -139,5 +137,4 @@ func (e ScheduleSettings) patchSchedule(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-
 }
