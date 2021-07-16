@@ -50,6 +50,8 @@ func All() []mock_api.MockEndpoint {
 		predictions.Predictions{},
 		schedule.Schedule{},
 		schedule.ScheduleICal{},
+		schedule.ScheduleSegment{},
+		schedule.ScheduleSettings{},
 		search.SearchCategories{},
 		search.SearchChannels{},
 		streams.AllTags{},

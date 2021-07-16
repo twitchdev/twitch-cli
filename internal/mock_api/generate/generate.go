@@ -25,6 +25,8 @@ type UserInfo struct {
 	Type string
 }
 
+var f = false
+
 func Generate(userCount int) error {
 	db, err := database.NewConnection()
 	if err != nil {
@@ -266,6 +268,7 @@ func generateUsers(ctx context.Context, count int) error {
 				Title:       "Test Title",
 				UserID:      broadcaster.ID,
 				Timezone:    "America/Los_Angeles",
+				IsCanceled:  &f,
 			}
 
 			err := db.NewQuery(nil, 100).InsertSchedule(segment)

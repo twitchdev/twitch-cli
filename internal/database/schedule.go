@@ -15,21 +15,24 @@ type Schedule struct {
 }
 
 type ScheduleSegment struct {
-	ID           string           `db:"id" json:"id" dbs:"s.id"`
-	Title        string           `db:"title" json:"title"`
-	StartTime    string           `db:"starttime" json:"start_time"`
-	EndTime      string           `db:"endtime" json:"end_time"`
-	IsRecurring  bool             `db:"is_recurring" json:"is_recurring"`
-	IsVacation   bool             `db:"is_vacation" json:"-"`
-	Category     *SegmentCategory `json:"category"`
-	UserID       string           `db:"broadcaster_id" json:"-"`
-	Timezone     string           `db:"timezone" json:"timezone"`
-	CategoryID   *string          `db:"category_id" json:"-"`
-	CategoryName *string          `db:"category_name" json:"-"`
+	ID            string           `db:"id" json:"id" dbs:"s.id"`
+	Title         string           `db:"title" json:"title"`
+	StartTime     string           `db:"starttime" json:"start_time"`
+	EndTime       string           `db:"endtime" json:"end_time"`
+	IsRecurring   bool             `db:"is_recurring" json:"is_recurring"`
+	IsVacation    bool             `db:"is_vacation" json:"-"`
+	Category      *SegmentCategory `json:"category"`
+	UserID        string           `db:"broadcaster_id" json:"-"`
+	Timezone      string           `db:"timezone" json:"timezone"`
+	CategoryID    *string          `db:"category_id" json:"-"`
+	CategoryName  *string          `db:"category_name" dbi:"false" json:"-"`
+	IsCanceled    *bool            `db:"is_canceled" json:"-"`
+	CanceledUntil *string          `json:"canceled_until"`
 }
 type ScheduleVacation struct {
-	StartTime string `json:"start_time"`
-	EndTime   string `json:"end_time"`
+	ID        string `db:"id" json:"-"`
+	StartTime string `db:"starttime" json:"start_time"`
+	EndTime   string `db:"endtime" json:"end_time"`
 }
 
 type SegmentCategory struct {
@@ -77,7 +80,11 @@ func (q *Query) GetSchedule(p ScheduleSegment, startTime time.Time) (*DBResponse
 			r.Segments = append(r.Segments, s)
 		}
 	}
-
+	v, err := q.GetVacations(ScheduleSegment{UserID: p.UserID})
+	if err != nil {
+		return nil, err
+	}
+	r.Vacation = &v
 	dbr := DBResponse{
 		Data:  r,
 		Limit: q.Limit,
@@ -100,4 +107,20 @@ func (q *Query) InsertSchedule(p ScheduleSegment) error {
 		return err
 	}
 	return tx.Commit()
+}
+
+func (q *Query) DeleteSegment(id string, broadcasterID string) error {
+	_, err := q.DB.Exec("delete from stream_schedule where id=$1 and broadcaster_id=$2", id, broadcasterID)
+	return err
+}
+
+func (q *Query) UpdateSegment(p ScheduleSegment) error {
+	_, err := q.DB.NamedExec(generateUpdateSQL("stream_schedule", []string{"id"}, p), p)
+	return err
+}
+
+func (q *Query) GetVacations(p ScheduleSegment) (ScheduleVacation, error) {
+	v := ScheduleVacation{}
+	err := q.DB.Get(&v, "select id,starttime,endtime from stream_schedule where is_vacation=true and datetime(endtime) > datetime('now') and broadcaster_id= $1 limit 1", p.UserID)
+	return v, err
 }

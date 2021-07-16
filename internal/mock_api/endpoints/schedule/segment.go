@@ -32,6 +32,8 @@ var scheduleSegmentScopesByMethod = map[string][]string{
 	http.MethodPut:    {},
 }
 
+var f = false
+
 type ScheduleSegment struct{}
 
 type SegmentPatchAndPostBody struct {
@@ -41,6 +43,7 @@ type SegmentPatchAndPostBody struct {
 	Duration    string  `json:"duration"`
 	CategoryID  *string `json:"category_id"`
 	Title       string  `json:"title"`
+	IsCanceled  *bool   `json:"is_canceled"`
 }
 
 func (e ScheduleSegment) Path() string { return "/schedule/segment" }
@@ -126,12 +129,13 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 		ID:          eventID,
 		StartTime:   st.UTC().Format(time.RFC3339),
 		EndTime:     et.UTC().Format(time.RFC3339),
-		IsRecurring: true,
+		IsRecurring: *body.IsRecurring,
 		IsVacation:  false,
 		CategoryID:  body.CategoryID,
 		Title:       body.Title,
 		UserID:      userCtx.UserID,
 		Timezone:    "America/Los_Angeles",
+		IsCanceled:  &f,
 	}
 	err = db.NewQuery(nil, 100).InsertSchedule(segment)
 	if err != nil {
@@ -150,12 +154,13 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 				ID:          eventID,
 				StartTime:   startTime.Format(time.RFC3339),
 				EndTime:     endTime.Format(time.RFC3339),
-				IsRecurring: true,
+				IsRecurring: *body.IsRecurring,
 				IsVacation:  false,
 				CategoryID:  body.CategoryID,
-				Title:       "Test Title",
+				Title:       body.Title,
 				UserID:      userCtx.UserID,
 				Timezone:    body.Timezone,
+				IsCanceled:  &f,
 			}
 
 			err := db.NewQuery(nil, 100).InsertSchedule(s)
@@ -165,7 +170,7 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	dbr, err := db.NewQuery(nil, 100).GetSchedule(database.ScheduleSegment{ID: segment.ID}, time.Now())
+	dbr, err := db.NewQuery(nil, 100).GetSchedule(database.ScheduleSegment{ID: eventID}, time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC))
 	if err != nil {
 		mock_errors.WriteServerError(w, err.Error())
 		return
@@ -176,9 +181,135 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 }
 
 func (e ScheduleSegment) deleteSegment(w http.ResponseWriter, r *http.Request) {
+	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
+	id := r.URL.Query().Get("id")
+	if !userCtx.MatchesBroadcasterIDParam(r) {
+		mock_errors.WriteBadRequest(w, "User token does not match broadcaster_id parameter")
+		return
+	}
 
+	if id == "" {
+		mock_errors.WriteBadRequest(w, "Missing required parameter id")
+		return
+	}
+
+	err := db.NewQuery(nil, 100).DeleteSegment(id, userCtx.UserID)
+	if err != nil {
+		mock_errors.WriteServerError(w, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (e ScheduleSegment) patchSegment(w http.ResponseWriter, r *http.Request) {
+	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
+	id := r.URL.Query().Get("id")
+	if !userCtx.MatchesBroadcasterIDParam(r) {
+		mock_errors.WriteBadRequest(w, "User token does not match broadcaster_id parameter")
+		return
+	}
 
+	dbr, err := db.NewQuery(nil, 100).GetSchedule(database.ScheduleSegment{ID: id, UserID: userCtx.UserID}, time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC))
+	if err != nil {
+		mock_errors.WriteServerError(w, err.Error())
+		return
+	}
+	b := dbr.Data.(database.Schedule)
+
+	if len(b.Segments) == 0 {
+		mock_errors.WriteBadRequest(w, "Invalid ID requested")
+		return
+	}
+	segment := b.Segments[0]
+
+	var body SegmentPatchAndPostBody
+	err = json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		mock_errors.WriteBadRequest(w, "Error parsing body")
+		return
+	}
+
+	// start_time
+	st, err := time.Parse(time.RFC3339, segment.StartTime)
+	if err != nil {
+		mock_errors.WriteServerError(w, err.Error())
+		return
+	}
+	if body.StartTime != "" {
+		st, err = time.Parse(time.RFC3339, body.StartTime)
+		if err != nil {
+			mock_errors.WriteBadRequest(w, "Error parsing start_time")
+			return
+		}
+	}
+
+	// timezone
+	tz, err := time.LoadLocation(segment.Timezone)
+	if err != nil {
+		mock_errors.WriteServerError(w, err.Error())
+		return
+	}
+	if body.Timezone != "" {
+		tz, err = time.LoadLocation(body.Timezone)
+		if err != nil {
+			mock_errors.WriteBadRequest(w, "Error parsing timezone")
+			return
+		}
+	}
+
+	// is_canceled
+	isCanceled := false
+	if body.IsCanceled != nil {
+		isCanceled = *body.IsCanceled
+	}
+
+	// title
+	title := segment.Title
+	if body.Title != "" {
+		if len(body.Title) > 140 {
+			mock_errors.WriteBadRequest(w, "Title must be less than 140 characters")
+			return
+		}
+		title = body.Title
+	}
+
+	// duration
+	et, err := time.Parse(time.RFC3339, segment.EndTime)
+	if err != nil {
+		mock_errors.WriteServerError(w, err.Error())
+		return
+	}
+	if body.Duration != "" {
+		duration, err := strconv.Atoi(body.Duration)
+		if err != nil {
+			mock_errors.WriteBadRequest(w, "Invalid duration provided")
+			return
+		}
+
+		et = st.Add(time.Duration(duration) * time.Minute)
+	}
+
+	s := database.ScheduleSegment{
+		ID:         segment.ID,
+		StartTime:  st.UTC().Format(time.RFC3339),
+		EndTime:    et.UTC().Format(time.RFC3339),
+		IsCanceled: &isCanceled,
+		Timezone:   tz.String(),
+		Title:      title,
+	}
+
+	err = db.NewQuery(r, 20).UpdateSegment(s)
+	if err != nil {
+		mock_errors.WriteServerError(w, err.Error())
+		return
+	}
+
+	dbr, err = db.NewQuery(nil, 100).GetSchedule(database.ScheduleSegment{ID: segment.ID}, time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC))
+	if err != nil {
+		mock_errors.WriteServerError(w, err.Error())
+		return
+	}
+	b = dbr.Data.(database.Schedule)
+	bytes, _ := json.Marshal(b)
+	w.Write(bytes)
 }

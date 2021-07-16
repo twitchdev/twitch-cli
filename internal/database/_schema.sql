@@ -298,6 +298,7 @@ create table stream_schedule(
   timezone text not null, 
   is_vacation boolean not null default false, 
   is_recurring boolean not null default false,
+  is_canceled boolean not null default false,
   title text,
   category_id text, 
   foreign key (broadcaster_id) references users(id), 
