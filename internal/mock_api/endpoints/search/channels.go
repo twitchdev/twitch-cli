@@ -64,7 +64,6 @@ func searchChannels(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("live_only") != "" {
 		live_only, _ = strconv.ParseBool(r.URL.Query().Get("live_only"))
 	}
-	println(live_only)
 	dbr, err := db.NewQuery(r, 100).SearchChannels(query, live_only)
 	if err != nil {
 		log.Print(err)

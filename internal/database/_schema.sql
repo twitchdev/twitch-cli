@@ -204,7 +204,8 @@ create table drops_entitlements(
   benefit_id text not null, 
   timestamp text not null, 
   user_id text not null, 
-  game_id text not null, 
+  game_id text not null,
+  status text not null default 'CLAIMED', 
   foreign key (user_id) references users(id), 
   foreign key (game_id) references categories(id)
 );
@@ -288,4 +289,18 @@ create table clips (
   duration real not null, 
   foreign key (broadcaster_id) references users(id), 
   foreign key (creator_id) references users(id)
+);
+create table stream_schedule(
+  id text not null primary key, 
+  broadcaster_id text not null, 
+  starttime text not null, 
+  endtime text not null, 
+  timezone text not null, 
+  is_vacation boolean not null default false, 
+  is_recurring boolean not null default false,
+  is_canceled boolean not null default false,
+  title text,
+  category_id text, 
+  foreign key (broadcaster_id) references users(id), 
+  foreign key (category_id) references categories(id)
 );
