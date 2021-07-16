@@ -89,8 +89,7 @@ func getMarkers(w http.ResponseWriter, r *http.Request) {
 
 	dbr, err := db.NewQuery(r, 100).GetStreamMarkers(database.StreamMarker{BroadcasterID: userID, VideoID: videoID})
 	if err != nil {
-		println(err.Error())
-		mock_errors.WriteServerError(w, "error fetching markers")
+		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
 	markerResponse := dbr.Data.([]database.StreamMarkerUser)
@@ -145,8 +144,7 @@ func postMarkers(w http.ResponseWriter, r *http.Request) {
 
 	err = db.NewQuery(r, 100).InsertStreamMarker(sm)
 	if err != nil {
-		println(err.Error())
-		mock_errors.WriteServerError(w, "error inserting marker")
+		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
 

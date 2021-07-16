@@ -10,6 +10,7 @@ type DropsEntitlement struct {
 	BenefitID string `db:"benefit_id" json:"benefit_id"`
 	GameID    string `db:"game_id" json:"game_id"`
 	Timestamp string `db:"timestamp" json:"timestamp"`
+	Status    string `db:"status" json:"fulfillment_status"`
 }
 
 func (q *Query) GetDropsEntitlements(de DropsEntitlement) (*DBResponse, error) {
@@ -49,5 +50,10 @@ func (q *Query) GetDropsEntitlements(de DropsEntitlement) (*DBResponse, error) {
 func (q *Query) InsertDropsEntitlement(d DropsEntitlement) error {
 	stmt := generateInsertSQL("drops_entitlements", "id", d, false)
 	_, err := q.DB.NamedExec(stmt, d)
+	return err
+}
+
+func (q *Query) UpdateDropsEntitlement(d DropsEntitlement) error {
+	_, err := q.DB.NamedExec(generateUpdateSQL("drops_entitlements", []string{"id"}, d), d)
 	return err
 }

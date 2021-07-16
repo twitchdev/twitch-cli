@@ -227,8 +227,7 @@ func patchPolls(w http.ResponseWriter, r *http.Request) {
 
 	dbr, err := db.NewQuery(r, 100).GetPolls(database.Poll{BroadcasterID: userCtx.UserID, ID: body.ID})
 	if err != nil {
-		println(err.Error())
-		mock_errors.WriteServerError(w, "error fetching polls")
+		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
 

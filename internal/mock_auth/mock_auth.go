@@ -39,6 +39,7 @@ var validScopesByTokenType = map[string]map[string]bool{
 		"channel:read:polls":         true,
 		"channel:read:predictions":   true,
 		"channel:read:redemptions":   true,
+		"channel:manage:schedule":    true,
 		"channel:read:stream_key":    true,
 		"channel:read:subscriptions": true,
 		"clips:edit":                 true,

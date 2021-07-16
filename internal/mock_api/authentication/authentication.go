@@ -24,6 +24,7 @@ type UserAuthentication struct {
 
 func AuthenticationMiddleware(next mock_api.MockEndpoint) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		db := r.Context().Value("db").(database.CLIDatabase)
 
 		// skip auth check for unsupported methods
