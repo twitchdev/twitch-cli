@@ -4,6 +4,7 @@ package trigger
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
@@ -111,7 +112,7 @@ func Fire(p TriggerParameters) (string, error) {
 		}
 		defer resp.Body.Close()
 
-		println(fmt.Sprintf(`[%v] Request Sent`, resp.StatusCode))
+		log.Println(fmt.Sprintf(`[%v] Request Sent`, resp.StatusCode))
 	}
 
 	return string(resp.JSON), nil

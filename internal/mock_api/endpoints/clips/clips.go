@@ -87,8 +87,7 @@ func getClips(w http.ResponseWriter, r *http.Request) {
 
 	dbr, err := db.NewQuery(r, 100).GetClips(database.Clip{ID: id, BroadcasterID: broadcasterID, GameID: gameID}, startedAt, endedAt)
 	if err != nil {
-		println(err.Error())
-		mock_errors.WriteServerError(w, "Error fetching clips")
+		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
 
@@ -150,8 +149,7 @@ func postClips(w http.ResponseWriter, r *http.Request) {
 
 	err = db.NewQuery(r, 100).InsertClip(clip)
 	if err != nil {
-		println(err.Error())
-		mock_errors.WriteServerError(w, "Error creating clip for user")
+		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
 

@@ -49,7 +49,6 @@ func (q *Query) GetDropsEntitlements(de DropsEntitlement) (*DBResponse, error) {
 }
 func (q *Query) InsertDropsEntitlement(d DropsEntitlement) error {
 	stmt := generateInsertSQL("drops_entitlements", "id", d, false)
-	println(stmt)
 	_, err := q.DB.NamedExec(stmt, d)
 	return err
 }
