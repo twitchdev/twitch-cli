@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	dbr, err := db.NewQuery(nil, 100).GetSchedule(database.ScheduleSegment{UserID: "1", ID: s.ID}, time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC))
+	dbr, err := db.NewQuery(nil, 100).GetSchedule(database.ScheduleSegment{UserID: "1"}, time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC))
 	log.Printf("%v %#v", err, dbr.Data)
 
 	segment = s
