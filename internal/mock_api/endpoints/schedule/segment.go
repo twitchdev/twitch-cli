@@ -154,7 +154,6 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 				ID:          eventID,
 				StartTime:   startTime.Format(time.RFC3339),
 				EndTime:     endTime.Format(time.RFC3339),
-<<<<<<< HEAD
 				IsRecurring: *body.IsRecurring,
 				IsVacation:  false,
 				CategoryID:  body.CategoryID,
@@ -162,14 +161,6 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 				UserID:      userCtx.UserID,
 				Timezone:    body.Timezone,
 				IsCanceled:  &f,
-=======
-				IsRecurring: true,
-				IsVacation:  false,
-				CategoryID:  body.CategoryID,
-				Title:       "Test Title",
-				UserID:      userCtx.UserID,
-				Timezone:    body.Timezone,
->>>>>>> 7985dac (adding schedules api support)
 			}
 
 			err := db.NewQuery(nil, 100).InsertSchedule(s)
