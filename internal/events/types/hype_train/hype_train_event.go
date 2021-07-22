@@ -39,7 +39,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	lastType := util.RandomType()
 
 	//Local variables which will be used for the trigger params below
-	localLevel := util.RandomInt(5)
+	localLevel := util.RandomInt(4) + 1
 	localTotal := util.RandomInt(10 * 100)
 	localGoal := util.RandomInt(10*100*100) + localTotal
 	localProgress := (localTotal / localGoal)
