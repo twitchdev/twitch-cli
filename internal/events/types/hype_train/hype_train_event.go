@@ -96,10 +96,10 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				ExpiresAtTimestamp: util.GetTimestamp().Add(5 * time.Minute).Format(time.RFC3339Nano),
 			},
 		}
-		if triggerMapping[params.Transport][params.Trigger] == "channel.hype_train.progress" {
+		if params.Trigger == "hype-train-progress" {
 			body.Event.Level = localLevel
 		}
-		if triggerMapping[params.Transport][params.Trigger] == "channel.hype_train.end" {
+		if params.Trigger == "hype-train-end" {
 			body.Event.CooldownEndsAtTimestamp = util.GetTimestamp().Add(1 * time.Hour).Format(time.RFC3339Nano)
 			body.Event.EndedAtTimestamp = util.GetTimestamp().Format(time.RFC3339Nano)
 			body.Event.ExpiresAtTimestamp = ""
