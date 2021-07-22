@@ -39,6 +39,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	lastType := util.RandomType()
 
 	//Local variables which will be used for the trigger params below
+	localLevel := util.RandomInt(4) + 1
 	localTotal := util.RandomInt(10 * 100)
 	localGoal := util.RandomInt(10*100*100) + localTotal
 	localProgress := (localTotal / localGoal)
@@ -92,11 +93,20 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					UserLoginWhoMadeContribution: "cli_user2",
 				},
 				StartedAtTimestamp: util.GetTimestamp().Format(time.RFC3339Nano),
-				ExpiresAtTimestamp: util.GetTimestamp().Format(time.RFC3339Nano),
+				ExpiresAtTimestamp: util.GetTimestamp().Add(5 * time.Minute).Format(time.RFC3339Nano),
 			},
 		}
-		if triggerMapping[params.Transport][params.Trigger] == "hype-train-end " {
+		if params.Trigger == "hype-train-progress" {
+			body.Event.Level = localLevel
+		}
+		if params.Trigger == "hype-train-end" {
 			body.Event.CooldownEndsAtTimestamp = util.GetTimestamp().Add(1 * time.Hour).Format(time.RFC3339Nano)
+			body.Event.EndedAtTimestamp = util.GetTimestamp().Format(time.RFC3339Nano)
+			body.Event.ExpiresAtTimestamp = ""
+			body.Event.Goal = 0
+			body.Event.Level = localLevel
+			body.Event.Progress = 0
+			body.Event.StartedAtTimestamp = util.GetTimestamp().Add(5 * -time.Minute).Format(time.RFC3339Nano)
 		}
 		event, err = json.Marshal(body)
 		if err != nil {
