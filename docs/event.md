@@ -16,30 +16,42 @@ Used to either create or send mock events for use with local webhooks testing.
 
 **Args**
 
-| Argument              | Description                                                                                                |
-|-----------------------|------------------------------------------------------------------------------------------------------------|
-| `subscribe`           | A standard subscription event. Triggers a basic tier 1 sub.                                                |
-| `unsubscribe`         | A standard unsubscribe event. Triggers a basic tier 1 sub.                                                 |
-| `gift`                | A gifted subscription event. Triggers a basic tier 1 sub.                                                  |
-| `cheer`               | Only usable with the `eventsub` transport, shows Cheers from chat.                                         |
-| `transaction`         | Bits in Extensions transactions events.                                                                    |
-| `add-reward`          | Channel Points EventSub event for a Custom Reward being added.                                             |
-| `update-reward`       | Channel Points EventSub event for a Custom Reward being updated.                                           |
-| `remove-reward`       | Channel Points EventSub event for a Custom Reward being removed.                                           |
-| `add-redemption`      | Channel Points EventSub event for a redemption being performed.                                            |
-| `update-redemption`   | Channel Points EventSub event for a redemption being updated.                                              |
-| `raid`                | Channel Raid event with a random viewer count.                                                             |
-| `revoke`              | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly. |
-| `stream-change`       | Stream Changed event.                                                                                      |
-| `streamup`            | Stream online event.                                                                                       |
-| `streamdown`          | Sstream offline event.                                                                                     |
-| `add-moderator`       | Channel moderator add event.                                                                               |
-| `remove-moderator`    | Channel moderator removal event.                                                                           |
-| `ban`                 | Channel ban event.                                                                                         |
-| `unban`               | Channel unban event.                                                                                       |
-| `hype-train-begin`    | Channel hype train start event.                                                                            |
-| `hype-train-progress` | Channel hype train progress event.                                                                         |
-| `hype-train-end`      | Channel hype train end event.                                                                              |
+| Argument              | Description                                                                                                                          |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `add-moderator`       | Channel moderator add event.                                                                                                         |
+| `add-redemption`      | Channel Points EventSub event for a redemption being performed.                                                                      |
+| `add-reward`          | Channel Points EventSub event for a Custom Reward being added.                                                                       |
+| `ban`                 | Channel ban event.                                                                                                                   |
+| `channel-gift`        | Channel gifting event; not to be confused with the `gift` event. This event is a description of the number of gifts given by a user. |
+| `cheer`               | Only usable with the `eventsub` transport                                                                                            |
+| `drop`                | Drops Entitlement event.                                                                                                             |
+| `gift`                | A gifted subscription event. Triggers a basic tier 1 sub.                                                                            |
+| `grant`               | Authorization grant event.                                                                                                           |
+| `hype-train-begin`    | Channel hype train start event.                                                                                                      |
+| `hype-train-end`      | Channel hype train end event.                                                                                                        |
+| `hype-train-progress` | Channel hype train progress event.                                                                                                   |
+| `poll-begin`          | Channel poll begin event.                                                                                                            |
+| `poll-end`            | Channel poll end event.                                                                                                              |
+| `poll-progress`       | Channel poll progress event.                                                                                                         |
+| `prediction-begin`    | Channel prediction begin event.                                                                                                      |
+| `prediction-end`      | Channel prediction end event.                                                                                                        |
+| `prediction-lock`     | Channel prediction lock event.                                                                                                       |
+| `prediction-progress` | Channel prediction progress event.                                                                                                   |
+| `raid`                | Channel Raid event with a random viewer count.                                                                                       |
+| `remove-moderator`    | Channel moderator removal event.                                                                                                     |
+| `remove-reward`       | Channel Points EventSub event for a Custom Reward being removed.                                                                     |
+| `revoke`              | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly.                           |
+| `stream-change`       | Stream Changed event.                                                                                                                |
+| `streamdown`          | Sstream offline event.                                                                                                               |
+| `streamup`            | Stream online event.                                                                                                                 |
+| `subscribe-message`   | Subscription Message event.                                                                                                          |
+| `subscribe`           | A standard subscription event. Triggers a basic tier 1 sub.                                                                          |
+| `transaction`         | Bits in Extensions transactions events.                                                                                              |
+| `unban`               | Channel unban event.                                                                                                                 |
+| `unsubscribe`         | A standard unsubscribe event. Triggers a basic tier 1 sub.                                                                           |
+| `update-redemption`   | Channel Points EventSub event for a redemption being updated.                                                                        |
+| `update-reward`       | Channel Points EventSub event for a Custom Reward being updated.                                                                     |
+
 
 
 
@@ -48,18 +60,18 @@ Used to either create or send mock events for use with local webhooks testing.
 | Flag                | Shorthand | Description                                                                                                                     | Example                                   | Required? (Y/N) |
 |---------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|-----------------|
 | `--forward-address` | `-F`      | Web server address for where to send mock events.                                                                               | `-F https://localhost:8080`               | N               |
-| `--transport`       | `-T`      | The method used to send events. Default is eventsub, but can send using websub.                                                 | `-T websub`                               | N               |
+| `--transport`       | `-T`      | The method used to send events. Default is `eventsub`, but can send using `websub`.                                             | `-T websub`                               | N               |
 | `--to-user`         | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                              | `-t 44635596`                             | N               |
 | `--from-user`       | `-f`      | Denotes the sender's TUID of the event, for example the user that follows another user or the subscriber to a broadcaster.      | `-f 44635596`                             | N               |
 | `--gift-user`       | `-g`      | Used only for subcription-based events, denotes the gifting user ID                                                             | `-g 44635596`                             | N               |
 | `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.                                                    | `-s testsecret`                           | N               |
-| `--count`           | `-c`      | Count of events to fire. This can be used to simulate an influx of subscriptions.                                               | `-c 100`                                  | N               |
+| `--count`           | `-c`      | Count of events to fire. This can be used to simulate an influx of events.                                                      | `-c 100`                                  | N               |
 | `--anonymous`       | `-a`      | If the event is anonymous. Only applies to `gift` and `cheer` events.                                                           | `-a`                                      | N               |
 | `--status`          | `-S`      | Status of the event object, currently applies to channel points redemptions.                                                    | `-S fulfilled`                            | N               |
 | `--item-id`         | `-i`      | Manually set the ID of the event payload item (for example the reward ID in redemption events or game in stream events).        | `-i 032e4a6c-4aef-11eb-a9f5-1f703d1f0b92` | N               |
 | `--item-name`       | `-n`      | Manually set the name of the event payload item (for example the reward ID in redemption events or game name in stream events). | `-n "Science & Technology"`               | N               |
 | `--cost`            | `-C`      | Amount of bits or channel points redeemed/used in the event.                                                                    | `-C 250`                                  | N               |
-| `--description`     | `-d`      | Title the stream should be updated/started with.                                                                                | `-d Awesome new title!`                   | N               |
+| `--description`     | `-d`      | Title the stream should be updated/started with. Additionally used as the category ID for Drops events.                         | `-d Awesome new title!`                   | N               |
 
 
 **Examples**
@@ -110,30 +122,42 @@ Allows you to test if your webserver responds to subscription requests properly.
 
 **Args**
 
-| Argument              | Description                                                                                                |
-|-----------------------|------------------------------------------------------------------------------------------------------------|
-| `subscribe`           | A standard subscription event. Triggers a basic tier 1 sub.                                                |
-| `unsubscribe`         | A standard unsubscribe event. Triggers a basic tier 1 sub.                                                 |
-| `gift`                | A gifted subscription event. Triggers a basic tier 1 sub.                                                  |
-| `cheer`               | Only usable with the `eventsub` transport, shows Cheers from chat.                                         |
-| `transaction`         | Bits in Extensions transactions events.                                                                    |
-| `add-reward`          | Channel Points EventSub event for a Custom Reward being added.                                             |
-| `update-reward`       | Channel Points EventSub event for a Custom Reward being updated.                                           |
-| `remove-reward`       | Channel Points EventSub event for a Custom Reward being removed.                                           |
-| `add-redemption`      | Channel Points EventSub event for a redemption being performed.                                            |
-| `update-redemption`   | Channel Points EventSub event for a redemption being updated.                                              |
-| `raid`                | Channel Raid event with a random viewer count.                                                             |
-| `revoke`              | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly. |
-| `stream-change`       | Stream Changed event.                                                                                      |
-| `streamup`            | Stream online event.                                                                                       |
-| `streamdown`          | Sstream offline event.                                                                                     |
-| `add-moderator`       | Channel moderator add event.                                                                               |
-| `remove-moderator`    | Channel moderator removal event.                                                                           |
-| `ban`                 | Channel ban event.                                                                                         |
-| `unban`               | Channel unban event.                                                                                       |
-| `hype-train-begin`    | Channel hype train start event.                                                                            |
-| `hype-train-progress` | Channel hype train progress event.                                                                         |
-| `hype-train-end`      | Channel hype train end event.                                                                              |
+| Argument              | Description                                                                                                                          |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `add-moderator`       | Channel moderator add event.                                                                                                         |
+| `add-redemption`      | Channel Points EventSub event for a redemption being performed.                                                                      |
+| `add-reward`          | Channel Points EventSub event for a Custom Reward being added.                                                                       |
+| `ban`                 | Channel ban event.                                                                                                                   |
+| `channel-gift`        | Channel gifting event; not to be confused with the `gift` event. This event is a description of the number of gifts given by a user. |
+| `cheer`               | Only usable with the `eventsub` transport                                                                                            |
+| `drop`                | Drops Entitlement event.                                                                                                             |
+| `gift`                | A gifted subscription event. Triggers a basic tier 1 sub.                                                                            |
+| `grant`               | Authorization grant event.                                                                                                           |
+| `hype-train-begin`    | Channel hype train start event.                                                                                                      |
+| `hype-train-end`      | Channel hype train end event.                                                                                                        |
+| `hype-train-progress` | Channel hype train progress event.                                                                                                   |
+| `poll-begin`          | Channel poll begin event.                                                                                                            |
+| `poll-end`            | Channel poll end event.                                                                                                              |
+| `poll-progress`       | Channel poll progress event.                                                                                                         |
+| `prediction-begin`    | Channel prediction begin event.                                                                                                      |
+| `prediction-end`      | Channel prediction end event.                                                                                                        |
+| `prediction-lock`     | Channel prediction lock event.                                                                                                       |
+| `prediction-progress` | Channel prediction progress event.                                                                                                   |
+| `raid`                | Channel Raid event with a random viewer count.                                                                                       |
+| `remove-moderator`    | Channel moderator removal event.                                                                                                     |
+| `remove-reward`       | Channel Points EventSub event for a Custom Reward being removed.                                                                     |
+| `revoke`              | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly.                           |
+| `stream-change`       | Stream Changed event.                                                                                                                |
+| `streamdown`          | Sstream offline event.                                                                                                               |
+| `streamup`            | Stream online event.                                                                                                                 |
+| `subscribe-message`   | Subscription Message event.                                                                                                          |
+| `subscribe`           | A standard subscription event. Triggers a basic tier 1 sub.                                                                          |
+| `transaction`         | Bits in Extensions transactions events.                                                                                              |
+| `unban`               | Channel unban event.                                                                                                                 |
+| `unsubscribe`         | A standard unsubscribe event. Triggers a basic tier 1 sub.                                                                           |
+| `update-redemption`   | Channel Points EventSub event for a redemption being updated.                                                                        |
+| `update-reward`       | Channel Points EventSub event for a Custom Reward being updated.                                                                     |
+
 
 **Flags**
 

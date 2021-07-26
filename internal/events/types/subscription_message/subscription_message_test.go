@@ -1,12 +1,11 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package authorization_revoke
+package subscription_message
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/test_setup"
@@ -17,41 +16,43 @@ var toUser = "4567"
 
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
+	ten := 10
 
-	viper.Set("ClientID", "1234")
 	params := *&events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
-		Trigger:    "subscribe",
+		Trigger:    "subscribe-message",
+		Cost:       int64(ten),
 	}
 
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.AuthorizationRevokeEventSubResponse // replace with actual value
+	var body models.SubscribeMessageEventSubResponse // replace with actual value
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
+	a.Equal(&ten, body.Event.StreakMonths)
+	a.GreaterOrEqual(body.Event.CumulativeMonths, 10)
 
-	a.NotEmpty(body.Event.ClientID)
-	a.Equal(body.Event.ClientID, body.Subscription.Condition.ClientID)
-	a.Equal("1234", body.Event.ClientID)
-}
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "revoke",
+	params = *&events.MockEventParameters{
+		FromUserID:  fromUser,
+		ToUserID:    toUser,
+		Transport:   models.TransportEventSub,
+		Trigger:     "subscribe-message",
+		Cost:        int64(ten),
+		IsAnonymous: true,
 	}
 
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
+	r, err = Event{}.GenerateEvent(params)
+	a.Nil(err)
 
-	// write tests here for websub
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+	a.Nil(body.Event.StreakMonths)
+	a.GreaterOrEqual(body.Event.CumulativeMonths, 10)
 }
+
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -59,7 +60,7 @@ func TestFakeTransport(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
-		Trigger:    "unsubscribe",
+		Trigger:    "subscribe-message",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -69,10 +70,10 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("revoke")
+	r := Event{}.ValidTrigger("subscribe-message")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("fake_revoke")
+	r = Event{}.ValidTrigger("notmessage")
 	a.Equal(false, r)
 }
 
@@ -88,6 +89,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "revoke")
+	r := Event{}.GetTopic(models.TransportEventSub, "subscribe-message")
 	a.NotNil(r)
 }

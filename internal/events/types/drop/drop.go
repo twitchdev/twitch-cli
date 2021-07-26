@@ -1,13 +1,12 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package authorization_revoke
+package drop
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"time"
 
-	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
@@ -18,11 +17,11 @@ var transportsSupported = map[string]bool{
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"revoke"}
+var triggerSupported = []string{"drop"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
-		"revoke": "user.authorization.revoke",
+		"drop": "drop.entitlement.grant",
 	},
 }
 
@@ -31,43 +30,54 @@ type Event struct{}
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
-	clientID := viper.GetString("ClientID")
 
-	// if not configured, generate a random one
-	if clientID == "" {
-		clientID = util.RandomClientID()
+	if params.ItemID == "" {
+		params.ItemID = util.RandomGUID()
+	}
+
+	if params.Description == "" {
+		params.Description = fmt.Sprintf("%v", util.RandomInt(1000))
 	}
 	switch params.Transport {
 	case models.TransportEventSub:
-		body := &models.AuthorizationRevokeEventSubResponse{
+		body := &models.DropsEntitlementEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  "enabled",
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: "1",
 				Condition: models.EventsubCondition{
-					ClientID: clientID,
+					OrganizationID: params.FromUserID,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
 					Callback: "null",
 				},
-				Cost:      1,
+				Cost:      0,
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
-			Event: models.AuthorizationRevokeEvent{
-				ClientID:  clientID,
-				UserID:    params.FromUserID,
-				UserLogin: params.FromUserName,
-				UserName:  params.FromUserName,
+			Events: []models.DropsEntitlementEventSubEvent{
+				{
+					ID: util.RandomGUID(),
+					Data: models.DropsEntitlementEventSubEventData{
+						OrganizationID: params.FromUserID,
+						CategoryID:     params.Description,
+						CategoryName:   "",
+						CampaignID:     util.RandomGUID(),
+						EntitlementID:  util.RandomGUID(),
+						BenefitID:      params.ItemID,
+						UserID:         params.ToUserID,
+						UserName:       params.ToUserName,
+						UserLogin:      params.ToUserName,
+						CreatedAt:      util.GetTimestamp().Format(time.RFC3339Nano),
+					},
+				},
 			},
 		}
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-	case models.TransportWebSub:
-		return events.MockEventResponse{}, errors.New("Websub is unsupported for authorization revoke events")
 	default:
 		return events.MockEventResponse{}, nil
 	}
