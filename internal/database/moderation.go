@@ -40,13 +40,17 @@ type ModeratorActionEvent struct {
 }
 
 type BanActionEvent struct {
-	BroadcasterID    string  `db:"broadcaster_id" json:"broadcaster_id"`
-	BroadcasterLogin string  `db:"broadcaster_login" json:"broadcaster_login"`
-	BroadcasterName  string  `db:"broadcaster_name" json:"broadcaster_name"`
-	UserID           string  `db:"user_id" json:"user_id"`
-	UserLogin        string  `db:"user_login" json:"user_login"`
-	UserName         string  `db:"user_name" json:"user_name"`
-	ExpiresAt        *string `db:"expires_at" json:"expires_at"`
+	BroadcasterID      string  `db:"broadcaster_id" json:"broadcaster_id"`
+	BroadcasterLogin   string  `db:"broadcaster_login" json:"broadcaster_login"`
+	BroadcasterName    string  `db:"broadcaster_name" json:"broadcaster_name"`
+	UserID             string  `db:"user_id" json:"user_id"`
+	UserLogin          string  `db:"user_login" json:"user_login"`
+	UserName           string  `db:"user_name" json:"user_name"`
+	ExpiresAt          *string `db:"expires_at" json:"expires_at"`
+	Reason             string  `json:"reason"`
+	ModeratorID        string  `json:"moderator_id"`
+	ModeratorUserLogin string  `json:"moderator_login"`
+	ModeratorUserName  string  `json:"moderator_user_name"`
 }
 
 type BanEvent struct {
@@ -57,10 +61,14 @@ type BanEvent struct {
 	BanActionEvent `json:"event_data"`
 }
 type Ban struct {
-	UserID    string  `db:"user_id" json:"user_id"`
-	UserLogin string  `db:"user_login" json:"user_login"`
-	UserName  string  `db:"user_name" json:"user_name"`
-	ExpiresAt *string `db:"expires_at" json:"expires_at"`
+	UserID             string  `db:"user_id" json:"user_id"`
+	UserLogin          string  `db:"user_login" json:"user_login"`
+	UserName           string  `db:"user_name" json:"user_name"`
+	ExpiresAt          *string `db:"expires_at" json:"expires_at"`
+	Reason             string  `json:"reason"`
+	ModeratorID        string  `json:"moderator_id"`
+	ModeratorUserLogin string  `json:"moderator_login"`
+	ModeratorUserName  string  `json:"moderator_user_name"`
 }
 
 var es = ""
@@ -192,6 +200,7 @@ func (q *Query) GetBans(p UserRequestParams) (*DBResponse, error) {
 		if b.ExpiresAt == nil {
 			b.ExpiresAt = &es
 		}
+		b.Reason = "CLI ban"
 		r = append(r, b)
 	}
 	dbr := DBResponse{
@@ -228,6 +237,7 @@ func (q *Query) GetBanEvents(p UserRequestParams) (*DBResponse, error) {
 		if b.ExpiresAt == nil {
 			b.ExpiresAt = &es
 		}
+		b.Reason = "CLI ban"
 		r = append(r, b)
 	}
 	dbr := DBResponse{

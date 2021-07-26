@@ -40,18 +40,12 @@ None.
 
 ## start
 
-The `start` function starts a new mock server for use with testing functionality. Currently, this replicates a large majority of the current API endpoints on the new API, but are ommitting: 
+The `start` function starts a new mock server for use with testing functionality. Currently, this replicates a large majority of the current API endpoints on the new API, but are omitting: 
 
-* GET /analytics/extensions
-* GET /analytics/games
-* GET /extensions/transactions
-* POST /eventsub/subscriptions
-* DELETE /eventsub/subscriptions
-* GET /eventsub/subscriptions
-* GET /users/extensions/list
-* GET /users/extensions
-* PUT /users/extensions
-* GET /webhooks/subscriptions
+* Extensions endpoints
+* Code entitlement endpoints
+* Websub endpoints
+* EventSub endpoints
 
 For many of these, we are exploring how to better integrate this with existing features (for example, allowing events to be triggered on unit creation or otherwise), and for others, the value is minimal compared to the docs. All other endpoints should be currently supported, however it is possible to be out of date- if so, [please raise an issue](https://github.com/twitchdev/twitch-cli/issues). 
 
