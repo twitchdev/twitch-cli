@@ -20,8 +20,9 @@ The `mock-api` product has two primary functions. The first is to generate so-ca
 * Teams
 * Users
 
-The second is the actual server used to mock the endpoints. In the next iteration, you will be able to edit these and add further ones manually (for example, making a user with specific attributes), but for the beta we won't be providing this functionality as the current `generate` feature will make all of these (and more),
+The second is the actual server used to mock the endpoints. In the next iteration, you will be able to edit these and add further ones manually (for example, making a user with specific attributes), but for the beta we won't be providing this functionality as the current `generate` feature will make all of these (and more).
 
+As of the 1.1 release, this product is in an **open beta** and any bugs should be filed via GitHub Issues. Given the breadth of the tool, it is likely you may run across oddities; please fill out an issue if that is the case. 
 
 ## generate
 
