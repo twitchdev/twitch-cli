@@ -29,7 +29,7 @@ func TestEventSub(t *testing.T) {
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.SubscribeMessageEventSubResponse // replace with actual value
+	var body models.SubscribeMessageEventSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 	a.Equal(&ten, body.Event.StreakMonths)

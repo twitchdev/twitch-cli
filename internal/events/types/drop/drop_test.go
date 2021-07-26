@@ -27,7 +27,7 @@ func TestEventSub(t *testing.T) {
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.DropsEntitlementEventSubResponse // replace with actual value
+	var body models.DropsEntitlementEventSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 

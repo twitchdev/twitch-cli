@@ -61,7 +61,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					ID: util.RandomGUID(),
 					Data: models.DropsEntitlementEventSubEventData{
 						OrganizationID: params.FromUserID,
-						CategoryID:     params.Description,
+						CategoryID:     params.GameID,
 						CategoryName:   "",
 						CampaignID:     util.RandomGUID(),
 						EntitlementID:  util.RandomGUID(),
