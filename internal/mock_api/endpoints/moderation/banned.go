@@ -61,6 +61,12 @@ func getBans(w http.ResponseWriter, r *http.Request) {
 		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
+	broadcaster, err := db.NewQuery(r, 100).GetUser(database.User{ID: userCtx.UserID})
+	if err != nil {
+		mock_errors.WriteServerError(w, "error fetching broadcaster")
+		return
+	}
+
 	bans := []database.Ban{}
 	userIDs := r.URL.Query()["user_id"]
 	if len(userIDs) > 0 {
@@ -80,6 +86,11 @@ func getBans(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		bans = append(bans, dbr.Data.([]database.Ban)...)
+	}
+	for i := range bans {
+		bans[i].ModeratorID = broadcaster.ID
+		bans[i].ModeratorUserLogin = broadcaster.UserLogin
+		bans[i].ModeratorUserName = broadcaster.DisplayName
 	}
 	apiResponse := models.APIResponse{Data: bans}
 	if dbr.Cursor != "" {
