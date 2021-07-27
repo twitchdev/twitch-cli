@@ -20,6 +20,7 @@ type MockEventParameters struct {
 	Cost         int64
 	IsPermanent  bool
 	Description  string
+	GameID       string
 }
 
 type MockEventResponse struct {

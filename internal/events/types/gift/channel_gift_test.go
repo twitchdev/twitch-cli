@@ -1,12 +1,11 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package authorization_revoke
+package gift
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/test_setup"
@@ -18,40 +17,27 @@ var toUser = "4567"
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	viper.Set("ClientID", "1234")
 	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
-		Trigger:    "subscribe",
+		FromUserID:  fromUser,
+		ToUserID:    toUser,
+		Transport:   models.TransportEventSub,
+		Trigger:     "channel-gift",
+		Cost:        0,
+		IsAnonymous: true,
 	}
 
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.AuthorizationRevokeEventSubResponse // replace with actual value
+	var body models.GiftEventSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 
-	a.NotEmpty(body.Event.ClientID)
-	a.Equal(body.Event.ClientID, body.Subscription.Condition.ClientID)
-	a.Equal("1234", body.Event.ClientID)
+	a.GreaterOrEqual(body.Event.Total, 1)
+	a.Nil(body.Event.CumulativeTotal)
+	a.NotEmpty(body.Event.UserID)
 }
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
 
-	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "revoke",
-	}
-
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
-
-	// write tests here for websub
-}
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -69,10 +55,10 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("revoke")
+	r := Event{}.ValidTrigger("channel-gift")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("fake_revoke")
+	r = Event{}.ValidTrigger("notgift")
 	a.Equal(false, r)
 }
 
@@ -88,6 +74,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "revoke")
+	r := Event{}.GetTopic(models.TransportEventSub, "channel-gift")
 	a.NotNil(r)
 }

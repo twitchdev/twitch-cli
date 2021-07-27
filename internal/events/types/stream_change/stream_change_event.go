@@ -37,8 +37,10 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	if params.Description == "" {
 		params.Description = "Example title from the CLI!"
 	}
-	if params.ItemID == "" {
-		params.ItemID = "509658"
+	if params.ItemID == "" && params.GameID == "" {
+		params.GameID = "509658"
+	} else if params.ItemID != "" && params.GameID == "" {
+		params.GameID = params.ItemID
 	}
 	if params.ItemName == "" {
 		params.ItemName = "Just Chatting"
@@ -69,7 +71,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserName:  params.ToUserName,
 				StreamTitle:          params.Description,
 				StreamLanguage:       "en",
-				StreamCategoryID:     params.ItemID,
+				StreamCategoryID:     params.GameID,
 				StreamCategoryName:   params.ItemName,
 				IsMature:             false,
 			},
@@ -86,8 +88,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					BroadcasterUserID:    params.ToUserID,
 					BroadcasterUserLogin: params.ToUserName,
 					BroadcasterUserName:  params.ToUserName,
-					StreamCategoryID:     params.ItemID,
-					StreamCategoryName:   "Just Chatting",
+					StreamCategoryID:     params.GameID,
+					StreamCategoryName:   params.ItemName,
 					StreamType:           "live",
 					StreamTitle:          params.Description,
 					StreamViewerCount:    9848,
