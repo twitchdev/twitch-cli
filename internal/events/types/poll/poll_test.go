@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package raid
+package poll
 
 import (
 	"encoding/json"
@@ -21,34 +21,51 @@ func TestEventSub(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
-		Trigger:    "raid",
+		Trigger:    "poll-begin",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.SubEventSubResponse
+	var body models.PollEventSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
+	a.NotEmpty(body.Event.EndsAt)
+	a.Empty(body.Event.EndedAt)
 
-	// write actual tests here (making sure you set appropriate values and the like) for eventsub
-}
-
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
+	params = *&events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "raid",
+		Transport:  models.TransportEventSub,
+		Trigger:    "poll-progress",
 	}
 
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
+	r, err = Event{}.GenerateEvent(params)
+	a.Nil(err)
 
-	// write tests here for websub
+	body = models.PollEventSubResponse{}
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+	a.NotEmpty(body.Event.EndsAt)
+	a.Empty(body.Event.EndedAt)
+
+	params = *&events.MockEventParameters{
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportEventSub,
+		Trigger:    "poll-end",
+	}
+
+	r, err = Event{}.GenerateEvent(params)
+	a.Nil(err)
+
+	body = models.PollEventSubResponse{}
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+	a.Empty(body.Event.EndsAt)
+	a.NotEmpty(body.Event.EndedAt)
 }
+
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -56,7 +73,7 @@ func TestFakeTransport(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
-		Trigger:    "raid",
+		Trigger:    "poll-begin",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -66,10 +83,10 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("raid")
+	r := Event{}.ValidTrigger("poll-begin")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("not_raid")
+	r = Event{}.ValidTrigger("notgift")
 	a.Equal(false, r)
 }
 
@@ -85,6 +102,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "trigger_keyword")
+	r := Event{}.GetTopic(models.TransportEventSub, "poll-begin")
 	a.NotNil(r)
 }

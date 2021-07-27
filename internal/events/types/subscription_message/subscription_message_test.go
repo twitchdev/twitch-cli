@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package raid
+package subscription_message
 
 import (
 	"encoding/json"
@@ -16,39 +16,43 @@ var toUser = "4567"
 
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
+	ten := 10
 
 	params := *&events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
-		Trigger:    "raid",
+		Trigger:    "subscribe-message",
+		Cost:       int64(ten),
 	}
 
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.SubEventSubResponse
+	var body models.SubscribeMessageEventSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
+	a.Equal(&ten, body.Event.StreakMonths)
+	a.GreaterOrEqual(body.Event.CumulativeMonths, 10)
 
-	// write actual tests here (making sure you set appropriate values and the like) for eventsub
-}
-
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "raid",
+	params = *&events.MockEventParameters{
+		FromUserID:  fromUser,
+		ToUserID:    toUser,
+		Transport:   models.TransportEventSub,
+		Trigger:     "subscribe-message",
+		Cost:        int64(ten),
+		IsAnonymous: true,
 	}
 
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
+	r, err = Event{}.GenerateEvent(params)
+	a.Nil(err)
 
-	// write tests here for websub
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+	a.Nil(body.Event.StreakMonths)
+	a.GreaterOrEqual(body.Event.CumulativeMonths, 10)
 }
+
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -56,7 +60,7 @@ func TestFakeTransport(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
-		Trigger:    "raid",
+		Trigger:    "subscribe-message",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -66,10 +70,10 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("raid")
+	r := Event{}.ValidTrigger("subscribe-message")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("not_raid")
+	r = Event{}.ValidTrigger("notmessage")
 	a.Equal(false, r)
 }
 
@@ -85,6 +89,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "trigger_keyword")
+	r := Event{}.GetTopic(models.TransportEventSub, "subscribe-message")
 	a.NotNil(r)
 }

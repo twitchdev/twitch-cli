@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package raid
+package prediction
 
 import (
 	"encoding/json"
@@ -21,34 +21,59 @@ func TestEventSub(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
-		Trigger:    "raid",
+		Trigger:    "prediction-begin",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.SubEventSubResponse
+	var body models.PredictionEventSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 
-	// write actual tests here (making sure you set appropriate values and the like) for eventsub
-}
-
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
+	params = *&events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "raid",
+		Transport:  models.TransportEventSub,
+		Trigger:    "prediction-progress",
 	}
 
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
+	r, err = Event{}.GenerateEvent(params)
+	a.Nil(err)
 
-	// write tests here for websub
+	body = models.PredictionEventSubResponse{}
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	params = *&events.MockEventParameters{
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportEventSub,
+		Trigger:    "prediction-lock",
+	}
+
+	r, err = Event{}.GenerateEvent(params)
+	a.Nil(err)
+
+	body = models.PredictionEventSubResponse{}
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
+
+	params = *&events.MockEventParameters{
+		FromUserID: fromUser,
+		ToUserID:   toUser,
+		Transport:  models.TransportEventSub,
+		Trigger:    "prediction-end",
+	}
+
+	r, err = Event{}.GenerateEvent(params)
+	a.Nil(err)
+
+	body = models.PredictionEventSubResponse{}
+	err = json.Unmarshal(r.JSON, &body)
+	a.Nil(err)
 }
+
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -56,7 +81,7 @@ func TestFakeTransport(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
-		Trigger:    "raid",
+		Trigger:    "unsubscribe",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -66,10 +91,10 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("raid")
+	r := Event{}.ValidTrigger("prediction-begin")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("not_raid")
+	r = Event{}.ValidTrigger("notgift")
 	a.Equal(false, r)
 }
 
@@ -85,6 +110,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "trigger_keyword")
+	r := Event{}.GetTopic(models.TransportEventSub, "prediction-begin")
 	a.NotNil(r)
 }

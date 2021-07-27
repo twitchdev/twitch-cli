@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package raid
+package drop
 
 import (
 	"encoding/json"
@@ -21,34 +21,19 @@ func TestEventSub(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
-		Trigger:    "raid",
+		Trigger:    "drop",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.SubEventSubResponse
+	var body models.DropsEntitlementEventSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 
-	// write actual tests here (making sure you set appropriate values and the like) for eventsub
+	a.Len(body.Events, 1)
 }
 
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "raid",
-	}
-
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
-
-	// write tests here for websub
-}
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -56,7 +41,7 @@ func TestFakeTransport(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
-		Trigger:    "raid",
+		Trigger:    "drop",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -66,10 +51,10 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("raid")
+	r := Event{}.ValidTrigger("drop")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("not_raid")
+	r = Event{}.ValidTrigger("notdrop")
 	a.Equal(false, r)
 }
 
@@ -85,6 +70,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "trigger_keyword")
+	r := Event{}.GetTopic(models.TransportEventSub, "drop")
 	a.NotNil(r)
 }

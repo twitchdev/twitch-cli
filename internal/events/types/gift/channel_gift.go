@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package subscribe
+package gift
 
 import (
 	"encoding/json"
@@ -12,24 +12,15 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
+	models.TransportWebSub:   false,
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"subscribe", "gift", "unsubscribe", "subscribe-end"}
+var triggerSupported = []string{"channel-gift"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"subscribe":     "subscriptions.subscribe",
-		"unsubscribe":   "subscriptions.unsubscribe",
-		"gift":          "subscriptions.subscribe",
-		"subscribe-end": "",
-	},
 	models.TransportEventSub: {
-		"subscribe":     "channel.subscribe",
-		"unsubscribe":   "channel.unsubscribe",
-		"gift":          "channel.subscribe",
-		"subscribe-end": "channel.subscription.end",
+		"channel-gift": "channel.subscription.gift",
 	},
 }
 
@@ -38,26 +29,21 @@ type Event struct{}
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
-	var giftUserID string
-	var giftUserName string
 
-	if params.Trigger == "gift" {
-		params.IsGift = true
+	if params.Cost <= 0 {
+		params.Cost = 5
 	}
 
-	if params.IsGift == true {
-		giftUserID = util.RandomUserID()
-		giftUserName = "testGifter"
-	}
+	total := int(util.RandomInt(200) + params.Cost)
 
-	if params.IsAnonymous == true {
-		giftUserID = "274598607"
-		giftUserName = "ananonymousgifter"
+	if params.IsAnonymous {
+		params.FromUserID = "274598607"
+		params.FromUserName = "ananonymousgifter"
 	}
 
 	switch params.Transport {
 	case models.TransportEventSub:
-		body := *&models.EventsubResponse{
+		body := &models.GiftEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  "enabled",
@@ -73,7 +59,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Cost:      0,
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
-			Event: models.SubEventSubEvent{
+			Event: models.GiftEventSubEvent{
 				UserID:               params.FromUserID,
 				UserLogin:            params.FromUserName,
 				UserName:             params.FromUserName,
@@ -81,36 +67,14 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
 				Tier:                 "1000",
-				IsGift:               params.IsGift,
+				Total:                int(params.Cost),
+				CumulativeTotal:      &total,
+				IsAnonymous:          params.IsAnonymous,
 			},
 		}
-
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
+		if params.IsAnonymous {
+			body.Event.CumulativeTotal = nil
 		}
-	case models.TransportWebSub:
-		body := *&models.SubWebSubResponse{
-			Data: []models.SubWebSubResponseData{
-				{
-					ID:             params.ID,
-					EventType:      triggerMapping[params.Transport][params.Trigger],
-					EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
-					Version:        "1.0",
-					EventData: models.SubWebSubEventData{
-						BroadcasterID:   params.ToUserID,
-						BroadcasterName: params.ToUserName,
-						UserID:          params.FromUserID,
-						UserName:        params.FromUserID,
-						Tier:            "1000",
-						PlanName:        "Tier 1 Test Sub",
-						IsGift:          params.IsGift,
-						GifterID:        giftUserID,
-						GifterName:      giftUserName,
-					},
-				},
-			}}
-
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
@@ -139,7 +103,6 @@ func (e Event) ValidTrigger(t string) bool {
 	}
 	return false
 }
-
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
 }
