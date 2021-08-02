@@ -22,7 +22,7 @@ type Channel struct {
 	CategoryID   string `db:"category_id" json:"game_id"`
 	CategoryName string `db:"category_name" json:"game_name" dbi:"false"`
 	Title        string `db:"title" json:"title"`
-	Language     string `db:"stream_language" json:"stream_language"`
+	Language     string `db:"stream_language" json:"broadcaster_language"`
 	Delay        int    `dbi:"false" json:"delay"`
 }
 
