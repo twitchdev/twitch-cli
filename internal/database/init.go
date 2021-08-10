@@ -10,7 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const currentVersion = 2
+const currentVersion = 3
 
 type migrateMap struct {
 	SQL     string
