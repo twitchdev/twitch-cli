@@ -113,7 +113,7 @@ func (q *Query) AddModerator(p UserRequestParams) error {
 
 	tx := q.DB.MustBegin()
 	tx.NamedExec(stmt, p)
-	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id)`, ma)
+	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_timestamp, :event_type, :event_version, :broadcaster_id, :user_id)`, ma)
 	return tx.Commit()
 }
 
@@ -156,7 +156,7 @@ func (q *Query) RemoveModerator(broadcaster string, user string) error {
 
 	tx := q.DB.MustBegin()
 	tx.Exec(`delete from moderators where broadcaster_id=$1 and user_id=$2`, broadcaster, user)
-	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id)`, ma)
+	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_timestamp, :event_type, :event_version, :broadcaster_id, :user_id)`, ma)
 	return tx.Commit()
 }
 
@@ -178,7 +178,7 @@ func (q *Query) InsertBan(p UserRequestParams) error {
 
 	tx := q.DB.MustBegin()
 	tx.NamedExec(stmt, p)
-	tx.NamedExec(`INSERT INTO ban_events VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id, :expires_at)`, ma)
+	tx.NamedExec(`INSERT INTO ban_events VALUES(:id, :event_timestamp, :event_type, :event_version, :broadcaster_id, :user_id, :expires_at)`, ma)
 	return tx.Commit()
 }
 
@@ -270,6 +270,14 @@ func (q *Query) GetModeratorEvents(p UserRequestParams) (*DBResponse, error) {
 			log.Print(err)
 			return nil, err
 		}
+		// shim for https://github.com/twitchdev/twitch-cli/issues/83
+		_, err = time.Parse(time.RFC3339, ma.EventTimestamp)
+		if err != nil {
+			ts := ma.EventType
+			ma.EventType = ma.EventTimestamp
+			ma.EventTimestamp = ts
+		}
+
 		r = append(r, ma)
 	}
 	dbr := DBResponse{
