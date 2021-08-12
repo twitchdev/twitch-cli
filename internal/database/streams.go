@@ -13,7 +13,7 @@ type Stream struct {
 	UserID      string   `db:"broadcaster_id" json:"user_id"`
 	UserLogin   string   `db:"broadcaster_login" json:"user_login" dbi:"false"`
 	UserName    string   `db:"broadcaster_name" json:"user_name" dbi:"false"`
-	StreamType  string   `db:"stream_type" json:"stream_type"`
+	StreamType  string   `db:"stream_type" json:"type"`
 	ViewerCount int      `db:"viewer_count" json:"viewer_count"`
 	StartedAt   string   `db:"started_at" json:"started_at"`
 	IsMature    bool     `db:"is_mature" json:"is_mature"`
@@ -24,7 +24,9 @@ type Stream struct {
 	CategoryName     sql.NullString `db:"category_name" json:"-" dbi:"false"`
 	RealCategoryName string         `json:"game_name"`
 	Title            string         `db:"title" json:"title" dbi:"false"`
-	Language         string         `db:"stream_language" json:"stream_language" dbi:"false"`
+	Language         string         `db:"stream_language" json:"language" dbi:"false"`
+	// calculated fields
+	ThumbnailURL string `json:"thumbnail_url"`
 }
 
 type StreamTag struct {
@@ -83,6 +85,7 @@ func (q *Query) GetStream(s Stream) (*DBResponse, error) {
 		if s.CategoryName.Valid {
 			s.RealCategoryName = s.CategoryName.String
 		}
+		s.ThumbnailURL = fmt.Sprintf("https://static-cdn.jtvnw.net/previews-ttv/live_user_%v-{width}x{height}.jpg", s.UserLogin)
 		r = append(r, s)
 	}
 

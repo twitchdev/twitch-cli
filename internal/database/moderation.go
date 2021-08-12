@@ -26,7 +26,7 @@ type ModeratorAction struct {
 	ID                   string `db:"id" json:"id"`
 	EventType            string `db:"event_type" json:"event_type"`
 	EventTimestamp       string `db:"event_timestamp" json:"event_timestamp"`
-	EventVersion         string `db:"event_version" json:"event_version"`
+	EventVersion         string `db:"event_version" json:"version"`
 	ModeratorActionEvent `json:"event_data"`
 }
 
@@ -50,14 +50,14 @@ type BanActionEvent struct {
 	Reason             string  `json:"reason"`
 	ModeratorID        string  `json:"moderator_id"`
 	ModeratorUserLogin string  `json:"moderator_login"`
-	ModeratorUserName  string  `json:"moderator_user_name"`
+	ModeratorUserName  string  `json:"moderator_name"`
 }
 
 type BanEvent struct {
 	ID             string `db:"id" json:"id"`
 	EventType      string `db:"event_type" json:"event_type"`
 	EventTimestamp string `db:"event_timestamp" json:"event_timestamp"`
-	EventVersion   string `db:"event_version" json:"event_version"`
+	EventVersion   string `db:"event_version" json:"version"`
 	BanActionEvent `json:"event_data"`
 }
 type Ban struct {
@@ -68,7 +68,7 @@ type Ban struct {
 	Reason             string  `json:"reason"`
 	ModeratorID        string  `json:"moderator_id"`
 	ModeratorUserLogin string  `json:"moderator_login"`
-	ModeratorUserName  string  `json:"moderator_user_name"`
+	ModeratorUserName  string  `json:"moderator_name"`
 }
 
 var es = ""
