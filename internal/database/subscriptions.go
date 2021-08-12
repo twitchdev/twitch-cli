@@ -4,6 +4,7 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 )
 
@@ -20,6 +21,8 @@ type Subscription struct {
 	GifterLogin      *sql.NullString `db:"gifter_login" json:"gifter_login,omitempty"`
 	Tier             string          `db:"tier" json:"tier"`
 	CreatedAt        string          `db:"created_at" json:"-"`
+	// calculated fields
+	PlanName string `json:"plan_name"`
 }
 
 type SubscriptionInsert struct {
@@ -50,6 +53,15 @@ func (q *Query) GetSubscriptions(s Subscription) (*DBResponse, error) {
 			log.Print(err)
 			return nil, err
 		}
+		plan := fmt.Sprintf("Channel Subscription (%v)", s.BroadcasterLogin)
+		switch s.Tier {
+		case "2000":
+			plan = plan + ": $9.99 Sub"
+		case "3000":
+			plan = plan + ": $24.99 Sub"
+		default:
+		}
+		s.PlanName = plan
 		r = append(r, s)
 	}
 
