@@ -234,9 +234,18 @@ func (q *Query) GetBanEvents(p UserRequestParams) (*DBResponse, error) {
 			return nil, err
 		}
 		es := ""
+
 		if b.ExpiresAt == nil {
 			b.ExpiresAt = &es
 		}
+		// shim for https://github.com/twitchdev/twitch-cli/issues/83
+		_, err = time.Parse(time.RFC3339, b.EventTimestamp)
+		if err != nil {
+			ts := b.EventType
+			b.EventType = b.EventTimestamp
+			b.EventTimestamp = ts
+		}
+
 		b.Reason = "CLI ban"
 		r = append(r, b)
 	}
