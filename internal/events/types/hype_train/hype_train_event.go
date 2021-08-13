@@ -63,6 +63,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 			Event: models.HypeTrainEventSubEvent{
+				ID:                   params.ID,
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,

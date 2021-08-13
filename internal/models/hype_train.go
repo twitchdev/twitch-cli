@@ -42,6 +42,7 @@ type HypeTrainEventSubResponse struct {
 }
 
 type HypeTrainEventSubEvent struct {
+	ID                      string             `json:"id"`
 	BroadcasterUserID       string             `json:"broadcaster_user_id"`
 	BroadcasterUserLogin    string             `json:"broadcaster_user_login"`
 	BroadcasterUserName     string             `json:"broadcaster_user_name"`
