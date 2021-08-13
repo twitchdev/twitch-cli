@@ -73,7 +73,7 @@ SUMMARY:TwitchDev Monthly Update // July 1, 2021
 DESCRIPTION:Science & Technology.
 CATEGORIES:Science & Technology
 END:VEVENT
-END:VCALENDAR%`
-	w.Header().Add("Content-Type", "text/calendar")
+END:VCALENDAR`
+	w.Header().Set("Content-Type", "text/calendar")
 	w.Write([]byte(body))
 }
