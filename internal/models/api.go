@@ -8,6 +8,7 @@ type APIResponse struct {
 	Error      string                    `json:"error,omitempty"`
 	Status     int                       `json:"status,omitempty"`
 	Message    string                    `json:"message,omitempty"`
+	Template   string                    `json:"template,omitempty"`
 	Total      *int                      `json:"total,omitempty"`
 	DateRange  *BitsLeaderboardDateRange `json:"date_range,omitempty"`
 }
