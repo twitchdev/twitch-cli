@@ -40,7 +40,7 @@ func TestEventSub(t *testing.T) {
 		ToUserID:   toUser,
 		Transport:  models.TransportEventSub,
 		Trigger:    "stream_change",
-		ItemID:     "1234",
+		GameID:     "1234",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
@@ -65,7 +65,7 @@ func TestWebSubStreamChange(t *testing.T) {
 		Transport:   models.TransportWebSub,
 		Trigger:     "stream-change",
 		Description: newStreamTitle,
-		ItemID:      "1234",
+		GameID:      "1234",
 	}
 
 	r, err := Event{}.GenerateEvent(params)

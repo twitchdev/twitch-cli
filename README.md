@@ -58,6 +58,7 @@ The CLI currently supports the following products:
 - [api](./docs/api.md)
 - [configure](./docs/configure.md)
 - [event](docs/event.md)
+- [mock-api](docs/mock-api.md)
 - [token](docs/token.md)
 - [version](docs/version.md)
 

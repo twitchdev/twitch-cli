@@ -72,6 +72,8 @@ type SearchChannel struct {
 	TagIDs       []string `json:"tag_ids" dbi:"false"`
 	IsLive       bool     `json:"is_live" db:"is_live"`
 	StartedAt    *string  `db:"started_at" json:"started_at"`
+	// calculated fields
+	ThumbNailURL string `json:"thumbnail_url"`
 }
 
 func (q *Query) GetUser(u User) (User, error) {
@@ -327,6 +329,7 @@ func (q *Query) SearchChannels(query string, live_only bool) (*DBResponse, error
 			r[i].StartedAt = &emptyString
 		}
 		r[i].TagIDs = st
+		r[i].ThumbNailURL = "https://static-cdn.jtvnw.net/jtv_user_pictures/3f13ab61-ec78-4fe6-8481-8682cb3b0ac2-channel_offline_image-300x300.png"
 	}
 
 	dbr := DBResponse{

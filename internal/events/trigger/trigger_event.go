@@ -4,6 +4,7 @@ package trigger
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
@@ -29,6 +30,7 @@ type TriggerParameters struct {
 	Count          int
 	Description    string
 	ItemName       string
+	GameID         string
 }
 
 type TriggerResponse struct {
@@ -52,6 +54,9 @@ func Fire(p TriggerParameters) (string, error) {
 		p.FromUser = util.RandomUserID()
 	}
 
+	if p.GameID == "" {
+		p.GameID = fmt.Sprint(util.RandomInt(10 * 1000))
+	}
 	eventParamaters := events.MockEventParameters{
 		ID:           util.RandomGUID(),
 		Trigger:      p.Event,
@@ -66,6 +71,7 @@ func Fire(p TriggerParameters) (string, error) {
 		ItemID:       p.ItemID,
 		Description:  p.Description,
 		ItemName:     p.ItemName,
+		GameID:       p.GameID,
 	}
 
 	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
@@ -111,7 +117,7 @@ func Fire(p TriggerParameters) (string, error) {
 		}
 		defer resp.Body.Close()
 
-		println(fmt.Sprintf(`[%v] Request Sent`, resp.StatusCode))
+		log.Println(fmt.Sprintf(`[%v] Request Sent`, resp.StatusCode))
 	}
 
 	return string(resp.JSON), nil

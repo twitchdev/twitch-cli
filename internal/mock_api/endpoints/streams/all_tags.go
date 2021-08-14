@@ -63,7 +63,6 @@ func getAllTags(w http.ResponseWriter, r *http.Request) {
 
 	if len(tagIDs) > 0 {
 		for _, id := range tagIDs {
-			println(id)
 			t := database.Tag{ID: id}
 			dbr, err := db.NewQuery(r, 100).GetTags(t)
 			if err != nil {

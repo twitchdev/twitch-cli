@@ -26,7 +26,7 @@ type ModeratorAction struct {
 	ID                   string `db:"id" json:"id"`
 	EventType            string `db:"event_type" json:"event_type"`
 	EventTimestamp       string `db:"event_timestamp" json:"event_timestamp"`
-	EventVersion         string `db:"event_version" json:"event_version"`
+	EventVersion         string `db:"event_version" json:"version"`
 	ModeratorActionEvent `json:"event_data"`
 }
 
@@ -40,27 +40,35 @@ type ModeratorActionEvent struct {
 }
 
 type BanActionEvent struct {
-	BroadcasterID    string  `db:"broadcaster_id" json:"broadcaster_id"`
-	BroadcasterLogin string  `db:"broadcaster_login" json:"broadcaster_login"`
-	BroadcasterName  string  `db:"broadcaster_name" json:"broadcaster_name"`
-	UserID           string  `db:"user_id" json:"user_id"`
-	UserLogin        string  `db:"user_login" json:"user_login"`
-	UserName         string  `db:"user_name" json:"user_name"`
-	ExpiresAt        *string `db:"expires_at" json:"expires_at"`
+	BroadcasterID      string  `db:"broadcaster_id" json:"broadcaster_id"`
+	BroadcasterLogin   string  `db:"broadcaster_login" json:"broadcaster_login"`
+	BroadcasterName    string  `db:"broadcaster_name" json:"broadcaster_name"`
+	UserID             string  `db:"user_id" json:"user_id"`
+	UserLogin          string  `db:"user_login" json:"user_login"`
+	UserName           string  `db:"user_name" json:"user_name"`
+	ExpiresAt          *string `db:"expires_at" json:"expires_at"`
+	Reason             string  `json:"reason"`
+	ModeratorID        string  `json:"moderator_id"`
+	ModeratorUserLogin string  `json:"moderator_login"`
+	ModeratorUserName  string  `json:"moderator_name"`
 }
 
 type BanEvent struct {
 	ID             string `db:"id" json:"id"`
 	EventType      string `db:"event_type" json:"event_type"`
 	EventTimestamp string `db:"event_timestamp" json:"event_timestamp"`
-	EventVersion   string `db:"event_version" json:"event_version"`
+	EventVersion   string `db:"event_version" json:"version"`
 	BanActionEvent `json:"event_data"`
 }
 type Ban struct {
-	UserID    string  `db:"user_id" json:"user_id"`
-	UserLogin string  `db:"user_login" json:"user_login"`
-	UserName  string  `db:"user_name" json:"user_name"`
-	ExpiresAt *string `db:"expires_at" json:"expires_at"`
+	UserID             string  `db:"user_id" json:"user_id"`
+	UserLogin          string  `db:"user_login" json:"user_login"`
+	UserName           string  `db:"user_name" json:"user_name"`
+	ExpiresAt          *string `db:"expires_at" json:"expires_at"`
+	Reason             string  `json:"reason"`
+	ModeratorID        string  `json:"moderator_id"`
+	ModeratorUserLogin string  `json:"moderator_login"`
+	ModeratorUserName  string  `json:"moderator_name"`
 }
 
 var es = ""
@@ -105,7 +113,7 @@ func (q *Query) AddModerator(p UserRequestParams) error {
 
 	tx := q.DB.MustBegin()
 	tx.NamedExec(stmt, p)
-	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id)`, ma)
+	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_timestamp, :event_type, :event_version, :broadcaster_id, :user_id)`, ma)
 	return tx.Commit()
 }
 
@@ -148,7 +156,7 @@ func (q *Query) RemoveModerator(broadcaster string, user string) error {
 
 	tx := q.DB.MustBegin()
 	tx.Exec(`delete from moderators where broadcaster_id=$1 and user_id=$2`, broadcaster, user)
-	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id)`, ma)
+	tx.NamedExec(`INSERT INTO moderator_actions VALUES(:id, :event_timestamp, :event_type, :event_version, :broadcaster_id, :user_id)`, ma)
 	return tx.Commit()
 }
 
@@ -170,7 +178,7 @@ func (q *Query) InsertBan(p UserRequestParams) error {
 
 	tx := q.DB.MustBegin()
 	tx.NamedExec(stmt, p)
-	tx.NamedExec(`INSERT INTO ban_events VALUES(:id, :event_type, :event_timestamp, :event_version, :broadcaster_id, :user_id, :expires_at)`, ma)
+	tx.NamedExec(`INSERT INTO ban_events VALUES(:id, :event_timestamp, :event_type, :event_version, :broadcaster_id, :user_id, :expires_at)`, ma)
 	return tx.Commit()
 }
 
@@ -192,6 +200,7 @@ func (q *Query) GetBans(p UserRequestParams) (*DBResponse, error) {
 		if b.ExpiresAt == nil {
 			b.ExpiresAt = &es
 		}
+		b.Reason = "CLI ban"
 		r = append(r, b)
 	}
 	dbr := DBResponse{
@@ -225,9 +234,19 @@ func (q *Query) GetBanEvents(p UserRequestParams) (*DBResponse, error) {
 			return nil, err
 		}
 		es := ""
+
 		if b.ExpiresAt == nil {
 			b.ExpiresAt = &es
 		}
+		// shim for https://github.com/twitchdev/twitch-cli/issues/83
+		_, err = time.Parse(time.RFC3339, b.EventTimestamp)
+		if err != nil {
+			ts := b.EventType
+			b.EventType = b.EventTimestamp
+			b.EventTimestamp = ts
+		}
+
+		b.Reason = "CLI ban"
 		r = append(r, b)
 	}
 	dbr := DBResponse{
@@ -260,6 +279,14 @@ func (q *Query) GetModeratorEvents(p UserRequestParams) (*DBResponse, error) {
 			log.Print(err)
 			return nil, err
 		}
+		// shim for https://github.com/twitchdev/twitch-cli/issues/83
+		_, err = time.Parse(time.RFC3339, ma.EventTimestamp)
+		if err != nil {
+			ts := ma.EventType
+			ma.EventType = ma.EventTimestamp
+			ma.EventTimestamp = ts
+		}
+
 		r = append(r, ma)
 	}
 	dbr := DBResponse{

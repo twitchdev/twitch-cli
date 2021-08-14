@@ -20,8 +20,9 @@ The `mock-api` product has two primary functions. The first is to generate so-ca
 * Teams
 * Users
 
-The second is the actual server used to mock the endpoints. In the next iteration, you will be able to edit these and add further ones manually (for example, making a user with specific attributes), but for the beta we won't be providing this functionality as the current `generate` feature will make all of these (and more),
+The second is the actual server used to mock the endpoints. In the next iteration, you will be able to edit these and add further ones manually (for example, making a user with specific attributes), but for the beta we won't be providing this functionality as the current `generate` feature will make all of these (and more).
 
+As of the 1.1 release, this product is in an **open beta** and any bugs should be filed via GitHub Issues. Given the breadth of the tool, it is likely you may run across oddities; please fill out an issue if that is the case. 
 
 ## generate
 
@@ -40,18 +41,12 @@ None.
 
 ## start
 
-The `start` function starts a new mock server for use with testing functionality. Currently, this replicates a large majority of the current API endpoints on the new API, but are ommitting: 
+The `start` function starts a new mock server for use with testing functionality. Currently, this replicates a large majority of the current API endpoints on the new API, but are omitting: 
 
-* GET /analytics/extensions
-* GET /analytics/games
-* GET /extensions/transactions
-* POST /eventsub/subscriptions
-* DELETE /eventsub/subscriptions
-* GET /eventsub/subscriptions
-* GET /users/extensions/list
-* GET /users/extensions
-* PUT /users/extensions
-* GET /webhooks/subscriptions
+* Extensions endpoints
+* Code entitlement endpoints
+* Websub endpoints
+* EventSub endpoints
 
 For many of these, we are exploring how to better integrate this with existing features (for example, allowing events to be triggered on unit creation or otherwise), and for others, the value is minimal compared to the docs. All other endpoints should be currently supported, however it is possible to be out of date- if so, [please raise an issue](https://github.com/twitchdev/twitch-cli/issues). 
 

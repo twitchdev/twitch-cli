@@ -16,18 +16,20 @@ var transportsSupported = map[string]bool{
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"subscribe", "gift", "unsubscribe"}
+var triggerSupported = []string{"subscribe", "gift", "unsubscribe", "subscribe-end"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportWebSub: {
-		"subscribe":   "subscriptions.subscribe",
-		"unsubscribe": "subscriptions.unsubscribe",
-		"gift":        "subscriptions.subscribe",
+		"subscribe":     "subscriptions.subscribe",
+		"unsubscribe":   "subscriptions.unsubscribe",
+		"gift":          "subscriptions.subscribe",
+		"subscribe-end": "",
 	},
 	models.TransportEventSub: {
-		"subscribe":   "channel.subscribe",
-		"unsubscribe": "channel.unsubscribe",
-		"gift":        "channel.subscribe",
+		"subscribe":     "channel.subscribe",
+		"unsubscribe":   "channel.unsubscribe",
+		"gift":          "channel.subscribe",
+		"subscribe-end": "channel.subscription.end",
 	},
 }
 

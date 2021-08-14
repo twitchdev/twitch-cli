@@ -81,6 +81,11 @@ func StartServer(port int) {
 func RegisterHandlers(m *http.ServeMux) {
 	// all mock endpoints live in the /mock/ namespace
 	for _, e := range endpoints.All() {
+		// no auth requirements on this endpoint, so just add it manually
+		if e.Path() == "/schedule/icalendar" {
+			m.Handle(MOCK_NAMESPACE+e.Path(), loggerMiddleware(e))
+			continue
+		}
 		m.Handle(MOCK_NAMESPACE+e.Path(), loggerMiddleware(authentication.AuthenticationMiddleware(e)))
 	}
 	for _, e := range mock_units.All() {
@@ -96,6 +101,7 @@ func loggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%v %v", r.Method, r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
+
 		next.ServeHTTP(w, r)
 	})
 }

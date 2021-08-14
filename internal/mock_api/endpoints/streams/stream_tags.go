@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/mattn/go-sqlite3"
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/authentication"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/mock_errors"
@@ -106,15 +107,18 @@ func putStreamTags(w http.ResponseWriter, r *http.Request) {
 
 	err = db.NewQuery(r, 100).DeleteAllStreamTags(userCtx.UserID)
 	if err != nil {
-		println(err.Error())
-		mock_errors.WriteBadRequest(w, "error removing stream tags")
+		log.Print(err)
+		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
 	for _, tag := range body.TagIDs {
 		err = db.NewQuery(r, 100).InsertStreamTag(database.StreamTag{UserID: userCtx.UserID, TagID: tag})
 		if err != nil {
-			println(err.Error())
-			mock_errors.WriteBadRequest(w, "error adding stream tag")
+			if database.DatabaseErrorIs(err, sqlite3.ErrConstraintForeignKey) {
+				mock_errors.WriteBadRequest(w, "invalid tag provided")
+				return
+			}
+			mock_errors.WriteServerError(w, err.Error())
 			return
 		}
 	}

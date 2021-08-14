@@ -56,9 +56,13 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		}
 
 		q := u.Query()
-		for _, param := range queryParameters {
-			value := strings.Split(param, "=")
-			q.Add(value[0], value[1])
+		for _, paramStr := range queryParameters {
+			var value string
+			param := strings.Split(paramStr, "=")
+			if len(param) == 2 {
+				value = param[1]
+			}
+			q.Add(param[0], value)
 		}
 
 		if cursor != "" {
@@ -97,13 +101,19 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			return
 		}
 
+		data.Template = apiResponse.Template
+
 		if resp.StatusCode > 299 || resp.StatusCode < 200 {
 			data = apiResponse
 			break
 		}
 
 		d := data.Data.([]interface{})
-		data.Data = append(d, apiResponse.Data)
+		if strings.Contains(path, "schedule") || apiResponse.Data == nil {
+			data.Data = append(d, apiResponse.Data)
+		} else {
+			data.Data = append(d, apiResponse.Data.([]interface{})...)
+		}
 
 		if apiResponse.Pagination == nil || *&apiResponse.Pagination.Cursor == "" {
 			break

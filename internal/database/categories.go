@@ -9,7 +9,7 @@ import (
 type Category struct {
 	ID          string `db:"id" json:"id"`
 	Name        string `db:"category_name" json:"name"`
-	BoxartURL   string `json:"boxart_url"`
+	BoxartURL   string `json:"box_art_url"`
 	ViewerCount int    `db:"vc" json:"-"`
 }
 
