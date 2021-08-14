@@ -101,6 +101,8 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			return
 		}
 
+		data.Template = apiResponse.Template
+
 		if resp.StatusCode > 299 || resp.StatusCode < 200 {
 			data = apiResponse
 			break
