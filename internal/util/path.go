@@ -48,7 +48,6 @@ func GetApplicationDir() (string, error) {
 			return "", err
 		}
 	}
-	println(path)
 
 	// if the user ends up in this state, provide some basic diagnostic info
 	if path == "" {
