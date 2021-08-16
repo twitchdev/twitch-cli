@@ -13,7 +13,6 @@ require (
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/mattn/go-sqlite3 v1.14.7
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pelletier/go-toml v1.9.2 // indirect
 	github.com/spf13/afero v1.6.0 // indirect

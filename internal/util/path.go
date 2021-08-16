@@ -8,8 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-
-	"github.com/mitchellh/go-homedir"
 )
 
 var legacySubFolder = ".twitch-cli"
@@ -17,29 +15,22 @@ var subFolder = "twitch-cli"
 
 // GetApplicationDir returns a string representation of the home path for use with configuration/data storage needs
 func GetApplicationDir() (string, error) {
-	home, err := homedir.Dir()
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
+
 	// check if the home/.twitch-cli folder exists; if so, use that as the path
 	if _, err := os.Stat(filepath.Join(home, ".twitch-cli")); !os.IsNotExist(err) {
 		return filepath.Join(home, ".twitch-cli"), nil
 	}
 
-	path := ""
-
-	xdg, exists := os.LookupEnv("XDG_CONFIG_HOME") // per comment in PR #71- using this env var if present
-	if !exists || xdg == "" {
-		// if not present, set sane defaults- APPDATA\twitch-cli for Windows, .config/twitch-cli for OSX/Linux
-		if runtime.GOOS == "WINDOWS" {
-			path = filepath.Join("$APPDATA", subFolder)
-		} else {
-			path = filepath.Join(home, ".config", subFolder)
-		}
-	} else {
-		// if it does exist, then just use it and combine with the subfolder; example is: $HOME/.config/twitch-cli
-		path = filepath.Join(xdg, subFolder)
+	// handles the XDG_CONFIG_HOME var as well as using AppData
+	configPath, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
 	}
+	path := filepath.Join(configPath, subFolder)
 
 	// if the full path doesn't exist, make all the folders to get there
 	if _, err := os.Stat(path); os.IsNotExist(err) {
