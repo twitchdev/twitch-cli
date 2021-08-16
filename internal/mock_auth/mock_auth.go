@@ -58,8 +58,9 @@ var validScopesByTokenType = map[string]map[string]bool{
 
 func All() []AuthEndpoint {
 	return []AuthEndpoint{
-		UserTokenEndpoint{},
 		AppAccessTokenEndpoint{},
+		UserTokenEndpoint{},
+		ValidateTokenEndpoint{},
 	}
 }
 
