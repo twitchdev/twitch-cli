@@ -14,7 +14,7 @@ func TestGetApplicationDir(t *testing.T) {
 
 	dir, err := GetApplicationDir()
 	a.Nil(err, "GetApplicationDir() failed with error  %v", err)
-	a.Equal(true, strings.HasSuffix(dir, ".twitch-cli"), "GetApplicationDir() expected to end with %v, got %v", ".twitch-cli", dir)
+	a.Equal(true, strings.HasSuffix(dir, "twitch-cli"), "GetApplicationDir() expected to end with %v, got %v", ".twitch-cli", dir)
 }
 
 func TestGetConfigPath(t *testing.T) {

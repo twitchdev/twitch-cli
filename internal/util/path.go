@@ -3,25 +3,47 @@
 package util
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/mitchellh/go-homedir"
+	"runtime"
 )
 
-var subFolder = ".twitch-cli"
+var legacySubFolder = ".twitch-cli"
+var subFolder = "twitch-cli"
 
 // GetApplicationDir returns a string representation of the home path for use with configuration/data storage needs
 func GetApplicationDir() (string, error) {
-	home, err := homedir.Dir()
+	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
 
-	path := filepath.Join(home, subFolder)
+	// check if the home/.twitch-cli folder exists; if so, use that as the path
+	if _, err := os.Stat(filepath.Join(home, ".twitch-cli")); !os.IsNotExist(err) {
+		return filepath.Join(home, ".twitch-cli"), nil
+	}
 
+	// handles the XDG_CONFIG_HOME var as well as using AppData
+	configPath, err := os.UserConfigDir()
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(configPath, subFolder)
+
+	// if the full path doesn't exist, make all the folders to get there
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		os.Mkdir(path, 0700)
+		err := os.MkdirAll(path, os.ModePerm)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// if the user ends up in this state, provide some basic diagnostic info
+	if path == "" {
+		triageMessage := fmt.Sprintf("Invalid path generated; Please file a bugreport here: https://github.com/twitchdev/twitch-cli/issues/new\nInclude this in the report:\n-----\nOS: %v\nArchitecture: %v\nVersion: %v\n-----", runtime.GOOS, runtime.GOARCH, GetVersion())
+		return "", errors.New(triageMessage)
 	}
 
 	return path, nil
