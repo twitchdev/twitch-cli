@@ -157,7 +157,7 @@ func postPolls(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.Duration < 15 || body.Duration > 1800 {
-		mock_errors.WriteBadRequest(w, "duation must be at least 15 and at most 1800")
+		mock_errors.WriteBadRequest(w, "duration must be at least 15 and at most 1800")
 		return
 	}
 	poll := database.Poll{
