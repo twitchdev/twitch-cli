@@ -38,7 +38,7 @@ type PatchAndPostRewardBody struct {
 	RewardPrompt               string `json:"prompt"`
 	IsEnabled                  *bool  `json:"is_enabled"`
 	BackgroundColor            string `json:"background_color"`
-	IsUserInputRequired        bool   `json:"is_user_input_requird"`
+	IsUserInputRequired        bool   `json:"is_user_input_required"`
 	StreamMaxEnabled           bool   `json:"is_max_per_stream_enabled"`
 	StreamMaxCount             int    `json:"max_per_stream"`
 	StreamUserMaxEnabled       bool   `json:"is_max_per_user_per_stream_enabled"`
