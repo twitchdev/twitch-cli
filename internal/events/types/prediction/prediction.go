@@ -16,7 +16,7 @@ var transportsSupported = map[string]bool{
 	models.TransportEventSub: true,
 }
 
-var triggerSupported = []string{"prediction-begin", "prediction-progress", "prediction-end"}
+var triggerSupported = []string{"prediction-begin", "prediction-progress", "prediction-end", "prediction-lock"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
@@ -56,7 +56,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 			if params.Trigger != "prediction-begin" {
 				tp := []models.PredictionEventSubEventTopPredictors{}
-
+				sum := 0
 				for j := 0; j < int(util.RandomInt(10))+1; j++ {
 					t := models.PredictionEventSubEventTopPredictors{
 						UserID:            util.RandomUserID(),
@@ -64,6 +64,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 						UserName:          "testLogin",
 						ChannelPointsUsed: int(util.RandomInt(10*1000)) + 100,
 					}
+					sum += t.ChannelPointsUsed
 					if params.Trigger == "prediction-lock" || params.Trigger == "prediction-end" {
 						if i == 0 {
 							t.ChannelPointsWon = intPointer(t.ChannelPointsUsed * 2)
@@ -74,6 +75,9 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					tp = append(tp, t)
 					o.TopPredictors = &tp
 				}
+				length := len(*o.TopPredictors)
+				o.Users = &length
+				o.ChannelPoints = &sum
 			}
 
 			outcomes = append(outcomes, o)
