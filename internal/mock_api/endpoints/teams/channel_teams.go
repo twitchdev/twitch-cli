@@ -28,7 +28,7 @@ var channelTeamsScopesByMethod = map[string][]string{
 }
 
 type ChannelTeams struct{}
-type ChannelTeamResposne struct {
+type ChannelTeamResponse struct {
 	ID                 string  `json:"id"`
 	BackgroundImageUrl *string `json:"background_image_url"`
 	Banner             *string `json:"banner"`
@@ -77,9 +77,9 @@ func getChannelTeams(w http.ResponseWriter, r *http.Request) {
 	if len(team) == 0 {
 		dbr.Data = make([]database.Team, 0)
 	}
-	response := []ChannelTeamResposne{}
+	response := []ChannelTeamResponse{}
 	for _, t := range team {
-		response = append(response, ChannelTeamResposne{
+		response = append(response, ChannelTeamResponse{
 			ID:                 t.ID,
 			Info:               t.Info,
 			BackgroundImageUrl: t.BackgroundImageUrl,

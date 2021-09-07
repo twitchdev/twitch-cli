@@ -110,17 +110,17 @@ func getPredictions(w http.ResponseWriter, r *http.Request) {
 		predictions = append(predictions, dbr.Data.([]database.Prediction)...)
 	}
 
-	apiResposne := models.APIResponse{
+	apiResponse := models.APIResponse{
 		Data: predictions,
 	}
 
 	if dbr != nil && dbr.Cursor != "" {
-		apiResposne.Pagination = &models.APIPagination{
+		apiResponse.Pagination = &models.APIPagination{
 			Cursor: dbr.Cursor,
 		}
 	}
 
-	bytes, _ := json.Marshal(apiResposne)
+	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
 }
 

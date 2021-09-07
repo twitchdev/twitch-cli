@@ -15,7 +15,14 @@ import (
 
 type AppAccessTokenEndpoint struct{}
 
-type AppAccessTokenEndpointResposne struct {
+type AppAccessTokenRequestBody struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+	GrantType    string `json:"grant_type"`
+	Scope        string `json:"scope"`
+}
+
+type AppAccessTokenEndpointResponse struct {
 	AccessToken  string   `json:"access_token"`
 	RefreshToken string   `json:"refresh_token"`
 	ExpiresIn    int      `json:"expires_in"`
@@ -33,12 +40,37 @@ func (e AppAccessTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	clientID := r.URL.Query().Get("client_id")
-	clientSecret := r.URL.Query().Get("client_secret")
-	grantType := r.URL.Query().Get("grant_type")
-	scope := r.URL.Query().Get("scope")
-	scopes := strings.Split(scope, " ")
-	if clientID == "" || clientSecret == "" || grantType != "client_credentials" {
+	params := AppAccessTokenRequestBody{
+		ClientID:     r.URL.Query().Get("client_id"),
+		ClientSecret: r.URL.Query().Get("client_secret"),
+		GrantType:    r.URL.Query().Get("grant_type"),
+		Scope:        r.URL.Query().Get("scope"),
+	}
+
+	if r.Header.Get("Content-Type") == "application/x-www-form-urlencoded" {
+		err := r.ParseForm()
+		if err != nil {
+			mock_errors.WriteServerError(w, err.Error())
+			return
+		}
+
+		if r.Form.Get("client_id") != "" {
+			params.ClientID = r.Form.Get("client_id")
+		}
+		if r.Form.Get("client_secret") != "" {
+			params.ClientSecret = r.Form.Get("client_secret")
+		}
+		if r.Form.Get("grant_type") != "" {
+			params.GrantType = r.Form.Get("grant_type")
+		}
+		if r.Form.Get("scope") != "" {
+			params.Scope = r.Form.Get("scope")
+		}
+	}
+
+	scopes := strings.Split(params.Scope, " ")
+
+	if params.ClientID == "" || params.ClientSecret == "" || params.GrantType != "client_credentials" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -55,7 +87,7 @@ func (e AppAccessTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	res, err := db.NewQuery(r, 10).GetAuthenticationClient(database.AuthenticationClient{ID: clientID, Secret: clientSecret})
+	res, err := db.NewQuery(r, 10).GetAuthenticationClient(database.AuthenticationClient{ID: params.ClientID, Secret: params.ClientSecret})
 	if err != nil {
 		mock_errors.WriteServerError(w, err.Error())
 		return
@@ -79,7 +111,7 @@ func (e AppAccessTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 	ea, _ := time.Parse(time.RFC3339, a.ExpiresAt)
-	ater := AppAccessTokenEndpointResposne{
+	ater := AppAccessTokenEndpointResponse{
 		AccessToken:  auth.Token,
 		RefreshToken: "",
 		ExpiresIn:    int(ea.Sub(time.Now().UTC()).Seconds()),

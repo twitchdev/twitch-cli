@@ -110,17 +110,17 @@ func getPolls(w http.ResponseWriter, r *http.Request) {
 		polls = append(polls, dbr.Data.([]database.Poll)...)
 	}
 
-	apiResposne := models.APIResponse{
+	apiResponse := models.APIResponse{
 		Data: polls,
 	}
 
 	if dbr != nil && dbr.Cursor != "" {
-		apiResposne.Pagination = &models.APIPagination{
+		apiResponse.Pagination = &models.APIPagination{
 			Cursor: dbr.Cursor,
 		}
 	}
 
-	bytes, _ := json.Marshal(apiResposne)
+	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
 }
 
@@ -231,16 +231,16 @@ func patchPolls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiResposne := models.APIResponse{
+	apiResponse := models.APIResponse{
 		Data: dbr.Data,
 	}
 
 	if dbr.Cursor != "" {
-		apiResposne.Pagination = &models.APIPagination{
+		apiResponse.Pagination = &models.APIPagination{
 			Cursor: dbr.Cursor,
 		}
 	}
 
-	bytes, _ := json.Marshal(apiResposne)
+	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
 }

@@ -4,10 +4,13 @@ package mock_auth
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/twitchdev/twitch-cli/internal/database"
@@ -19,6 +22,10 @@ var a *assert.Assertions
 var firstRun = true
 var ac = database.AuthenticationClient{ID: "222", Secret: "333", Name: "test_client", IsExtension: false}
 
+func TestMain(m *testing.M) {
+
+	os.Exit(m.Run())
+}
 func TestAreValidScopes(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -70,6 +77,46 @@ func TestUserToken(t *testing.T) {
 	a.Equal(400, resp.StatusCode)
 }
 
+func TestValidateToken(t *testing.T) {
+	a = test_setup.SetupTestEnv(t)
+	ts := httptest.NewServer(baseMiddleware(ValidateTokenEndpoint{}))
+
+	req, _ := http.NewRequest(http.MethodGet, ts.URL+ValidateTokenEndpoint{}.Path(), nil)
+	resp, err := http.DefaultClient.Do(req)
+	a.Nil(err, err)
+	a.Equal(401, resp.StatusCode)
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", "auth.Token"))
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err, err)
+	a.Equal(401, resp.StatusCode)
+
+	db, err := database.NewConnection()
+	a.Nil(err, err)
+	defer db.DB.Close()
+
+	auth, err := db.NewQuery(nil, 0).CreateAuthorization(database.Authorization{
+		ClientID:  ac.ID,
+		ExpiresAt: util.GetTimestamp().Add(time.Hour * 4).Format(time.RFC3339),
+		Scopes:    "",
+	})
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", auth.Token))
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err, err)
+	a.Equal(200, resp.StatusCode)
+
+	auth, err = db.NewQuery(nil, 0).CreateAuthorization(database.Authorization{
+		ClientID:  ac.ID,
+		ExpiresAt: util.GetTimestamp().Add(time.Hour * 4).Format(time.RFC3339),
+		Scopes:    "user:read:email",
+		UserID:    "1",
+	})
+	req.Header.Set("Authorization", fmt.Sprintf("Oauth %v", auth.Token))
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err, err)
+	a.Equal(200, resp.StatusCode)
+}
 func TestAppAccessToken(t *testing.T) {
 	a = test_setup.SetupTestEnv(t)
 	ts := httptest.NewServer(baseMiddleware(AppAccessTokenEndpoint{}))
@@ -99,6 +146,7 @@ func TestAppAccessToken(t *testing.T) {
 	a.Nil(err)
 	a.Equal(200, resp.StatusCode)
 }
+
 func baseMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
