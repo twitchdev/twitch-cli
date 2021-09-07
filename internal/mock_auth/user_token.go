@@ -77,7 +77,7 @@ func (e UserTokenEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ea, _ := time.Parse(time.RFC3339, a.ExpiresAt)
-	ater := AppAccessTokenEndpointResposne{
+	ater := AppAccessTokenEndpointResponse{
 		AccessToken:  auth.Token,
 		RefreshToken: "",
 		ExpiresIn:    int(ea.Sub(time.Now().UTC()).Seconds()),

@@ -92,21 +92,21 @@ func getClips(w http.ResponseWriter, r *http.Request) {
 	}
 
 	clips := dbr.Data.([]database.Clip)
-	apiResposne := models.APIResponse{
+	apiResponse := models.APIResponse{
 		Data: clips,
 	}
 
-	if len(apiResposne.Data.([]database.Clip)) == 0 {
-		apiResposne.Data = []string{}
+	if len(apiResponse.Data.([]database.Clip)) == 0 {
+		apiResponse.Data = []string{}
 	}
 
 	if dbr.Limit == len(dbr.Data.([]database.Clip)) {
-		apiResposne.Pagination = &models.APIPagination{
+		apiResponse.Pagination = &models.APIPagination{
 			Cursor: dbr.Cursor,
 		}
 	}
 
-	bytes, _ := json.Marshal(apiResposne)
+	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
 }
 

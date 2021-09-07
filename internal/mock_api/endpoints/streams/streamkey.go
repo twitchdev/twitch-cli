@@ -32,7 +32,7 @@ var streamKeyScopesByMethod = map[string][]string{
 
 type StreamKey struct{}
 
-type StreamKeyResposne struct {
+type StreamKeyResponse struct {
 	StreamKey string `json:"stream_key"`
 }
 
@@ -66,7 +66,7 @@ func getStreamKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	streamKeys := []StreamKeyResposne{{StreamKey: fmt.Sprintf("live_%v_%v", userCtx.UserID, util.RandomGUID())}}
+	streamKeys := []StreamKeyResponse{{StreamKey: fmt.Sprintf("live_%v_%v", userCtx.UserID, util.RandomGUID())}}
 
 	bytes, _ := json.Marshal(models.APIResponse{Data: streamKeys})
 	w.Write(bytes)

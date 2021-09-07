@@ -128,8 +128,8 @@ func getCheermotes(w http.ResponseWriter, r *http.Request) {
 		cheermoteBody = append(cheermoteBody, cheermote)
 	}
 
-	resposne, _ := json.Marshal(cheermoteBody)
-	w.Write(resposne)
+	response, _ := json.Marshal(cheermoteBody)
+	w.Write(response)
 }
 
 func generateCheermoteImageSizes(prefix string, theme string, imageType string, bits int) CheermoteImageSizes {
