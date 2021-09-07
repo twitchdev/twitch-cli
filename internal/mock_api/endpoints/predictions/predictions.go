@@ -220,7 +220,7 @@ func patchPredictions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if body.Status != "RESOLVED" && body.Status != "CANCELED" && body.Status != "LOCKED" {
-		mock_errors.WriteBadRequest(w, "status must be one of RESOLVED or CANCELED or LOCEKD")
+		mock_errors.WriteBadRequest(w, "status must be one of RESOLVED or CANCELED or LOCKED")
 		return
 	}
 
