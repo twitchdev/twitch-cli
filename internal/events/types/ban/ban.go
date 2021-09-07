@@ -37,6 +37,26 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 	switch params.Transport {
 	case models.TransportEventSub:
+		e := models.BanEventSubEvent{
+			UserID:               params.FromUserID,
+			UserLogin:            params.FromUserName,
+			UserName:             params.FromUserName,
+			BroadcasterUserID:    params.ToUserID,
+			BroadcasterUserLogin: params.ToUserName,
+			BroadcasterUserName:  params.ToUserName,
+			ModeratorUserId:      util.RandomUserID(),
+			ModeratorUserLogin:   "CLIModerator",
+			ModeratorUserName:    "CLIModerator",
+		}
+
+		if params.Trigger == "ban" {
+			reason := "This is a test event"
+			endsAt := util.GetTimestamp().Format(time.RFC3339Nano)
+			e.Reason = &reason
+			e.EndsAt = &endsAt
+			e.IsPermanent = &params.IsPermanent
+		}
+
 		body := *&models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
@@ -53,20 +73,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Cost:      0,
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
-			Event: models.BanEventSubEvent{
-				UserID:               params.FromUserID,
-				UserLogin:            params.FromUserName,
-				UserName:             params.FromUserName,
-				BroadcasterUserID:    params.ToUserID,
-				BroadcasterUserLogin: params.ToUserName,
-				BroadcasterUserName:  params.ToUserName,
-				ModeratorUserId:      util.RandomUserID(),
-				ModeratorUserLogin:   "CLIModerator",
-				ModeratorUserName:    "CLIModerator",
-				Reason:               "This is a test event",
-				EndsAt:               util.GetTimestamp().Format(time.RFC3339Nano),
-				IsPermanent:          params.IsPermanent,
-			},
+			Event: e,
 		}
 
 		event, err = json.Marshal(body)
