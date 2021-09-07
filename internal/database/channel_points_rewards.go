@@ -18,7 +18,7 @@ type ChannelPointsReward struct {
 	Cost                             int            `db:"cost" json:"cost"`
 	Title                            string         `db:"title" dbs:"cpr.title" json:"title"`
 	RewardPrompt                     string         `db:"reward_prompt" json:"prompt"`
-	IsUserInputRequired              bool           `db:"is_user_input_required" json:"is_user_input_requird"`
+	IsUserInputRequired              bool           `db:"is_user_input_required" json:"is_user_input_required"`
 	MaxPerStream                     `json:"max_per_stream_setting"`
 	MaxPerUserPerStream              `json:"max_per_user_per_stream_setting"`
 	GlobalCooldown                   `json:"global_cooldown_setting"`
