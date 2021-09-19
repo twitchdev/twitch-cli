@@ -117,7 +117,13 @@ func Fire(p TriggerParameters) (string, error) {
 		}
 		defer resp.Body.Close()
 
-		log.Println(fmt.Sprintf(`[%v] Request Sent`, resp.StatusCode))
+		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Request Sent. Recieved Status Code: %v`, resp.StatusCode))
+			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Server Said: %s`, resp.Body))
+		} else {
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid response. Recieved Status Code: %v`, resp.StatusCode))
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Server Said: %s`, resp.Body))
+		}	
 	}
 
 	return string(resp.JSON), nil
