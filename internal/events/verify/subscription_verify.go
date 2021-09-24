@@ -94,10 +94,10 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 			r.IsChallengeValid = false
 		}
 
-		if resp.Header.Get('Content-Type') == 'text/plain' {
-			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid content-type header. Received type %v`, resp.Header.Get('Content-Type')))
+		if resp.Header.Get("Content-Type") == "text/plain" {
+			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid content-type header. Received type %v`, resp.Header.Get("Content-Type")))
 	        } else {
-			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v`, resp.Header.Get('Content-Type')))
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v`, resp.Header.Get("Content-Type")))
 	        }
 		
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
