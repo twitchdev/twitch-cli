@@ -4,9 +4,10 @@ package trigger
 
 import (
 	"fmt"
-	"log"
+	"io/ioutil"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
@@ -117,12 +118,18 @@ func Fire(p TriggerParameters) (string, error) {
 		}
 		defer resp.Body.Close()
 
+                body, err := ioutil.ReadAll(resp.Body)
+                if err != nil {
+                        return "", err
+                }
+
+                respTrigger := string(body)
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Request Sent. Recieved Status Code: %v`, resp.StatusCode))
-			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Server Said: %s`, resp.Body))
+			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Server Said: %s`, respTrigger))
 		} else {
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid response. Recieved Status Code: %v`, resp.StatusCode))
-			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Server Said: %s`, resp.Body))
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Server Said: %s`, respTrigger))
 		}	
 	}
 
