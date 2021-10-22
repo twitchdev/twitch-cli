@@ -15,6 +15,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/extension_transaction"
 	"github.com/twitchdev/twitch-cli/internal/events/types/follow"
 	"github.com/twitchdev/twitch-cli/internal/events/types/gift"
+	"github.com/twitchdev/twitch-cli/internal/events/types/goal"
 	"github.com/twitchdev/twitch-cli/internal/events/types/hype_train"
 	"github.com/twitchdev/twitch-cli/internal/events/types/moderator_change"
 	"github.com/twitchdev/twitch-cli/internal/events/types/poll"
@@ -48,6 +49,7 @@ func All() []events.MockEvent {
 		streamdown.Event{},
 		subscribe.Event{},
 		subscription_message.Event{},
+		goal.Event{},
 	}
 }
 
