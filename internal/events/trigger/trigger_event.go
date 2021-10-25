@@ -11,6 +11,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
+	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
@@ -80,6 +81,13 @@ func Fire(p TriggerParameters) (string, error) {
 		return "", err
 	}
 
+	if eventParamaters.Transport == models.TransportEventSub {
+		newTrigger := e.GetEventbusAlias(p.Event)
+		if newTrigger != "" {
+			eventParamaters.Trigger = newTrigger // overwrite the existing trigger with the "correct" one
+		}
+	}
+
 	resp, err = e.GenerateEvent(eventParamaters)
 	if err != nil {
 		return "", err
@@ -118,19 +126,19 @@ func Fire(p TriggerParameters) (string, error) {
 		}
 		defer resp.Body.Close()
 
-                body, err := ioutil.ReadAll(resp.Body)
-                if err != nil {
-                        return "", err
-                }
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
 
-                respTrigger := string(body)
+		respTrigger := string(body)
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Request Sent. Recieved Status Code: %v`, resp.StatusCode))
 			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Server Said: %s`, respTrigger))
 		} else {
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid response. Recieved Status Code: %v`, resp.StatusCode))
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Server Said: %s`, respTrigger))
-		}	
+		}
 	}
 
 	return string(resp.JSON), nil

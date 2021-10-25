@@ -36,9 +36,15 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	challenge := util.RandomGUID()
 
 	event, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
-
 	if err != nil {
 		return VerifyResponse{}, err
+	}
+
+	if p.Transport == models.TransportEventSub {
+		newTrigger := event.GetEventbusAlias(p.Event)
+		if newTrigger != "" {
+			p.Event = newTrigger
+		}
 	}
 
 	body, err := generateWebhookSubscriptionBody(p.Transport, event.GetTopic(p.Transport, p.Event), challenge, p.ForwardAddress)
@@ -96,10 +102,10 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 
 		if resp.Header.Get("Content-Type") == "text/plain" {
 			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid content-type header. Received type %v`, resp.Header.Get("Content-Type")))
-	        } else {
+		} else {
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v`, resp.Header.Get("Content-Type")))
-	        }
-		
+		}
+
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid status code. Received status %v`, resp.StatusCode))
 			r.IsStatusValid = true
