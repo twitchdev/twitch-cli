@@ -12,6 +12,8 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/verify"
 )
 
+const websubDeprecationNotice = "Halt! It appears you are trying to use WebSub, which has been deprecated. For more information, see: https://discuss.dev.twitch.tv/t/deprecation-of-websub-based-webhooks/32152"
+
 var (
 	isAnonymous    bool
 	forwardAddress string
@@ -33,7 +35,7 @@ var (
 
 var eventCmd = &cobra.Command{
 	Use:   "event",
-	Short: "Used to interface with Event services, such as Eventsub and Websub.",
+	Short: "Used to interface with EventSub topics.",
 }
 
 var triggerCmd = &cobra.Command{
@@ -61,6 +63,9 @@ var verifyCmd = &cobra.Command{
 	ValidArgs: events.ValidTriggers(),
 	Run:       verifyCmdRun,
 	Example:   `twitch event verify-subscription subscribe`,
+	Aliases: []string{
+		"verify",
+	},
 }
 
 var retriggerCmd = &cobra.Command{
@@ -112,6 +117,11 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	if transport == "websub" {
+		fmt.Println(websubDeprecationNotice)
+		return
+	}
+
 	// Validate that the forward address is actually a URL
 	if len(forwardAddress) > 0 {
 		_, err := url.ParseRequestURI(forwardAddress)
@@ -149,6 +159,11 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 }
 
 func retriggerCmdRun(cmd *cobra.Command, args []string) {
+	if transport == "websub" {
+		fmt.Println(websubDeprecationNotice)
+		return
+	}
+
 	res, err := trigger.RefireEvent(eventID, trigger.TriggerParameters{
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
@@ -164,6 +179,11 @@ func retriggerCmdRun(cmd *cobra.Command, args []string) {
 func verifyCmdRun(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		cmd.Help()
+		return
+	}
+
+	if transport == "websub" {
+		fmt.Println(websubDeprecationNotice)
 		return
 	}
 

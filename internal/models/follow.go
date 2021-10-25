@@ -9,19 +9,7 @@ type FollowEventSubEvent struct {
 	BroadcasterUserID    string `json:"broadcaster_user_id"`
 	BroadcasterUserLogin string `json:"broadcaster_user_login"`
 	BroadcasterUserName  string `json:"broadcaster_user_name"`
-        FollowedAt           string `json:"followed_at"`
-}
-
-type FollowWebSubResponse struct {
-	Data []FollowWebSubResponseData `json:"data"`
-}
-
-type FollowWebSubResponseData struct {
-	FromID     string `json:"from_id"`
-	FromName   string `json:"from_name"`
-	ToID       string `json:"to_id"`
-	ToName     string `json:"to_name"`
-	FollowedAt string `json:"followed_at"`
+	FollowedAt           string `json:"followed_at"`
 }
 
 type FollowEventSubResponse struct {

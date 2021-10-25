@@ -36,33 +36,6 @@ func TestEventSub(t *testing.T) {
 	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
 }
 
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "add-moderator",
-	}
-
-	r, err := Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	var body models.ModeratorChangeWebSubResponse
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
-
-	a.Equal("moderation.moderator.add", body.Data[0].EventType, "Expected event type %v, got %v", "moderation.moderator.add", body.Data[0].EventType)
-	a.Equal(toUser, body.Data[0].EventData.BroadcasterID, "Expected to user %v, got %v", toUser, body.Data[0].EventData.BroadcasterID)
-	a.Equal(fromUser, body.Data[0].EventData.UserID, "Expected from user %v, got %v", fromUser, body.Data[0].EventData.UserID)
-
-	params = *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-	}
-}
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -93,19 +66,13 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportWebSub)
-	a.Equal(true, r)
-
-	r = Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportEventSub)
 	a.Equal(true, r)
 }
 
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportWebSub, "add-moderator")
-	a.Equal("moderation.moderator.add", r, "Expected %v, got %v", "moderation.moderator.add", r)
-
-	r = Event{}.GetTopic(models.TransportWebSub, "remove-moderator")
-	a.Equal("moderation.moderator.remove", r, "Expected %v, got %v", "moderation.moderator.remove", r)
+	r := Event{}.GetTopic(models.TransportEventSub, "remove-moderator")
+	a.Equal("channel.moderator.remove", r, "Expected %v, got %v", "channel.moderator.remove", r)
 }

@@ -49,28 +49,3 @@ func TestForwardEventEventsub(t *testing.T) {
 
 	// TODO update test
 }
-
-func TestForwardEventWebsub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	secret := "potaytoes"
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusAccepted)
-
-		body, err := ioutil.ReadAll(r.Body)
-		a.Nil(err)
-		a.NotNil(body)
-
-		mac := hmac.New(sha256.New, []byte(secret))
-
-		mac.Write(body)
-
-		hash := fmt.Sprintf("sha256=%x", mac.Sum(nil))
-		a.Equal(hash, r.Header.Get("X-Hub-Signature"))
-	}))
-	defer ts.Close()
-
-	// TODO update test
-
-}

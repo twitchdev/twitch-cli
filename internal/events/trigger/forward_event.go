@@ -47,16 +47,6 @@ var notificationHeaders = map[string][]header{
 			HeaderValue: `test`,
 		},
 	},
-	models.TransportWebSub: {
-		{
-			HeaderName:  `Twitch-Notification-Timestamp`,
-			HeaderValue: util.GetTimestamp().Format(time.RFC3339Nano),
-		},
-		{
-			HeaderName:  `Twitch-Notification-Retry`,
-			HeaderValue: `0`,
-		},
-	},
 }
 
 func ForwardEvent(p ForwardParamters) (*http.Response, error) {
@@ -85,8 +75,6 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 		case EventSubMessageTypeVerification:
 			req.Header.Add("Twitch-Eventsub-Message-Type", EventSubMessageTypeVerification)
 		}
-	case models.TransportWebSub:
-		req.Header.Set("Twitch-Notification-Id", p.ID)
 	}
 
 	if p.Secret != "" {
@@ -117,8 +105,5 @@ func getSignatureHeader(req *http.Request, id string, secret string, transport s
 		mac.Write(prefix)
 		mac.Write(payload)
 		req.Header.Set("Twitch-Eventsub-Message-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))
-	case models.TransportWebSub:
-		mac.Write(payload)
-		req.Header.Set("X-Hub-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))
 	}
 }

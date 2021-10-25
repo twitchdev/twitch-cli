@@ -54,32 +54,6 @@ func TestEventSub(t *testing.T) {
 	a.Equal("1234", body.Event.StreamCategoryID)
 }
 
-func TestWebSubStreamChange(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	newStreamTitle := "Awesome new title from the CLI!"
-
-	params := events.MockEventParameters{
-		FromUserID:  fromUser,
-		ToUserID:    toUser,
-		Transport:   models.TransportWebSub,
-		Trigger:     "stream-change",
-		Description: newStreamTitle,
-		GameID:      "1234",
-	}
-
-	r, err := Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	var body models.StreamChangeWebSubResponse
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
-
-	// write tests here for websub
-	a.Equal(toUser, body.Data[0].BroadcasterUserID, "Expected Stream Channel %v, got %v", toUser, body.Data[0].BroadcasterUserID)
-	a.Equal(newStreamTitle, body.Data[0].StreamTitle, "Expected new stream title, got %v", body.Data[0].StreamTitle)
-	a.Equal("1234", body.Data[0].StreamCategoryID)
-}
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 

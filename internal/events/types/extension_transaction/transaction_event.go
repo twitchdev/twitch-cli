@@ -13,16 +13,12 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"transaction"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"transaction": "transaction",
-	},
 	models.TransportEventSub: {
 		"transaction": "extension.bits_transaction.create",
 	},
@@ -92,37 +88,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-	case models.TransportWebSub:
-		body := *&models.TransactionWebSubResponse{
-			Data: []models.TransactionWebsubEvent{
-				{
-					ID:              params.ID,
-					Timestamp:       util.GetTimestamp().Format(time.RFC3339),
-					BroadcasterID:   params.ToUserID,
-					BroadcasterName: "testBroadcaster",
-					UserID:          params.FromUserID,
-					UserName:        "testUser",
-					ProductType:     "BITS_IN_EXTENSION",
-					Product: models.TransactionProduct{
-						Sku:           "testItemSku",
-						DisplayName:   "Test Trigger Item from CLI",
-						Broadcast:     false,
-						InDevelopment: true,
-						Domain:        "",
-						Expiration:    "",
-						Cost: models.TransactionCost{
-							Amount: params.Cost,
-							Type:   "bits",
-						},
-					},
-				},
-			},
-		}
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
-
 	default:
 		return events.MockEventResponse{}, nil
 	}

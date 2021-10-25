@@ -13,7 +13,6 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   false,
 	models.TransportEventSub: true,
 }
 

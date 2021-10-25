@@ -31,10 +31,8 @@ type MockEventResponse struct {
 	Timestamp string
 }
 
-// MockEvent represents an event to be triggered using the `twitch event trigger <event>` command. Given that
-// both WebSub and EventSub need to be supported, it's required to have logic for both currently.
+// MockEvent represents an event to be triggered using the `twitch event trigger <event>` command.
 type MockEvent interface {
-
 	// Returns the Mock Response for the given transport
 	GenerateEvent(p MockEventParameters) (MockEventResponse, error)
 
