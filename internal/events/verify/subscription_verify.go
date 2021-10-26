@@ -36,9 +36,15 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	challenge := util.RandomGUID()
 
 	event, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
-
 	if err != nil {
 		return VerifyResponse{}, err
+	}
+
+	if p.Transport == models.TransportEventSub {
+		newTrigger := event.GetEventSubAlias(p.Event)
+		if newTrigger != "" {
+			p.Event = newTrigger
+		}
 	}
 
 	body, err := generateWebhookSubscriptionBody(p.Transport, event.GetTopic(p.Transport, p.Event), challenge, p.ForwardAddress)

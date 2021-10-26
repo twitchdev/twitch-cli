@@ -44,4 +44,7 @@ type MockEvent interface {
 
 	// Returns the string of the topic
 	GetTopic(transport string, trigger string) string
+
+	// Returns back the correct "trigger" if using the eventsub topic
+	GetEventSubAlias(trigger string) string
 }
