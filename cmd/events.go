@@ -119,9 +119,9 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 
 	if transport == "websub" {
 		fmt.Println(websubDeprecationNotice)
-    return
-  }
-    
+		return
+	}
+
 	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
 		fmt.Println("Invalid secret provided. Secrets must be between 10-100 characters")
 		return
@@ -166,9 +166,9 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 func retriggerCmdRun(cmd *cobra.Command, args []string) {
 	if transport == "websub" {
 		fmt.Println(websubDeprecationNotice)
-    return
-  }
-    
+		return
+	}
+
 	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
 		fmt.Println("Invalid secret provided. Secrets must be between 10-100 characters")
 		return
@@ -194,9 +194,9 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 
 	if transport == "websub" {
 		fmt.Println(websubDeprecationNotice)
-    return
-  }
-    
+		return
+	}
+
 	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
 		fmt.Println("Invalid secret provided. Secrets must be between 10-100 characters")
 		return
