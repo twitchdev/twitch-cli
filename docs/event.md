@@ -57,22 +57,22 @@ Used to either create or send mock events for use with local webhooks testing.
 
 **Flags**
 
- Flag                | Shorthand | Description                                                                                                                     | Example                                   | Required? (Y/N) 
----------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|-----------------
- `--forward-address` | `-F`      | Web server address for where to send mock events.                                                                               | `-F https://localhost:8080`               | N               
- `--transport`       | `-T`      | The method used to send events. Default is `eventsub`, but can send using `websub`.                                             | `-T websub`                               | N               
- `--to-user`         | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                              | `-t 44635596`                             | N               
- `--from-user`       | `-f`      | Denotes the sender's TUID of the event, for example the user that follows another user or the subscriber to a broadcaster.      | `-f 44635596`                             | N               
- `--gift-user`       | `-g`      | Used only for subcription-based events, denotes the gifting user ID                                                             | `-g 44635596`                             | N               
- `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.                                                    | `-s testsecret`                           | N               
- `--count`           | `-c`      | Count of events to fire. This can be used to simulate an influx of events.                                                      | `-c 100`                                  | N               
- `--anonymous`       | `-a`      | If the event is anonymous. Only applies to `gift` and `cheer` events.                                                           | `-a`                                      | N               
- `--status`          | `-S`      | Status of the event object, currently applies to channel points redemptions.                                                    | `-S fulfilled`                            | N               
- `--item-id`         | `-i`      | Manually set the ID of the event payload item (for example the reward ID in redemption events or game in stream events).        | `-i 032e4a6c-4aef-11eb-a9f5-1f703d1f0b92` | N               
- `--item-name`       | `-n`      | Manually set the name of the event payload item (for example the reward ID in redemption events or game name in stream events). | `-n "Science & Technology"`               | N               
- `--cost`            | `-C`      | Amount of bits or channel points redeemed/used in the event.                                                                    | `-C 250`                                  | N               
- `--description`     | `-d`      | Title the stream should be updated/started with.                                                                                | `-d Awesome new title!`                   | N               
- `--game-id`         | `-G`      | Game ID for Drop or other relevant events.                                                                                      | `-G 1234`                                 | N               
+| Flag                | Shorthand | Description                                                                                                                                                   | Example                                   | Required? (Y/N) |
+|---------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|-----------------|
+| `--forward-address` | `-F`      | Web server address for where to send mock events.                                                                                                             | `-F https://localhost:8080`               | N               |
+| `--transport`       | `-T`      | The method used to send events. Default is `eventsub`, but can send using `websub`.                                                                           | `-T websub`                               | N               |
+| `--to-user`         | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                                                            | `-t 44635596`                             | N               |
+| `--from-user`       | `-f`      | Denotes the sender's TUID of the event, for example the user that follows another user or the subscriber to a broadcaster.                                    | `-f 44635596`                             | N               |
+| `--gift-user`       | `-g`      | Used only for subcription-based events, denotes the gifting user ID                                                                                           | `-g 44635596`                             | N               |
+| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.                                          | `-s testsecret`                           | N               |
+| `--count`           | `-c`      | Count of events to fire. This can be used to simulate an influx of events.                                                                                    | `-c 100`                                  | N               |
+| `--anonymous`       | `-a`      | If the event is anonymous. Only applies to `gift` and `cheer` events.                                                                                         | `-a`                                      | N               |
+| `--status`          | `-S`      | Status of the event object, currently applies to channel points redemptions.                                                                                  | `-S fulfilled`                            | N               |
+| `--item-id`         | `-i`      | Manually set the ID of the event payload item (for example the reward ID in redemption events or game in stream events).                                      | `-i 032e4a6c-4aef-11eb-a9f5-1f703d1f0b92` | N               |
+| `--item-name`       | `-n`      | Manually set the name of the event payload item (for example the reward ID in redemption events or game name in stream events).                               | `-n "Science & Technology"`               | N               |
+| `--cost`            | `-C`      | Amount of bits or channel points redeemed/used in the event.                                                                                                  | `-C 250`                                  | N               |
+| `--description`     | `-d`      | Title the stream should be updated/started with.                                                                                                              | `-d Awesome new title!`                   | N               |
+| `--game-id`         | `-G`      | Game ID for Drop or other relevant events.                                                                                                                    | `-G 1234`                                 | N               |
 
 
 
@@ -106,11 +106,11 @@ None
 
 **Flags**
 
-| Flag                | Shorthand | Description                                                                  | Example                     | Required? (Y/N) |
-| ------------------- | --------- | ---------------------------------------------------------------------------- | --------------------------- | --------------- |
-| `--forward-address` | `-F`      | Web server address for where to send mock events.                            | `-F https://localhost:8080` | N               |
-| `--id`              | `-i`      | The ID of the event to refire.                                               | `-i <id>`                   | Y               |
-| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC. | `-s testsecret`             | N               |
+| Flag                | Shorthand | Description                                                                                                                                                   | Example                     | Required? (Y/N) |
+|---------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
+| `--forward-address` | `-F`      | Web server address for where to send mock events.                                                                                                             | `-F https://localhost:8080` | N               |
+| `--id`              | `-i`      | The ID of the event to refire.                                                                                                                                | `-i <id>`                   | Y               |
+| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.                                          | `-s testsecret`             | N               |
 
 **Examples**
 
@@ -163,11 +163,11 @@ Allows you to test if your webserver responds to subscription requests properly.
 
 **Flags**
 
-| Flag                | Shorthand | Description                                                                     | Example                     | Required? (Y/N) |
-| ------------------- | --------- | ------------------------------------------------------------------------------- | --------------------------- | --------------- |
-| `--forward-address` | `-F`      | Web server address for where to send mock subscription.                         | `-F https://localhost:8080` | Y               |
-| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.    | `-s testsecret`             | N               |
-| `--transport`       | `-T`      | The method used to send events. Default is eventsub, but can send using websub. | `-T websub`                 | N               |
+| Flag                | Shorthand | Description                                                                                                                                                   | Example                     | Required? (Y/N) |
+|---------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
+| `--forward-address` | `-F`      | Web server address for where to send mock subscription.                                                                                                       | `-F https://localhost:8080` | Y               |
+| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.                                          | `-s testsecret`             | N               |
+| `--transport`       | `-T`      | The method used to send events. Default is eventsub, but can send using websub.                                                                               | `-T websub`                 | N               |
 
 **Examples**
 
