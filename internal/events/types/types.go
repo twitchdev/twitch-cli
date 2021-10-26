@@ -55,7 +55,7 @@ func All() []events.MockEvent {
 func GetByTriggerAndTransport(trigger string, transport string) (events.MockEvent, error) {
 	for _, e := range All() {
 		if transport == models.TransportEventSub {
-			newTrigger := e.GetEventbusAlias(trigger)
+			newTrigger := e.GetEventSubAlias(trigger)
 			if newTrigger != "" {
 				trigger = newTrigger
 			}

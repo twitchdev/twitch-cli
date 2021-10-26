@@ -82,7 +82,7 @@ func Fire(p TriggerParameters) (string, error) {
 	}
 
 	if eventParamaters.Transport == models.TransportEventSub {
-		newTrigger := e.GetEventbusAlias(p.Event)
+		newTrigger := e.GetEventSubAlias(p.Event)
 		if newTrigger != "" {
 			eventParamaters.Trigger = newTrigger // overwrite the existing trigger with the "correct" one
 		}

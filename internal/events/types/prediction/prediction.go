@@ -155,7 +155,7 @@ func (e Event) GetTopic(transport string, trigger string) string {
 func intPointer(i int) *int {
 	return &i
 }
-func (e Event) GetEventbusAlias(t string) string {
+func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases
 	for trigger, topic := range triggerMapping[models.TransportEventSub] {
 		if topic == t {

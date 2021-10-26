@@ -41,7 +41,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	}
 
 	if p.Transport == models.TransportEventSub {
-		newTrigger := event.GetEventbusAlias(p.Event)
+		newTrigger := event.GetEventSubAlias(p.Event)
 		if newTrigger != "" {
 			p.Event = newTrigger
 		}

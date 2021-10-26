@@ -123,7 +123,7 @@ func (e Event) ValidTrigger(t string) bool {
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
 }
-func (e Event) GetEventbusAlias(t string) string {
+func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases
 	for trigger, topic := range triggerMapping[models.TransportEventSub] {
 		if topic == t {
