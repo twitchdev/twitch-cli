@@ -78,7 +78,7 @@ func init() {
 	// flags for forwarding functionality/changing payloads
 	triggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
 	triggerCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to /EventSub.\nSupported values: %s", events.ValidTransports()))
-	triggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.")
+	triggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 
 	// per-topic flags
 	triggerCmd.Flags().StringVarP(&toUser, "to-user", "t", "", "User ID of the receiver of the event. For example, the user that receives a follow. In most contexts, this is the broadcaster.")
@@ -96,19 +96,24 @@ func init() {
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
 	retriggerCmd.Flags().StringVarP(&eventID, "id", "i", "", "ID of the event to be refired.")
-	retriggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.")
+	retriggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	retriggerCmd.MarkFlagRequired("id")
 
 	// verify-subscription flags
 	verifyCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
 	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
-	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.")
+	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	verifyCmd.MarkFlagRequired("forward-address")
 }
 
 func triggerCmdRun(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		cmd.Help()
+		return
+	}
+
+	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
+		fmt.Println("Invalid secret provided. Secrets must be between 10-100 characters")
 		return
 	}
 
@@ -149,6 +154,11 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 }
 
 func retriggerCmdRun(cmd *cobra.Command, args []string) {
+	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
+		fmt.Println("Invalid secret provided. Secrets must be between 10-100 characters")
+		return
+	}
+
 	res, err := trigger.RefireEvent(eventID, trigger.TriggerParameters{
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
@@ -164,6 +174,11 @@ func retriggerCmdRun(cmd *cobra.Command, args []string) {
 func verifyCmdRun(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		cmd.Help()
+		return
+	}
+
+	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
+		fmt.Println("Invalid secret provided. Secrets must be between 10-100 characters")
 		return
 	}
 
