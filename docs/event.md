@@ -60,7 +60,7 @@ Used to either create or send mock events for use with local webhooks testing.
  Flag                | Shorthand | Description                                                                                                                     | Example                                   | Required? (Y/N) 
 ---------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|-----------------
  `--forward-address` | `-F`      | Web server address for where to send mock events.                                                                               | `-F https://localhost:8080`               | N               
- `--transport`       | `-T`      | The method used to send events. Default is `eventsub`, but can send using `websub`.                                             | `-T websub`                               | N               
+ `--transport`       | `-T`      | The method used to send events. Default is `eventsub`.                                                                          | `-T eventsub`                             | N               
  `--to-user`         | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                              | `-t 44635596`                             | N               
  `--from-user`       | `-f`      | Denotes the sender's TUID of the event, for example the user that follows another user or the subscriber to a broadcaster.      | `-f 44635596`                             | N               
  `--gift-user`       | `-g`      | Used only for subcription-based events, denotes the gifting user ID                                                             | `-g 44635596`                             | N               
@@ -163,11 +163,11 @@ Allows you to test if your webserver responds to subscription requests properly.
 
 **Flags**
 
-| Flag                | Shorthand | Description                                                                     | Example                     | Required? (Y/N) |
-| ------------------- | --------- | ------------------------------------------------------------------------------- | --------------------------- | --------------- |
-| `--forward-address` | `-F`      | Web server address for where to send mock subscription.                         | `-F https://localhost:8080` | Y               |
-| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC.    | `-s testsecret`             | N               |
-| `--transport`       | `-T`      | The method used to send events. Default is eventsub, but can send using websub. | `-T websub`                 | N               |
+| Flag                | Shorthand | Description                                                                  | Example                     | Required? (Y/N) |
+|---------------------|-----------|------------------------------------------------------------------------------|-----------------------------|-----------------|
+| `--forward-address` | `-F`      | Web server address for where to send mock subscription.                      | `-F https://localhost:8080` | Y               |
+| `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC. | `-s testsecret`             | N               |
+| `--transport`       | `-T`      | The method used to send events. Default is `eventsub`.                       | `-T eventsub`               | N               |
 
 **Examples**
 
