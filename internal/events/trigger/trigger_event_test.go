@@ -139,25 +139,6 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "transaction",
-		Transport:      models.TransportWebSub,
-		IsAnonymous:    false,
-		FromUser:       "",
-		ToUser:         "",
-		GiftUser:       "",
-		Status:         "",
-		ItemID:         "",
-		Cost:           0,
-		ForwardAddress: ts.URL,
-		Secret:         "potato",
-		Verbose:        false,
-		Count:          0,
-	}
-	res, err = Fire(params)
-	a.Nil(err)
-	a.NotEmpty(res)
-
-	params = *&TriggerParameters{
-		Event:          "transaction",
 		Transport:      models.TransportEventSub,
 		IsAnonymous:    false,
 		FromUser:       "",

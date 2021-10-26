@@ -66,30 +66,6 @@ func TestEventSub(t *testing.T) {
 
 }
 
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
-		ToUserID:  toUser,
-		Transport: models.TransportWebSub,
-		Trigger:   "hype-train-progress",
-	}
-
-	r, err := Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	var body models.HypeTrainWebSubResponse
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
-
-	a.Equal("hypetrain.progression", body.Data[0].EventType, "Expected event type %v, got %v", "hypetrain.progression", body.Data[0].EventType)
-	a.Equal(toUser, body.Data[0].EventData.BroadcasterID, "Expected to user %v, got %v", toUser, body.Data[0].EventData.BroadcasterID)
-
-	params = *&events.MockEventParameters{
-		ToUserID:  toUser,
-		Transport: models.TransportWebSub,
-	}
-}
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -120,16 +96,13 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportWebSub)
-	a.Equal(true, r)
-
-	r = Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportEventSub)
 	a.Equal(true, r)
 }
 
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportWebSub, "hype-train-progress")
-	a.Equal("hypetrain.progression", r, "Expected %v, got %v", "hypetrain.progression", r)
+	r := Event{}.GetTopic(models.TransportEventSub, "hype-train-progress")
+	a.Equal("channel.hype_train.progress", r, "Expected %v, got %v", "channel.hype_train.progress", r)
 }

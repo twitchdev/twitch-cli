@@ -16,28 +16,6 @@ var fromUser = "1234"
 var toUser = "4567"
 var clientId = "7890"
 
-func TestWebusbTransaction(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "transaction",
-	}
-
-	r, err := Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	var body models.TransactionWebSubResponse
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
-
-	a.Equal(toUser, body.Data[0].BroadcasterID, "Expected to user %v, got %v", toUser, body.Data[0].BroadcasterID)
-	a.Equal(fromUser, body.Data[0].UserID, "Expected from user %v, got %v", r.ToUser, body.Data[0].UserID)
-
-}
-
 func TestEventsubTransaction(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
@@ -90,7 +68,7 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportWebSub)
+	r := Event{}.ValidTransport(models.TransportEventSub)
 	a.Equal(true, r)
 
 	r = Event{}.ValidTransport("noteventsub")
@@ -99,6 +77,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportWebSub, "transaction")
+	r := Event{}.GetTopic(models.TransportEventSub, "transaction")
 	a.NotNil(r)
 }

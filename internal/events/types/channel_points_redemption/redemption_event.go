@@ -4,7 +4,6 @@ package channel_points_redemption
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
@@ -13,7 +12,6 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   false,
 	models.TransportEventSub: true,
 }
 
@@ -91,9 +89,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-
-	case models.TransportWebSub:
-		return events.MockEventResponse{}, errors.New("Websub is unsupported for channel points events")
 	default:
 		return events.MockEventResponse{}, nil
 	}

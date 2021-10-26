@@ -3,11 +3,4 @@
 package models
 
 const TransportEventSub = "eventsub"
-const TransportWebSub = "websub"
 const TransportWebsockets = "websockets"
-
-var TransportSupported = map[string]bool{
-	"websub":     true,
-	"eventsub":   true,
-	"websockets": false,
-}

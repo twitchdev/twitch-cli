@@ -65,5 +65,5 @@ func GetByTriggerAndTransport(trigger string, transport string) (events.MockEven
 		}
 	}
 
-	return nil, errors.New("Invalid event/transport combination")
+	return nil, errors.New("Invalid event")
 }

@@ -13,17 +13,12 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"add-moderator", "remove-moderator"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"add-moderator":    "moderation.moderator.add",
-		"remove-moderator": "moderation.moderator.remove",
-	},
 	models.TransportEventSub: {
 		"add-moderator":    "channel.moderator.add",
 		"remove-moderator": "channel.moderator.remove",
@@ -68,28 +63,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-	case models.TransportWebSub:
-		body := *&models.ModeratorChangeWebSubResponse{
-			Data: []models.ModeratorChangeWebSubEvent{
-				{
-					ID:             params.ID,
-					EventType:      triggerMapping[params.Transport][params.Trigger],
-					EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
-					Version:        "v1",
-					EventData: models.ModeratorChangeEventData{
-						BroadcasterID:   params.ToUserID,
-						BroadcasterName: params.ToUserName,
-						UserID:          params.FromUserID,
-						UserName:        params.FromUserName,
-					},
-				},
-			},
-		}
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
-
 	default:
 		return events.MockEventResponse{}, nil
 	}

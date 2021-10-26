@@ -58,16 +58,6 @@ func TestEventSub(t *testing.T) {
 	a.NotNil(body.Event.UserID)
 	a.NotNil(body.Event.Reward.ID)
 }
-func TestWebsubRedemption(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := events.MockEventParameters{
-		Transport: models.TransportWebSub,
-	}
-
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err, "Expected error (Channel Points unsupported on websub)")
-}
 
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)

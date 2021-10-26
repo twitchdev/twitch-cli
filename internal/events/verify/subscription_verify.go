@@ -61,16 +61,6 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 			return VerifyResponse{}, err
 		}
 
-		if p.Transport == models.TransportWebSub {
-			q := u.Query()
-			q.Add("hub.challenge", challenge)
-			// this isn't per spec, however for the purposes of verifying whether a service is responding properly, it'll do
-			q.Add("hub.topic", event.GetTopic(p.Transport, p.Event))
-			q.Add("hub.mode", "subscribe")
-			u.RawQuery = q.Encode()
-			requestMethod = http.MethodGet
-		}
-
 		resp, err := trigger.ForwardEvent(trigger.ForwardParamters{
 			ID:             body.ID,
 			Event:          event.GetTopic(p.Transport, p.Event),
@@ -146,8 +136,6 @@ func generateWebhookSubscriptionBody(transport string, event string, challenge s
 		if err != nil {
 			return trigger.TriggerResponse{}, err
 		}
-	case models.TransportWebSub:
-
 	default:
 		res = []byte("")
 	}
