@@ -33,58 +33,74 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var event []byte
 	var err error
 	var isAchieved *bool
-	var endDate *string
+	var goalEndDate *string
 	var goalType string
+	var currentAmount int64
+	var targetAmount int64
 
-	createdAt := util.GetTimestamp()
-	switch params.Trigger {
-	case "goal-end":
-		date := createdAt.Add(time.Hour * 24).Format(time.RFC3339)
-		endDate = &date
+	goalStartedAt := util.GetTimestamp()
+	currentAmount = util.RandomInt(10 * 10)
+	targetAmount = util.RandomInt(10 * 100)
+
+	if params.Trigger == "goal-end" {
+		endDate := goalStartedAt.Add(time.Hour * 24).Format(time.RFC3339)
+		goalEndDate = &endDate
 
 		achieved := util.RandomInt(1) == 1
+		if achieved {
+			currentAmount = 100
+			targetAmount = 100
+		}
+
 		isAchieved = &achieved
 	}
 
-	goalType = params.ItemID
+	goalType = params.ItemName
 	if goalType == "" {
 		goalType = "follower"
 	}
 
-	body := *&models.EventsubResponse{
-		Subscription: models.EventsubSubscription{
-			ID:      params.ID,
-			Status:  "enabled",
-			Type:    triggerMapping[params.Transport][params.Trigger],
-			Version: "1",
-			Condition: models.EventsubCondition{
-				BroadcasterUserID: params.ToUserID,
-			},
-			Transport: models.EventsubTransport{
-				Method:   "webhook",
-				Callback: "null",
-			},
-			Cost:      0,
-			CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
-		},
-		Event: models.GoalEventSubEvent{
-			ID:                   params.ID,
-			BroadcasterUserID:    params.ToUserID,
-			BroadcasterUserLogin: params.ToUserName,
-			BroadcasterUserName:  params.ToUserName,
-			Type:                 goalType,
-			Description:          params.Description,
-			CurrentAmount:        util.RandomInt(10 * 10),
-			TargetAmount:         util.RandomInt(10 * 100),
-			StartedAt:            util.GetTimestamp().Format(time.RFC3339Nano),
-			EndedAt:              endDate,
-			IsAchieved:           isAchieved,
-		},
-	}
+	switch params.Transport {
+	case models.TransportEventSub:
 
-	event, err = json.Marshal(body)
-	if err != nil {
-		return events.MockEventResponse{}, err
+		body := *&models.EventsubResponse{
+			Subscription: models.EventsubSubscription{
+				ID:      params.ID,
+				Status:  "enabled",
+				Type:    triggerMapping[params.Transport][params.Trigger],
+				Version: "1",
+				Condition: models.EventsubCondition{
+					BroadcasterUserID: params.ToUserID,
+				},
+				Transport: models.EventsubTransport{
+					Method:   "webhook",
+					Callback: "null",
+				},
+				Cost:      0,
+				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+			},
+			Event: models.GoalEventSubEvent{
+				ID:                   params.ID,
+				BroadcasterUserID:    params.ToUserID,
+				BroadcasterUserLogin: params.ToUserName,
+				BroadcasterUserName:  params.ToUserName,
+				Type:                 goalType,
+				Description:          params.Description,
+				CurrentAmount:        currentAmount,
+				TargetAmount:         targetAmount,
+				StartedAt:            goalStartedAt.Format(time.RFC3339Nano),
+				EndedAt:              goalEndDate,
+				IsAchieved:           isAchieved,
+			},
+		}
+
+		event, err = json.Marshal(body)
+		if err != nil {
+			return events.MockEventResponse{}, err
+		}
+
+	default:
+		return events.MockEventResponse{}, nil
 	}
 
 	return events.MockEventResponse{
