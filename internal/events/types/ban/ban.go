@@ -12,17 +12,12 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"ban", "unban"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"ban":   "moderation.user.ban",
-		"unban": "moderation.user.unban",
-	},
 	models.TransportEventSub: {
 		"ban":   "channel.ban",
 		"unban": "channel.unban",
@@ -80,31 +75,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-
-	case models.TransportWebSub:
-		body := *&models.BanWebSubResponse{
-			Data: []models.BanWebSubResponseData{
-				{
-					ID:             params.ID,
-					EventType:      triggerMapping[params.Transport][params.Trigger],
-					EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
-					Version:        "v1",
-					EventData: models.BanWebSubEventData{
-						BroadcasterID:        params.ToUserID,
-						BroadcasterUserLogin: params.ToUserName,
-						BroadcasterName:      params.ToUserName,
-						UserID:               params.FromUserID,
-						UserLogin:            params.FromUserName,
-						UserName:             params.FromUserName,
-						ExpiresAt:            util.GetTimestamp().Add(1 * time.Hour).Format(time.RFC3339),
-					},
-				},
-			}}
-
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
 	default:
 		return events.MockEventResponse{}, nil
 	}
@@ -132,4 +102,13 @@ func (e Event) ValidTrigger(t string) bool {
 
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
+}
+func (e Event) GetEventSubAlias(t string) string {
+	// check for aliases
+	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+		if topic == t {
+			return trigger
+		}
+	}
+	return ""
 }

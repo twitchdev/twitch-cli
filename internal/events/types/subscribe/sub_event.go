@@ -12,19 +12,12 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"subscribe", "gift", "unsubscribe", "subscribe-end"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"subscribe":     "subscriptions.subscribe",
-		"unsubscribe":   "subscriptions.unsubscribe",
-		"gift":          "subscriptions.subscribe",
-		"subscribe-end": "",
-	},
 	models.TransportEventSub: {
 		"subscribe":     "channel.subscribe",
 		"unsubscribe":   "channel.unsubscribe",
@@ -38,21 +31,9 @@ type Event struct{}
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
-	var giftUserID string
-	var giftUserName string
 
 	if params.Trigger == "gift" {
 		params.IsGift = true
-	}
-
-	if params.IsGift == true {
-		giftUserID = util.RandomUserID()
-		giftUserName = "testGifter"
-	}
-
-	if params.IsAnonymous == true {
-		giftUserID = "274598607"
-		giftUserName = "ananonymousgifter"
 	}
 
 	switch params.Transport {
@@ -89,32 +70,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-	case models.TransportWebSub:
-		body := *&models.SubWebSubResponse{
-			Data: []models.SubWebSubResponseData{
-				{
-					ID:             params.ID,
-					EventType:      triggerMapping[params.Transport][params.Trigger],
-					EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
-					Version:        "1.0",
-					EventData: models.SubWebSubEventData{
-						BroadcasterID:   params.ToUserID,
-						BroadcasterName: params.ToUserName,
-						UserID:          params.FromUserID,
-						UserName:        params.FromUserID,
-						Tier:            "1000",
-						PlanName:        "Tier 1 Test Sub",
-						IsGift:          params.IsGift,
-						GifterID:        giftUserID,
-						GifterName:      giftUserName,
-					},
-				},
-			}}
-
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
 	default:
 		return events.MockEventResponse{}, nil
 	}
@@ -142,4 +97,13 @@ func (e Event) ValidTrigger(t string) bool {
 
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
+}
+func (e Event) GetEventSubAlias(t string) string {
+	// check for aliases
+	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+		if topic == t {
+			return trigger
+		}
+	}
+	return ""
 }

@@ -13,16 +13,12 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"stream-change"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"stream-change": "streams",
-	},
 	models.TransportEventSub: {
 		"stream-change": "channel.update",
 	},
@@ -80,30 +76,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-	case models.TransportWebSub:
-		body := models.StreamChangeWebSubResponse{
-			Data: []models.StreamChangeWebSubResponseData{
-				{
-					WebsubID:             params.ID,
-					BroadcasterUserID:    params.ToUserID,
-					BroadcasterUserLogin: params.ToUserName,
-					BroadcasterUserName:  params.ToUserName,
-					StreamCategoryID:     params.GameID,
-					StreamCategoryName:   params.ItemName,
-					StreamType:           "live",
-					StreamTitle:          params.Description,
-					StreamViewerCount:    9848,
-					StreamStartedAt:      util.GetTimestamp().Format(time.RFC3339),
-					StreamLanguage:       "en",
-					StreamThumbnailURL:   "https://static-cdn.jtvnw.net/previews-ttv/live_twitch_user-{width}x{height}.jpg",
-					TagIDs:               make([]string, 0),
-				},
-			},
-		}
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
 	default:
 		return events.MockEventResponse{}, nil
 	}
@@ -131,4 +103,13 @@ func (e Event) ValidTrigger(t string) bool {
 
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
+}
+func (e Event) GetEventSubAlias(t string) string {
+	// check for aliases
+	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+		if topic == t {
+			return trigger
+		}
+	}
+	return ""
 }

@@ -26,6 +26,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamup"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscribe"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscription_message"
+	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
 func All() []events.MockEvent {
@@ -55,10 +56,16 @@ func All() []events.MockEvent {
 
 func GetByTriggerAndTransport(trigger string, transport string) (events.MockEvent, error) {
 	for _, e := range All() {
+		if transport == models.TransportEventSub {
+			newTrigger := e.GetEventSubAlias(trigger)
+			if newTrigger != "" {
+				trigger = newTrigger
+			}
+		}
 		if e.ValidTrigger(trigger) == true && e.ValidTransport(transport) == true {
 			return e, nil
 		}
 	}
 
-	return nil, errors.New("Invalid event/transport combination")
+	return nil, errors.New("Invalid event")
 }

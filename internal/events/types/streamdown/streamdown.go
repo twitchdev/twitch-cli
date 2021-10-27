@@ -12,16 +12,12 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"streamdown"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"streamdown": "channel.update",
-	},
 	models.TransportEventSub: {
 		"streamdown": "stream.offline",
 	},
@@ -61,14 +57,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-	case models.TransportWebSub:
-		body := *&models.StreamDownWebSubResponse{
-			Data: []models.StreamDownWebSubResponseData{}}
-
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
 	default:
 		return events.MockEventResponse{}, nil
 	}
@@ -95,4 +83,13 @@ func (e Event) ValidTrigger(t string) bool {
 }
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
+}
+func (e Event) GetEventSubAlias(t string) string {
+	// check for aliases
+	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+		if topic == t {
+			return trigger
+		}
+	}
+	return ""
 }

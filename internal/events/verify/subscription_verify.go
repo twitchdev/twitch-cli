@@ -36,9 +36,15 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	challenge := util.RandomGUID()
 
 	event, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
-
 	if err != nil {
 		return VerifyResponse{}, err
+	}
+
+	if p.Transport == models.TransportEventSub {
+		newTrigger := event.GetEventSubAlias(p.Event)
+		if newTrigger != "" {
+			p.Event = newTrigger
+		}
 	}
 
 	body, err := generateWebhookSubscriptionBody(p.Transport, event.GetTopic(p.Transport, p.Event), challenge, p.ForwardAddress)
@@ -53,16 +59,6 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		u, err := url.Parse(p.ForwardAddress)
 		if err != nil {
 			return VerifyResponse{}, err
-		}
-
-		if p.Transport == models.TransportWebSub {
-			q := u.Query()
-			q.Add("hub.challenge", challenge)
-			// this isn't per spec, however for the purposes of verifying whether a service is responding properly, it'll do
-			q.Add("hub.topic", event.GetTopic(p.Transport, p.Event))
-			q.Add("hub.mode", "subscribe")
-			u.RawQuery = q.Encode()
-			requestMethod = http.MethodGet
 		}
 
 		resp, err := trigger.ForwardEvent(trigger.ForwardParamters{
@@ -96,10 +92,10 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 
 		if resp.Header.Get("Content-Type") == "text/plain" {
 			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid content-type header. Received type %v`, resp.Header.Get("Content-Type")))
-	        } else {
+		} else {
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v`, resp.Header.Get("Content-Type")))
-	        }
-		
+		}
+
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid status code. Received status %v`, resp.StatusCode))
 			r.IsStatusValid = true
@@ -140,8 +136,6 @@ func generateWebhookSubscriptionBody(transport string, event string, challenge s
 		if err != nil {
 			return trigger.TriggerResponse{}, err
 		}
-	case models.TransportWebSub:
-
 	default:
 		res = []byte("")
 	}

@@ -13,7 +13,6 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   false,
 	models.TransportEventSub: true,
 }
 
@@ -129,4 +128,13 @@ func (e Event) GetTopic(transport string, trigger string) string {
 
 func intPointer(i int) *int {
 	return &i
+}
+func (e Event) GetEventSubAlias(t string) string {
+	// check for aliases
+	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+		if topic == t {
+			return trigger
+		}
+	}
+	return ""
 }

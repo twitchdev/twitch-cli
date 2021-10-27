@@ -12,16 +12,10 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 var triggerSupported = []string{"hype-train-begin", "hype-train-progress", "hype-train-end"}
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"hype-train-progress": "hypetrain.progression",
-		"hype-train-begin":    "hypetrain.progression",
-		"hype-train-end":      "hypetrain.progression",
-	},
 	models.TransportEventSub: {
 		"hype-train-progress": "channel.hype_train.progress",
 		"hype-train-begin":    "channel.hype_train.begin",
@@ -113,48 +107,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-	case models.TransportWebSub:
-		body := *&models.HypeTrainWebSubResponse{
-			Data: []models.HypeTrainWebSubEvent{
-				{
-					ID:             params.ID,
-					EventType:      triggerMapping[params.Transport][params.Trigger],
-					EventTimestamp: util.GetTimestamp().Format(time.RFC3339),
-					Version:        "1.0",
-					EventData: models.HypeTrainWebsubEventData{
-						BroadcasterID:        params.ToUserID,
-						CooldownEndTimestamp: util.GetTimestamp().Format(time.RFC3339),
-						ExpiresAtTimestamp:   util.GetTimestamp().Format(time.RFC3339),
-						Goal:                 localGoal,
-						Id:                   util.RandomGUID(),
-						LastContribution: models.ContributionData{
-							TotalContribution:  lastTotal,
-							TypeOfContribution: lastType,
-							WebSubUser:         lastUser,
-						},
-						Level:              util.RandomInt(4) + 1,
-						StartedAtTimestamp: util.GetTimestamp().Format(time.RFC3339),
-						TopContributions: []models.ContributionData{
-							{
-								TotalContribution:  lastTotal,
-								TypeOfContribution: lastType,
-								WebSubUser:         lastUser,
-							},
-							{
-								TotalContribution:  util.RandomInt(10 * 100),
-								TypeOfContribution: util.RandomType(),
-								WebSubUser:         util.RandomUserID(),
-							},
-						},
-						Total: localTotal,
-					},
-				},
-			},
-		}
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
 	default:
 		return events.MockEventResponse{}, nil
 	}
@@ -178,4 +130,13 @@ func (e Event) ValidTrigger(t string) bool {
 }
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
+}
+func (e Event) GetEventSubAlias(t string) string {
+	// check for aliases
+	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+		if topic == t {
+			return trigger
+		}
+	}
+	return ""
 }

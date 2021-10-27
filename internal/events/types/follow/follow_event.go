@@ -12,7 +12,6 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 var triggers = []string{"follow"}
@@ -20,9 +19,6 @@ var triggers = []string{"follow"}
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
 		"follow": "channel.follow",
-	},
-	models.TransportWebSub: {
-		"follow": "follow",
 	},
 }
 
@@ -65,24 +61,6 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-
-	case models.TransportWebSub:
-		body := models.FollowWebSubResponse{
-			Data: []models.FollowWebSubResponseData{
-				{
-					FromID:     p.FromUserID,
-					FromName:   p.FromUserName,
-					ToID:       p.ToUserID,
-					ToName:     p.ToUserName,
-					FollowedAt: util.GetTimestamp().Format(time.RFC3339),
-				},
-			},
-		}
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
-
 	default:
 		return events.MockEventResponse{}, nil
 	}
@@ -109,4 +87,13 @@ func (e Event) ValidTrigger(trigger string) bool {
 }
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
+}
+func (e Event) GetEventSubAlias(t string) string {
+	// check for aliases
+	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+		if topic == t {
+			return trigger
+		}
+	}
+	return ""
 }

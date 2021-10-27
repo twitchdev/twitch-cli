@@ -4,7 +4,6 @@ package raid
 
 import (
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
@@ -13,7 +12,6 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   false,
 	models.TransportEventSub: true,
 }
 
@@ -63,8 +61,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
-	case models.TransportWebSub:
-		return events.MockEventResponse{}, errors.New("Raids are unsupported for websub")
 	default:
 		return events.MockEventResponse{}, nil
 	}
@@ -91,4 +87,13 @@ func (e Event) ValidTrigger(t string) bool {
 }
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
+}
+func (e Event) GetEventSubAlias(t string) string {
+	// check for aliases
+	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+		if topic == t {
+			return trigger
+		}
+	}
+	return ""
 }

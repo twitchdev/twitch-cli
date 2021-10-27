@@ -35,49 +35,6 @@ func TestEventSub(t *testing.T) {
 	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
 }
 
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "unsubscribe",
-	}
-
-	r, err := Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	var body models.SubWebSubResponse
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
-
-	a.Equal(toUser, body.Data[0].EventData.BroadcasterID, "Expected to user %v, got %v", toUser, body.Data[0].EventData.BroadcasterID)
-	a.Equal(fromUser, body.Data[0].EventData.UserID, "Expected from user %v, got %v", fromUser, body.Data[0].EventData.UserID)
-
-	a.Equal(false, body.Data[0].EventData.IsGift)
-
-	params = *&events.MockEventParameters{
-		FromUserID:  fromUser,
-		ToUserID:    toUser,
-		Transport:   models.TransportWebSub,
-		IsGift:      true,
-		IsAnonymous: true,
-		Trigger:     "gift",
-	}
-
-	r, err = Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
-
-	a.Equal(toUser, body.Data[0].EventData.BroadcasterID, "Expected to user %v, got %v", toUser, body.Data[0].EventData.BroadcasterID)
-	a.Equal(fromUser, body.Data[0].EventData.UserID, "Expected from user %v, got %v", fromUser, body.Data[0].EventData.UserID)
-	a.Equal("274598607", body.Data[0].EventData.GifterID)
-
-	a.Equal(true, body.Data[0].EventData.IsGift)
-}
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 

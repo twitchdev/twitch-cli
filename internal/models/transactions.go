@@ -26,17 +26,6 @@ type TransactionEventSubResponse struct {
 	Event        TransactionEventSubEvent `json:"event"`
 }
 
-type TransactionWebsubEvent struct {
-	ID              string             `json:"id"`
-	Timestamp       string             `json:"timestamp"`
-	BroadcasterID   string             `json:"broadcaster_id"`
-	BroadcasterName string             `json:"broadcaster_name"`
-	UserID          string             `json:"user_id"`
-	UserName        string             `json:"user_name"`
-	ProductType     string             `json:"product_type"`
-	Product         TransactionProduct `json:"product_data"`
-}
-
 type TransactionProduct struct {
 	Sku           string          `json:"sku"`
 	Cost          TransactionCost `json:"cost"`
@@ -50,8 +39,4 @@ type TransactionProduct struct {
 type TransactionCost struct {
 	Amount int64  `json:"amount"`
 	Type   string `json:"type"`
-}
-
-type TransactionWebSubResponse struct {
-	Data []TransactionWebsubEvent `json:"data"`
 }

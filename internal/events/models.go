@@ -27,7 +27,7 @@ var triggerSupported = map[string]bool{
 }
 
 var transportSupported = map[string]bool{
-	"websub":     true,
+	"websub":     false,
 	"eventsub":   true,
 	"websockets": false,
 }

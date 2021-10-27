@@ -34,21 +34,6 @@ func TestEventSub(t *testing.T) {
 	// write actual tests here (making sure you set appropriate values and the like) for eventsub
 }
 
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "raid",
-	}
-
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
-
-	// write tests here for websub
-}
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 

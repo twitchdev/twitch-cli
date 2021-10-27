@@ -53,17 +53,6 @@ func TestEventsubCheer(t *testing.T) {
 	a.Equal("", body.Event.UserID, "Expected empty from user, got %v", body.Event.UserID)
 }
 
-func TestWebsubCheer(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := events.MockEventParameters{
-		Transport: models.TransportWebSub,
-	}
-
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err, "Expected error (Cheer unsupported on websub)")
-}
-
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 

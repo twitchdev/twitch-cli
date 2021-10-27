@@ -52,44 +52,6 @@ func TestEventSubBan(t *testing.T) {
 	a.Equal(fromUser, body.Event.UserID, "Expected  from user %v, got %v", fromUser, body.Event.UserID)
 }
 
-func TestWebSubBan(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "ban",
-	}
-
-	r, err := Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	var body models.BanWebSubResponse
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
-
-	a.Equal(toUser, body.Data[0].EventData.BroadcasterID, "Expected to user %v, got %v", toUser, body.Data[0].EventData.BroadcasterID)
-	a.Equal(fromUser, body.Data[0].EventData.UserID, "Expected from user %v, got %v", fromUser, body.Data[0].EventData.UserID)
-
-	params = *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportWebSub,
-		Trigger:    "unban",
-	}
-
-	r, err = Event{}.GenerateEvent(params)
-	a.Nil(err)
-
-	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err)
-
-	a.Equal(toUser, body.Data[0].EventData.BroadcasterID, "Expected to user %v, got %v", toUser, body.Data[0].EventData.BroadcasterID)
-	a.Equal(fromUser, body.Data[0].EventData.UserID, "Expected from user %v, got %v", fromUser, body.Data[0].EventData.UserID)
-
-}
-
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 

@@ -10,16 +10,12 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   true,
 	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"trigger_keyword"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {
-		"trigger_keyword": "topic_name_ws",
-	},
 	models.TransportEventSub: {
 		"trigger_keyword": "topic_name_es",
 	},
@@ -36,12 +32,6 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		body := &models.EventsubResponse{
 			// make the eventsub response (if supported)
 		}
-		event, err = json.Marshal(body)
-		if err != nil {
-			return events.MockEventResponse{}, err
-		}
-	case models.TransportWebSub:
-		body := models.FollowWebSubResponse{} // replace with actual model in internal/models
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
@@ -72,4 +62,13 @@ func (e Event) ValidTrigger(t string) bool {
 }
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
+}
+func (e Event) GetEventSubAlias(t string) string {
+	// check for aliases
+	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+		if topic == t {
+			return trigger
+		}
+	}
+	return ""
 }

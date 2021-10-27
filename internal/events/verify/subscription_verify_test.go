@@ -53,15 +53,6 @@ func TestSubscriptionVerify(t *testing.T) {
 	a.Nil(err)
 	a.Equal(res.IsChallengeValid, true)
 
-	p.Transport = models.TransportWebSub
-	res, err = VerifyWebhookSubscription(p)
-	a.Nil(err)
-	a.Equal(res.IsChallengeValid, true)
-
-	p.Event = "cheer"
-	_, err = VerifyWebhookSubscription(p)
-	a.NotNil(err)
-
 	p.Transport = "notarealtransport"
 	_, err = VerifyWebhookSubscription(p)
 	a.NotNil(err)

@@ -40,18 +40,6 @@ func TestEventSub(t *testing.T) {
 	a.Equal(params.ItemName, body.Event.Title)
 }
 
-func TestWebSub(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	params := events.MockEventParameters{
-		Transport: models.TransportWebSub,
-	}
-
-	_, err := Event{}.GenerateEvent(params)
-	a.NotNil(err)
-
-}
-
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
