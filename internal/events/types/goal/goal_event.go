@@ -12,14 +12,12 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebSub:   false,
 	models.TransportEventSub: true,
 }
 
 var triggerSupported = []string{"goal-begin", "goal-progress", "goal-end"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportWebSub: {},
 	models.TransportEventSub: {
 		"goal-progress": "channel.goal.progress",
 		"goal-begin":    "channel.goal.begin",
