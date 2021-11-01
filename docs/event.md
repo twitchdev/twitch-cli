@@ -26,6 +26,9 @@ Used to either create or send mock events for use with local webhooks testing.
 | `cheer`               | Only usable with the `eventsub` transport                                                                                            |
 | `drop`                | Drops Entitlement event.                                                                                                             |
 | `gift`                | A gifted subscription event. Triggers a basic tier 1 sub.                                                                            |
+| `goal-begin`          | Channel creator goal start event.                                                                                                    |
+| `goal-end`            | Channel creator goal end event.                                                                                                      |
+| `goal-progress`       | Channel creator goal progress event.                                                                                                 |
 | `grant`               | Authorization grant event.                                                                                                           |
 | `hype-train-begin`    | Channel hype train start event.                                                                                                      |
 | `hype-train-end`      | Channel hype train end event.                                                                                                        |
@@ -131,6 +134,9 @@ Allows you to test if your webserver responds to subscription requests properly.
 | `cheer`               | Only usable with the `eventsub` transport                                                                                            |
 | `drop`                | Drops Entitlement event.                                                                                                             |
 | `gift`                | A gifted subscription event. Triggers a basic tier 1 sub.                                                                            |
+| `goal-begin`          | Channel creator goal start event.                                                                                                    |
+| `goal-end`            | Channel creator goal end event.                                                                                                      |
+| `goal-progress`       | Channel creator goal progress event.                                                                                                 |
 | `grant`               | Authorization grant event.                                                                                                           |
 | `hype-train-begin`    | Channel hype train start event.                                                                                                      |
 | `hype-train-end`      | Channel hype train end event.                                                                                                        |

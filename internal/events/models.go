@@ -21,6 +21,9 @@ var triggerSupported = map[string]bool{
 	"hype-train-begin":    true,
 	"hype-train-progress": true,
 	"hype-train-end":      true,
+	"goal-begin":          true,
+	"goal-progress":       true,
+	"goal-end":            true,
 }
 
 var transportSupported = map[string]bool{
