@@ -24,6 +24,7 @@ var triggerSupported = map[string]bool{
 	"goal-begin":          true,
 	"goal-progress":       true,
 	"goal-end":            true,
+	"user-update":         true,
 }
 
 var transportSupported = map[string]bool{
