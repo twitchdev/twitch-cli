@@ -19,7 +19,7 @@ func TestEventSub(t *testing.T) {
     params := *&events.MockEventParameters{
         UserID:     toUser,
         Transport:  models.TransportEventSub,
-        Trigger:    "user_update",
+        Trigger:    "user.update",
     }
 
     r, err := Event{}.GenerateEvent(params)
