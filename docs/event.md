@@ -54,6 +54,7 @@ Used to either create or send mock events for use with local webhooks testing.
 | `unsubscribe`         | A standard unsubscribe event. Triggers a basic tier 1 sub.                                                                           |
 | `update-redemption`   | Channel Points EventSub event for a redemption being updated.                                                                        |
 | `update-reward`       | Channel Points EventSub event for a Custom Reward being updated.                                                                     |
+| `user.update`         | A user updates their account. [User Update](https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types#user-update)             |
 
 
 
