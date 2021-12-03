@@ -45,7 +45,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	if err != nil {
 		fmt.Println("Error fetching client information", err.Error())
 	}
-
+	isFirstRun := true
 	for {
 		var apiResponse models.APIResponse
 
@@ -101,13 +101,18 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			return
 		}
 
-		data.Template = apiResponse.Template
+		if isFirstRun {
+			data = apiResponse
+			isFirstRun = false
+		}
 
 		if resp.StatusCode > 299 || resp.StatusCode < 200 {
 			data = apiResponse
 			break
 		}
-
+		if data.Data == nil {
+			break
+		}
 		d := data.Data.([]interface{})
 		if strings.Contains(path, "schedule") || apiResponse.Data == nil {
 			data.Data = append(d, apiResponse.Data)
@@ -115,11 +120,11 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			data.Data = append(d, apiResponse.Data.([]interface{})...)
 		}
 
-		if apiResponse.Pagination == nil || *&apiResponse.Pagination.Cursor == "" {
+		if apiResponse.Pagination == nil || apiResponse.Pagination.Cursor == "" {
 			break
 		}
 
-		if autopaginate == false {
+		if !autopaginate {
 			data.Pagination = &models.APIPagination{
 				Cursor: apiResponse.Pagination.Cursor,
 			}
@@ -130,7 +135,6 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			break
 		}
 		cursor = apiResponse.Pagination.Cursor
-
 	}
 
 	if data.Data == nil {
