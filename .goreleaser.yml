@@ -16,6 +16,7 @@ builds:
       - darwin
     goarch:
       - amd64
+      - arm64
   - id: twitch-linux
     ldflags:
       - -s -w -X main.buildVersion={{ .Version }}
@@ -51,7 +52,7 @@ builds:
     goos:
       - windows
     goarch:
-      - 386
+      - 386 
 scoop:
   bucket:
     owner: twitchdev
@@ -68,11 +69,6 @@ brews:
     homepage: https://github.com/twitchdev/twitch-cli
     description: CLI for Twitch's developer offerings
     custom_block: | 
-      if OS.mac? && Hardware::CPU.arm?
-        url "https://github.com/twitchdev/twitch-cli.git", tag: "{{ .Tag }}"
-        depends_on "go" => :build
-      end
-
       head "https://github.com/twitchdev/twitch-cli.git", branch: "main"
       head do
         depends_on "go" => :build
@@ -81,12 +77,6 @@ brews:
       v = version
       if build.head? 
         v = "head"
-        ldflags = "-X main.buildVersion=#{v}"
-        system "go", "build", "-ldflags=#{ldflags}"
-        mv "twitch-cli", "twitch"
-      end
-
-      if OS.mac? && Hardware::CPU.arm? 
         ldflags = "-X main.buildVersion=#{v}"
         system "go", "build", "-ldflags=#{ldflags}"
         mv "twitch-cli", "twitch"
