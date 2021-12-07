@@ -103,21 +103,22 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 
 		if isFirstRun {
 			data = apiResponse
-			isFirstRun = false
 		}
 
 		if resp.StatusCode > 299 || resp.StatusCode < 200 {
 			data = apiResponse
 			break
 		}
-		if data.Data == nil {
+
+		if apiResponse.Data == nil {
 			break
 		}
-		d := data.Data.([]interface{})
-		if strings.Contains(path, "schedule") || apiResponse.Data == nil {
-			data.Data = append(d, apiResponse.Data)
-		} else {
-			data.Data = append(d, apiResponse.Data.([]interface{})...)
+
+		if strings.Contains(path, "schedule") || data.Data == nil {
+			data.Data = apiResponse.Data
+			break // autopagination unsupported
+		} else if !isFirstRun {
+			data.Data = append(data.Data.([]interface{}), apiResponse.Data.([]interface{})...)
 		}
 
 		if apiResponse.Pagination == nil || apiResponse.Pagination.Cursor == "" {
@@ -135,13 +136,14 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			break
 		}
 		cursor = apiResponse.Pagination.Cursor
+		isFirstRun = false
 	}
 
 	if data.Data == nil {
 		data.Data = make([]interface{}, 0)
 	}
 	// handle json marshalling better; returns empty slice vs. null
-	if len(data.Data.([]interface{})) == 0 && data.Error == "" {
+	if !strings.Contains(path, "schedule") && len(data.Data.([]interface{})) == 0 && data.Error == "" {
 		data.Data = make([]interface{}, 0)
 	}
 
