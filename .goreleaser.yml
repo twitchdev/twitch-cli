@@ -2,6 +2,7 @@
 # Make sure to check the documentation at http://goreleaser.com
 before:
   hooks:
+    - sh -c "go env -w GOPROXY=direct"
     - go mod download
 builds:
   - id: twitch-darwin
