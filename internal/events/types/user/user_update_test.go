@@ -17,7 +17,7 @@ func TestEventSub(t *testing.T) {
     a := test_setup.SetupTestEnv(t)
 
     params := *&events.MockEventParameters{
-        UserID:     toUser,
+        ToUserID:     toUser,
         Transport:  models.TransportEventSub,
         Trigger:    "user.update",
     }
@@ -36,7 +36,7 @@ func TestFakeTransport(t *testing.T) {
     a := test_setup.SetupTestEnv(t)
 
     params := *&events.MockEventParameters{
-        UserID:     toUser,
+        ToUserID:     toUser,
         Transport:  "fake_transport",
         Trigger:    "unsubscribe",
     }
