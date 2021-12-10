@@ -21,6 +21,7 @@ type EventsubTransport struct {
 type EventsubCondition struct {
 	BroadcasterUserID     string `json:"broadcaster_user_id,omitempty"`
 	ToBroadcasterUserID   string `json:"to_broadcaster_user_id,omitempty"`
+	UserID                string `json:"user_id,omitempty"`
 	FromBroadcasterUserID string `json:"from_broadcaster_user_id,omitempty"`
 	ClientID              string `json:"client_id,omitempty"`
 	ExtensionClientID     string `json:"extension_client_id,omitempty"`
