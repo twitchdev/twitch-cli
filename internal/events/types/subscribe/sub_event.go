@@ -20,7 +20,7 @@ var triggerSupported = []string{"subscribe", "gift", "unsubscribe", "subscribe-e
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
 		"subscribe":     "channel.subscribe",
-		"unsubscribe":   "channel.unsubscribe",
+		"unsubscribe":   "channel.subscription.end",
 		"gift":          "channel.subscribe",
 		"subscribe-end": "channel.subscription.end",
 	},
