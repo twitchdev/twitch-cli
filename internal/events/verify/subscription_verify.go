@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+	"mime"
 
 	"github.com/fatih/color"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
@@ -90,10 +91,25 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 			r.IsChallengeValid = false
 		}
 
-		if resp.Header.Get("Content-Type") == "text/plain" {
-			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid content-type header. Received type %v`, resp.Header.Get("Content-Type")))
+		mediatype, params, err := mime.ParseMediaType(resp.Header.Get("Content-Type"))
+		charset := string(params["charset"])
+
+		if err != nil {
+			return VerifyResponse{}, err
+		}
+
+		if mediatype == "text/plain" {
+			if charset != "" {
+				color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid content-type header. Received type %v with charset %v`, mediatype, params["charset"]))
+			} else {
+				color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Valid content-type header. Received type %v`, mediatype))
+			}
 		} else {
-			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v`, resp.Header.Get("Content-Type")))
+			if charset != "" {
+				color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v with charset %v`, mediatype, params["charset"]))
+			} else {
+				color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v`, mediatype))
+			}
 		}
 
 		if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
