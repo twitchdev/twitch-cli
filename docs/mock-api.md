@@ -97,7 +97,7 @@ This endpoint generates a user token, similar to OAuth authorization code.
 | `client_secret` | Application client secret, which is output by the `generate` command | `?client_secret=1234`    | Y               |   
 | `grant_type`    | Must be `user_token`                                                 | `?grant_type=user_token` | Y               |   
 | `user_id`       | User to get the token for.                                           | `?user_id=1234`          | Y               |   
-| `scope`         | Space seperated list of scopes to request for the given user.        | `?scope=bits:read`       | N               |   
+| `scope`         | Space separated list of scopes to request for the given user.        | `?scope=bits:read`       | N               |   
 
 The response is identical to the OAuth `authorization_code` with the omission of a refresh token. 
 
@@ -126,12 +126,12 @@ Docs: https://dev.twitch.tv/docs/authentication/getting-tokens-oauth#oauth-autho
 This endpoint generates an app access token using the `client_credentials` flow as documented. 
 
 
-| Query Parameter | Description                                                          | Example                  | Required? (Y/N) |   
-|-----------------|----------------------------------------------------------------------|--------------------------|-----------------|
-| `client_id`     | Application client ID, which is output by the `generate` command.    | `?client_id=1234`        | Y               |  
-| `client_secret` | Application client secret, which is output by the `generate` command | `?client_secret=1234`    | Y               |   
-| `grant_type`    | Must be `client_credentials`                                         | `?grant_type=user_token` | Y               |   
-| `scope`         | Space seperated list of scopes to request for the given user.        | `?scope=bits:read`       | N               |   
+| Query Parameter | Description                                                          | Example                          | Required? (Y/N) |   
+|-----------------|----------------------------------------------------------------------|----------------------------------|-----------------|
+| `client_id`     | Application client ID, which is output by the `generate` command.    | `?client_id=1234`                | Y               |  
+| `client_secret` | Application client secret, which is output by the `generate` command | `?client_secret=1234`            | Y               |   
+| `grant_type`    | Must be `client_credentials`                                         | `?grant_type=client_credentials` | Y               |   
+| `scope`         | Space separated list of scopes to request for the given user.        | `?scope=bits:read`               | N               |   
 
 
 The response is identical to the OAuth `client_credentials` flow with the omission of a refresh token. 
