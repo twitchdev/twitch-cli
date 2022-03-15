@@ -106,9 +106,9 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 			}
 		} else {
 			if charset != "" {
-				color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v with charset %v`, mediatype, params["charset"]))
+				color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v with charset %v. Expecting text/plain.`, mediatype, params["charset"]))
 			} else {
-				color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v`, mediatype))
+				color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid content-type header. Received type %v. Expecting text/plain.`, mediatype))
 			}
 		}
 
