@@ -31,7 +31,14 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.twitch-cli/.twitch-cli.env)")
+
+	cfgFile, err := util.GetConfigPath()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", fmt.Sprintf("config file (default is %s)", cfgFile))
 }
 
 // initConfig reads in config file and ENV variables if set.
