@@ -53,7 +53,7 @@ builds:
     goos:
       - windows
     goarch:
-      - 386 
+      - "386" 
 scoop:
   bucket:
     owner: twitchdev
@@ -97,6 +97,13 @@ archives:
     format_overrides:
     - goos: windows
       format: zip
+    wrap_in_directory: "true"
+    files:
+      - docs/*
+      - LICENSE.md
+      - NOTICE
+      - THIRD-PARTY
+      - README.md
 checksum:
   name_template: 'checksums.txt'
 changelog:
