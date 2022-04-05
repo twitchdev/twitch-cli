@@ -22,7 +22,7 @@ type HypeTrainEventSubEvent struct {
 	BroadcasterUserName     string             `json:"broadcaster_user_name"`
 	Level                   int64              `json:"level,omitempty"`
 	Total                   int64              `json:"total"`
-	Progress                int64              `json:"progress,omitempty"`
+	Progress                *int64             `json:"progress,omitempty"`
 	Goal                    int64              `json:"goal,omitempty"`
 	TopContributions        []ContributionData `json:"top_contributions"`
 	LastContribution        ContributionData   `json:"last_contribution,omitempty"`

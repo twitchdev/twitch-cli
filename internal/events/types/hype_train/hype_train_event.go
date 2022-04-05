@@ -36,11 +36,11 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	localLevel := util.RandomInt(4) + 1
 	localTotal := util.RandomInt(10 * 100)
 	localGoal := util.RandomInt(10*100*100) + localTotal
-	localProgress := (localTotal / localGoal)
+	localProgress := localTotal - util.RandomInt(100)
 
 	switch params.Transport {
 	case models.TransportEventSub:
-		body := *&models.HypeTrainEventSubResponse{
+		body := models.HypeTrainEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  "enabled",
@@ -62,7 +62,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
 				Total:                localTotal,
-				Progress:             localProgress,
+				Progress:             &localProgress,
 				Goal:                 localGoal,
 				TopContributions: []models.ContributionData{
 					{
@@ -91,6 +91,9 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				ExpiresAtTimestamp: util.GetTimestamp().Add(5 * time.Minute).Format(time.RFC3339Nano),
 			},
 		}
+		if params.Trigger == "hype-train-begin" {
+			body.Event.Progress = &localTotal
+		}
 		if params.Trigger == "hype-train-progress" {
 			body.Event.Level = localLevel
 		}
@@ -100,7 +103,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			body.Event.ExpiresAtTimestamp = ""
 			body.Event.Goal = 0
 			body.Event.Level = localLevel
-			body.Event.Progress = 0
+			body.Event.Progress = nil
 			body.Event.StartedAtTimestamp = util.GetTimestamp().Add(5 * -time.Minute).Format(time.RFC3339Nano)
 		}
 		event, err = json.Marshal(body)
