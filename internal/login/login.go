@@ -48,6 +48,7 @@ type AuthorizationResponse struct {
 type UserAuthorizationQueryResponse struct {
 	Code  string
 	State string
+	Error error
 }
 
 type LoginResponse struct {
@@ -122,7 +123,8 @@ func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 
 	ur, err := userAuthServer()
 	if err != nil {
-		log.Fatal(err.Error())
+		fmt.Printf("Error processing request; %v\n", err.Error())
+		return LoginResponse{}, err
 	}
 
 	if ur.State != state {
@@ -130,6 +132,10 @@ func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	}
 
 	u2, err := url.Parse(p.URL)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	q = u2.Query()
 	q.Set("client_id", p.ClientID)
 	q.Set("client_secret", p.ClientSecret)
@@ -164,7 +170,7 @@ func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 
 	resp, err := loginRequest(http.MethodPost, u.String(), nil)
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		return LoginResponse{}, err
 	}
 
@@ -194,7 +200,7 @@ func RefreshUserToken(p RefreshParameters) (LoginResponse, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return LoginResponse{}, errors.New("Error with client while refreshing. Please rerun twitch configure")
+		return LoginResponse{}, errors.New("error with client while refreshing. Please rerun twitch configure")
 	}
 
 	r, err := handleLoginResponse(resp.Body)
@@ -255,13 +261,23 @@ func userAuthServer() (UserAuthorizationQueryResponse, error) {
 	s := http.Server{Addr: ":3000", Handler: m}
 	userAuth := make(chan UserAuthorizationQueryResponse)
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Feel free to close this browser window."))
+		authError := r.URL.Query().Get("error")
 
-		var u = UserAuthorizationQueryResponse{
-			Code:  r.URL.Query().Get("code"),
-			State: r.URL.Query().Get("state"),
+		if authError != "" {
+			w.Write([]byte(fmt.Sprintf("Error! %v\nError Details: %v", authError, r.URL.Query().Get("error_description"))))
+			var u = UserAuthorizationQueryResponse{
+				Error: fmt.Errorf("%v", r.URL.Query().Get("error_description")),
+			}
+			userAuth <- u
+		} else {
+			w.Write([]byte("Feel free to close this browser window."))
+
+			var u = UserAuthorizationQueryResponse{
+				Code:  r.URL.Query().Get("code"),
+				State: r.URL.Query().Get("state"),
+			}
+			userAuth <- u
 		}
-		userAuth <- u
 	})
 	go func() {
 		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -271,9 +287,8 @@ func userAuthServer() (UserAuthorizationQueryResponse, error) {
 	}()
 
 	userAuthResponse := <-userAuth
-
 	s.Shutdown(context.Background())
-	return userAuthResponse, nil
+	return userAuthResponse, userAuthResponse.Error
 }
 
 func storeInConfig(token string, refresh string, scopes []string, expiresAt time.Time) {
