@@ -1,5 +1,5 @@
 FROM techknowlogick/xgo:latest
-RUN apt-get update && apt-get install curl -y
-RUN curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | sh
+RUN echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | tee /etc/apt/sources.list.d/goreleaser.list
+RUN apt-get update && apt-get install goreleaser -y
 
 ENTRYPOINT ["goreleaser"]
