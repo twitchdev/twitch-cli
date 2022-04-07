@@ -100,7 +100,7 @@ archives:
     wrap_in_directory: "true"
     files:
       - docs/*
-      - LICENSE.md
+      - LICENSE
       - NOTICE
       - THIRD-PARTY
       - README.md
