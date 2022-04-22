@@ -45,6 +45,7 @@ type PatchAndPostRewardBody struct {
 	StreamUserMaxCount         int    `json:"max_per_user_per_stream"`
 	GlobalCooldownEnabled      bool   `json:"is_global_cooldown_enabled"`
 	GlobalCooldownSeconds      int    `json:"global_cooldown_seconds"`
+	IsPaused                   bool   `json:"is_paused"`
 	ShouldRedemptionsSkipQueue bool   `json:"should_redemptions_skip_request_queue"`
 }
 
@@ -200,6 +201,7 @@ func postRewards(w http.ResponseWriter, r *http.Request) {
 			GlobalCooldownEnabled: body.GlobalCooldownEnabled,
 			GlobalCooldownSeconds: body.GlobalCooldownSeconds,
 		},
+		IsPaused:                   body.IsPaused,
 		ShouldRedemptionsSkipQueue: body.ShouldRedemptionsSkipQueue,
 	}
 
@@ -290,6 +292,7 @@ func patchRewards(w http.ResponseWriter, r *http.Request) {
 			GlobalCooldownEnabled: body.GlobalCooldownEnabled,
 			GlobalCooldownSeconds: body.GlobalCooldownSeconds,
 		},
+		IsPaused:                   body.IsPaused,
 		ShouldRedemptionsSkipQueue: body.ShouldRedemptionsSkipQueue,
 	}
 
