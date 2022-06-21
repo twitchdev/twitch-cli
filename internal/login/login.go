@@ -261,6 +261,9 @@ func userAuthServer() (UserAuthorizationQueryResponse, error) {
 	s := http.Server{Addr: ":3000", Handler: m}
 	userAuth := make(chan UserAuthorizationQueryResponse)
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/favicon.ico" {
+			return
+		}
 		authError := r.URL.Query().Get("error")
 
 		if authError != "" {
@@ -286,7 +289,9 @@ func userAuthServer() (UserAuthorizationQueryResponse, error) {
 		}
 	}()
 
+	log.Printf("Waiting for authorization response ...")
 	userAuthResponse := <-userAuth
+	log.Printf("Closing local server ...")
 	s.Shutdown(context.Background())
 	return userAuthResponse, userAuthResponse.Error
 }
