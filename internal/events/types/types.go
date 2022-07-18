@@ -26,7 +26,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamup"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscribe"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscription_message"
-	"github.com/twitchdev/twitch-cli/internal/events/types/user"
+	user_update "github.com/twitchdev/twitch-cli/internal/events/types/user"
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
