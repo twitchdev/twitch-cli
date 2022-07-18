@@ -15,7 +15,7 @@ type ChannelPointsReward struct {
 	RealRewardImage                  *string        `json:"image"`
 	BackgroundColor                  string         `db:"background_color" json:"background_color"`
 	IsEnabled                        *bool          `db:"is_enabled" json:"is_enabled"`
-	Cost                             int            `db:"cost" json:"cost"`
+	Cost                             *int           `db:"cost" json:"cost"`
 	Title                            string         `db:"title" dbs:"cpr.title" json:"title"`
 	RewardPrompt                     string         `db:"reward_prompt" json:"prompt"`
 	IsUserInputRequired              bool           `db:"is_user_input_required" json:"is_user_input_required"`
@@ -32,18 +32,18 @@ type ChannelPointsReward struct {
 }
 
 type MaxPerStream struct {
-	StreamMaxEnabled bool `db:"stream_max_enabled" json:"is_enabled"`
-	StreamMaxCount   int  `db:"stream_max_count" json:"max_per_stream"`
+	StreamMaxEnabled bool `db:"stream_max_enabled" json:"is_enabled" dbi:"force"`
+	StreamMaxCount   *int `db:"stream_max_count" json:"max_per_stream"`
 }
 
 type MaxPerUserPerStream struct {
-	StreamUserMaxEnabled bool `db:"stream_user_max_enabled" json:"is_enabled"`
-	StreamMUserMaxCount  int  `db:"stream_user_max_count" json:"max_per_user_per_stream"`
+	StreamUserMaxEnabled bool `db:"stream_user_max_enabled" json:"is_enabled" dbi:"force"`
+	StreamMUserMaxCount  *int `db:"stream_user_max_count" json:"max_per_user_per_stream"`
 }
 
 type GlobalCooldown struct {
-	GlobalCooldownEnabled bool `db:"global_cooldown_enabled" json:"is_enabled"`
-	GlobalCooldownSeconds int  `db:"global_cooldown_seconds" json:"global_cooldown_seconds"`
+	GlobalCooldownEnabled bool `db:"global_cooldown_enabled" json:"is_enabled" dbi:"force"`
+	GlobalCooldownSeconds *int `db:"global_cooldown_seconds" json:"global_cooldown_seconds"`
 }
 
 type DefaultImage struct {
