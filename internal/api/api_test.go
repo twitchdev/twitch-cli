@@ -54,18 +54,19 @@ func TestNewRequest(t *testing.T) {
 	viper.Set("accesstoken", "4567")
 	viper.Set("refreshtoken", "123")
 
+	defaultAutoPaginate := 0
 	// tests for normal get requests
-	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, true, false)
-	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, false, true)
+	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, true, nil)
+	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, false, &defaultAutoPaginate)
 
 	// testing cursors autopagination
-	NewRequest("GET", "/cursor", []string{"test=1", "test=2"}, nil, false, true)
+	NewRequest("GET", "/cursor", []string{"test=1", "test=2"}, nil, false, &defaultAutoPaginate)
 
 	// testing 204 no-content apis
-	NewRequest("POST", "/nocontent", []string{"test=1", "test=2"}, nil, false, false)
+	NewRequest("POST", "/nocontent", []string{"test=1", "test=2"}, nil, false, nil)
 
 	// testing 500 errors
-	NewRequest("GET", "/error", []string{"test=1", "test=2"}, nil, false, true)
+	NewRequest("GET", "/error", []string{"test=1", "test=2"}, nil, false, &defaultAutoPaginate)
 }
 
 func TestValidOptions(t *testing.T) {
