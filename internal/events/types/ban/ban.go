@@ -32,7 +32,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 	switch params.Transport {
 	case models.TransportEventSub:
-		e := models.BanEventSubEvent{
+		ban := models.BanEventSubEvent{
 			UserID:               params.FromUserID,
 			UserLogin:            params.FromUserName,
 			UserName:             params.FromUserName,
@@ -47,9 +47,9 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if params.Trigger == "ban" {
 			reason := "This is a test event"
 			endsAt := util.GetTimestamp().Format(time.RFC3339Nano)
-			e.Reason = &reason
-			e.EndsAt = &endsAt
-			e.IsPermanent = &params.IsPermanent
+			ban.Reason = &reason
+			ban.EndsAt = &endsAt
+			ban.IsPermanent = &params.IsPermanent
 		}
 
 		body := *&models.EventsubResponse{
@@ -57,7 +57,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				ID:      params.ID,
 				Status:  "enabled",
 				Type:    triggerMapping[params.Transport][params.Trigger],
-				Version: "1",
+				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: params.ToUserID,
 				},
@@ -68,7 +68,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Cost:      0,
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
-			Event: e,
+			Event: ban,
 		}
 
 		event, err = json.Marshal(body)
@@ -111,4 +111,8 @@ func (e Event) GetEventSubAlias(t string) string {
 		}
 	}
 	return ""
+}
+
+func (e Event) SubscriptionVersion() string {
+	return "1"
 }

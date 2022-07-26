@@ -16,14 +16,15 @@ import (
 )
 
 type ForwardParamters struct {
-	ID             string
-	ForwardAddress string
-	JSON           []byte
-	Transport      string
-	Secret         string
-	Event          string
-	Method         string
-	Type           string
+	ID                  string
+	ForwardAddress      string
+	JSON                []byte
+	Transport           string
+	Secret              string
+	Event               string
+	Method              string
+	Type                string
+	SubscriptionVersion string
 }
 
 type header struct {
@@ -41,10 +42,6 @@ var notificationHeaders = map[string][]header{
 		{
 			HeaderName:  `Twitch-Eventsub-Message-Retry`,
 			HeaderValue: `0`,
-		},
-		{
-			HeaderName:  `Twitch-Eventsub-Subscription-Version`,
-			HeaderValue: `test`,
 		},
 	},
 }
@@ -69,6 +66,7 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 	case models.TransportEventSub:
 		req.Header.Set("Twitch-Eventsub-Message-Id", p.ID)
 		req.Header.Set("Twitch-Eventsub-Subscription-Type", p.Event)
+		req.Header.Set("Twitch-Eventsub-Subscription-Version", p.SubscriptionVersion)
 		switch p.Type {
 		case EventSubMessageTypeNotification:
 			req.Header.Add("Twitch-Eventsub-Message-Type", EventSubMessageTypeNotification)

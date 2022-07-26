@@ -56,7 +56,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				ID:      params.ID,
 				Status:  "enabled",
 				Type:    triggerMapping[params.Transport][params.Trigger],
-				Version: "1",
+				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
 					ExtensionClientID: clientID,
 				},
@@ -123,4 +123,8 @@ func (e Event) GetEventSubAlias(t string) string {
 		}
 	}
 	return ""
+}
+
+func (e Event) SubscriptionVersion() string {
+	return "1"
 }

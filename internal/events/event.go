@@ -47,4 +47,7 @@ type MockEvent interface {
 
 	// Returns back the correct "trigger" if using the eventsub topic
 	GetEventSubAlias(trigger string) string
+
+	// Returns the subscription version for this event
+	SubscriptionVersion() string
 }
