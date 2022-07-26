@@ -118,7 +118,7 @@ func Fire(p TriggerParameters) (string, error) {
 			JSON:           resp.JSON,
 			Secret:         p.Secret,
 			ForwardAddress: p.ForwardAddress,
-			Event:          e.GetTopic(p.Transport, p.Event),
+			Event:          p.Event,
 			Type:           EventSubMessageTypeNotification,
 		})
 		if err != nil {
