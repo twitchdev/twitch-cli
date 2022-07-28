@@ -112,13 +112,18 @@ func Fire(p TriggerParameters) (string, error) {
 	}
 
 	if p.ForwardAddress != "" {
+		topic := e.GetTopic(p.Transport, p.Event)
+		if topic == "" && e.GetEventSubAlias(p.Event) != "" {
+			topic = p.Event // fix #163; need to check if A) if the topic is valid (meaning the trigger is not the direct EventSub tpe) and B) if it has a valid ES alias
+		}
+
 		resp, err := ForwardEvent(ForwardParamters{
 			ID:             resp.ID,
 			Transport:      p.Transport,
 			JSON:           resp.JSON,
 			Secret:         p.Secret,
 			ForwardAddress: p.ForwardAddress,
-			Event:          p.Event,
+			Event:          topic,
 			Type:           EventSubMessageTypeNotification,
 		})
 		if err != nil {
