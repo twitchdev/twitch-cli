@@ -29,17 +29,18 @@ Allows the user to make GET calls to endpoints on Helix. Requires a logged in to
 
 **Flags**
 
-| Flag             | Shorthand | Description                                                                                                                                                         | Example              | Required? (Y/N) |
-|------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------|-----------------|
-| `--query-param`  | `-q`      | Query parameters for the endpoint in `key=value` format. Multiple can be entered to give multiple parameters.                                                       | `get -q login=ninja` | N               |
-| `--unformatted`  | `-u`      | Whether to return unformatted responses. Default is `false`.                                                                                                        | `get -u`             | N               |
-| `--autopaginate` | `-P`      | Whether to autopaginate the response from Twitch **WARNING** This flag can cause extremely large payloads and cause issues with some terminals. Default is `false`. | `get -P`             | N               |
+| Flag             | Shorthand | Description                                                                                                                                                                                                                                                                           | Example              | Required? (Y/N) |
+|------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------|-----------------|
+| `--query-param`  | `-q`      | Query parameters for the endpoint in `key=value` format. Multiple can be entered to give multiple parameters.                                                                                                                                                                         | `get -q login=ninja` | N               |
+| `--unformatted`  | `-u`      | Whether to return unformatted responses. Default is `false`.                                                                                                                                                                                                                          | `get -u`             | N               |
+| `--autopaginate` | `-P`      | Whether to autopaginate the response from Twitch, and optionally the number of pages to limit. **WARNING** This flag can cause extremely large payloads and cause issues with some terminals. Default is to not autopaginate, however if provided, the default is gets all responses. | `get -P=10`          | N               |
 
 **Examples**
 
 ```sh
 twitch api get users follows -q from_id=44635596 // gets user follows from user ID 44635596
 twitch api get /subscriptions -q broadcaster_id=44635596 // gets subscriptions to broadcaster 44635596
+twitch api get streams -P=10 // gets first 10 pages of streams
 ```
 
 ## post
