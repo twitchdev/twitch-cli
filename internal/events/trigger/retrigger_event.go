@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
+	"github.com/twitchdev/twitch-cli/internal/events/types"
 )
 
 func RefireEvent(id string, p TriggerParameters) (string, error) {
@@ -20,15 +21,21 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 
 	p.Transport = res.Transport
 
+	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
+	if err != nil {
+		return "", err
+	}
+
 	if p.ForwardAddress != "" {
 		resp, err := ForwardEvent(ForwardParamters{
-			ID:             id,
-			Transport:      res.Transport,
-			ForwardAddress: p.ForwardAddress,
-			Secret:         p.Secret,
-			JSON:           []byte(res.JSON),
-			Event:          res.Event,
-			Type:           EventSubMessageTypeNotification,
+			ID:                  id,
+			Transport:           res.Transport,
+			ForwardAddress:      p.ForwardAddress,
+			Secret:              p.Secret,
+			JSON:                []byte(res.JSON),
+			Event:               res.Event,
+			Type:                EventSubMessageTypeNotification,
+			SubscriptionVersion: e.SubscriptionVersion(),
 		})
 		defer resp.Body.Close()
 
