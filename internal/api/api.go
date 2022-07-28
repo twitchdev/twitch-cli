@@ -30,22 +30,28 @@ type clientInformation struct {
 }
 
 // NewRequest is used to request data from the Twitch API using a HTTP GET request- this function is a wrapper for the apiRequest function that handles the network call
-func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool, autopaginate bool) {
+func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool, autopaginate *int) {
 	var data models.APIResponse
 	var err error
 	var cursor string
 
 	data.Data = make([]interface{}, 0)
 	client, err := GetClientInformation()
+	if err != nil {
+		fmt.Println("Error fetching client information", err.Error())
+		return
+	}
+
+	if autopaginate != nil && *autopaginate < 0 {
+		fmt.Println("Invalid pagination value provided. Must be greater than or equal to 0.")
+		return
+	}
 
 	if viper.GetString("BASE_URL") != "" {
 		baseURL = viper.GetString("BASE_URL")
 	}
 
-	if err != nil {
-		fmt.Println("Error fetching client information", err.Error())
-	}
-	isFirstRun := true
+	runCounter := 1
 	for {
 		var apiResponse models.APIResponse
 
@@ -69,7 +75,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			q.Set("after", cursor)
 		}
 
-		if autopaginate == true {
+		if autopaginate != nil {
 			first := "100"
 			// since channel points custom rewards endpoints only support 50, capping that here
 			if strings.Contains(u.String(), "custom_rewards") {
@@ -101,7 +107,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			return
 		}
 
-		if isFirstRun {
+		if runCounter == 1 {
 			data = apiResponse
 		}
 
@@ -117,7 +123,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		if strings.Contains(path, "schedule") || data.Data == nil {
 			data.Data = apiResponse.Data
 			break // autopagination unsupported
-		} else if !isFirstRun {
+		} else if runCounter > 1 {
 			data.Data = append(data.Data.([]interface{}), apiResponse.Data.([]interface{})...)
 		}
 
@@ -125,7 +131,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			break
 		}
 
-		if !autopaginate {
+		if autopaginate == nil {
 			data.Pagination = &models.APIPagination{
 				Cursor: apiResponse.Pagination.Cursor,
 			}
@@ -136,7 +142,12 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			break
 		}
 		cursor = apiResponse.Pagination.Cursor
-		isFirstRun = false
+
+		// if autopaginate is 0, run indefinitely. otherwise, track counter and break once met limit
+		if *autopaginate != 0 && *autopaginate <= runCounter {
+			break // break if
+		}
+		runCounter++
 	}
 
 	if data.Data == nil {
@@ -153,7 +164,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		return
 	}
 
-	if prettyPrint == true {
+	if prettyPrint {
 		var obj map[string]interface{}
 		json.Unmarshal(d, &obj)
 		// since Command Prompt/Powershell don't support coloring, will pretty print without colors
@@ -176,7 +187,6 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	}
 
 	fmt.Println(string(d))
-	return
 }
 
 // ValidOptions returns a list of supported endpoints given a specified method as noted in the map endpointMethodSupports, which is located in resources.go of this package.

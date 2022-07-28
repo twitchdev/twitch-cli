@@ -3,7 +3,6 @@
 package cmd
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -19,7 +18,7 @@ import (
 var queryParameters []string
 var body string
 var prettyPrint bool
-var autoPaginate bool
+var autoPaginate int = 0
 var port int
 
 var apiCmd = &cobra.Command{
@@ -94,7 +93,8 @@ func init() {
 
 	apiCmd.PersistentFlags().BoolVarP(&prettyPrint, "unformatted", "u", false, "Whether to have API requests come back unformatted/non-prettyprinted. Default is false.")
 
-	getCmd.PersistentFlags().BoolVarP(&autoPaginate, "autopaginate", "P", false, "Whether to have API requests automatically paginate. Default is false.")
+	getCmd.PersistentFlags().IntVarP(&autoPaginate, "autopaginate", "P", 0, "Whether to have API requests automatically paginate. Default is to not paginate.")
+	getCmd.PersistentFlags().Lookup("autopaginate").NoOptDefVal = "0"
 
 	mockCmd.AddCommand(startCmd, generateCmd)
 
@@ -104,17 +104,27 @@ func init() {
 }
 
 func cmdRun(cmd *cobra.Command, args []string) {
+	var path string
+
 	if len(args) == 0 {
 		cmd.Help()
 		return
 	} else if len(args) == 1 && args[0][:1] == "/" {
-		api.NewRequest(cmd.Name(), args[0], queryParameters, []byte(body), !prettyPrint, autoPaginate)
-		return
+		path = args[0]
+	} else {
+		path = "/" + strings.Join(args[:], "/")
 	}
+
 	if body != "" && body[:1] == "@" {
 		body = getBodyFromFile(body[1:])
 	}
-	api.NewRequest(cmd.Name(), "/"+strings.Join(args[:], "/"), queryParameters, []byte(body), !prettyPrint, autoPaginate)
+
+	if cmd.PersistentFlags().Lookup("autopaginate").Changed {
+		api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, &autoPaginate)
+	} else {
+		api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, nil) // only set on when the user changed the flag
+	}
+
 }
 
 func getBodyFromFile(filename string) string {
@@ -127,7 +137,7 @@ func getBodyFromFile(filename string) string {
 }
 
 func mockStartRun(cmd *cobra.Command, args []string) {
-	log.Println(fmt.Sprintf("Starting mock API server on http://localhost:%v", port))
+	log.Printf("Starting mock API server on http://localhost:%v", port)
 	mock_server.StartServer(port)
 }
 
