@@ -110,7 +110,10 @@ func Fire(p TriggerParameters) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
+	topic := e.GetTopic(p.Transport, p.Event)
+	if topic == "" && e.GetEventSubAlias(p.Event) != "" {
+		topic = p.Event
+	}
 	if p.ForwardAddress != "" {
 		resp, err := ForwardEvent(ForwardParamters{
 			ID:             resp.ID,
@@ -118,7 +121,7 @@ func Fire(p TriggerParameters) (string, error) {
 			JSON:           resp.JSON,
 			Secret:         p.Secret,
 			ForwardAddress: p.ForwardAddress,
-			Event:          p.Event,
+			Event:          topic,
 			Type:           EventSubMessageTypeNotification,
 		})
 		if err != nil {
