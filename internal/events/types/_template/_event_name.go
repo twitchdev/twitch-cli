@@ -72,3 +72,7 @@ func (e Event) GetEventSubAlias(t string) string {
 	}
 	return ""
 }
+
+func (e Event) SubscriptionVersion() string {
+	return "1"
+}

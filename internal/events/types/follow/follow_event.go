@@ -35,7 +35,7 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 				ID:      p.ID,
 				Status:  "enabled",
 				Type:    "channel.follow",
-				Version: "1",
+				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: p.ToUserID,
 				},
@@ -96,4 +96,8 @@ func (e Event) GetEventSubAlias(t string) string {
 		}
 	}
 	return ""
+}
+
+func (e Event) SubscriptionVersion() string {
+	return "1"
 }

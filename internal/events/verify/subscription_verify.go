@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"mime"
 	"net/http"
 	"net/url"
 	"time"
-	"mime"
 
 	"github.com/fatih/color"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
@@ -48,7 +48,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		}
 	}
 
-	body, err := generateWebhookSubscriptionBody(p.Transport, event.GetTopic(p.Transport, p.Event), challenge, p.ForwardAddress)
+	body, err := generateWebhookSubscriptionBody(p.Transport, event.GetTopic(p.Transport, p.Event), event.SubscriptionVersion(), challenge, p.ForwardAddress)
 	if err != nil {
 		return VerifyResponse{}, err
 	}
@@ -63,14 +63,15 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		}
 
 		resp, err := trigger.ForwardEvent(trigger.ForwardParamters{
-			ID:             body.ID,
-			Event:          event.GetTopic(p.Transport, p.Event),
-			JSON:           body.JSON,
-			Transport:      p.Transport,
-			Secret:         p.Secret,
-			Method:         requestMethod,
-			ForwardAddress: u.String(),
-			Type:           trigger.EventSubMessageTypeVerification,
+			ID:                  body.ID,
+			Event:               event.GetTopic(p.Transport, p.Event),
+			JSON:                body.JSON,
+			Transport:           p.Transport,
+			Secret:              p.Secret,
+			Method:              requestMethod,
+			ForwardAddress:      u.String(),
+			Type:                trigger.EventSubMessageTypeVerification,
+			SubscriptionVersion: event.SubscriptionVersion(),
 		})
 		if err != nil {
 			return VerifyResponse{}, err
@@ -124,7 +125,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	return r, nil
 }
 
-func generateWebhookSubscriptionBody(transport string, event string, challenge string, callback string) (trigger.TriggerResponse, error) {
+func generateWebhookSubscriptionBody(transport string, event string, subscriptionVersion string, challenge string, callback string) (trigger.TriggerResponse, error) {
 	var res []byte
 	var err error
 	id := util.RandomGUID()
@@ -137,7 +138,7 @@ func generateWebhookSubscriptionBody(transport string, event string, challenge s
 				ID:      id,
 				Status:  "webhook_callback_verification_pending",
 				Type:    event,
-				Version: "1",
+				Version: subscriptionVersion,
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: util.RandomUserID(),
 				},
