@@ -113,13 +113,14 @@ func Fire(p TriggerParameters) (string, error) {
 
 	if p.ForwardAddress != "" {
 		resp, err := ForwardEvent(ForwardParamters{
-			ID:             resp.ID,
-			Transport:      p.Transport,
-			JSON:           resp.JSON,
-			Secret:         p.Secret,
-			ForwardAddress: p.ForwardAddress,
-			Event:          e.GetTopic(p.Transport, p.Event),
-			Type:           EventSubMessageTypeNotification,
+			ID:                  resp.ID,
+			Transport:           p.Transport,
+			JSON:                resp.JSON,
+			Secret:              p.Secret,
+			ForwardAddress:      p.ForwardAddress,
+			Event:               e.GetTopic(p.Transport, p.Event),
+			Type:                EventSubMessageTypeNotification,
+			SubscriptionVersion: e.SubscriptionVersion(),
 		})
 		if err != nil {
 			return "", err
