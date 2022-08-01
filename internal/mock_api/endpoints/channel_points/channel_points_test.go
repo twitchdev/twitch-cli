@@ -34,12 +34,13 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 	bTrue := true
+	pCost := 100
 	reward := database.ChannelPointsReward{
 		ID:                         util.RandomGUID(),
 		BroadcasterID:              "1",
 		BackgroundColor:            "#fff",
 		IsEnabled:                  &bTrue,
-		Cost:                       100,
+		Cost:                       &pCost,
 		Title:                      "from_unit_tests",
 		RewardPrompt:               "",
 		IsUserInputRequired:        false,
@@ -279,7 +280,8 @@ func TestRewards(t *testing.T) {
 	a.Equal(200, resp.StatusCode)
 
 	// bad body
-	body.Cost = nil
+	body.StreamMaxCount = nil
+	body.StreamMaxEnabled = true
 	b, _ = json.Marshal(body)
 	req, _ = http.NewRequest(http.MethodPatch, ts.URL+Reward{}.Path(), bytes.NewBuffer(b))
 	q.Set("broadcaster_id", "1")
@@ -288,6 +290,8 @@ func TestRewards(t *testing.T) {
 	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err, err)
 	a.Equal(400, resp.StatusCode)
+	body.StreamMaxCount = &oneHundred
+	body.StreamMaxEnabled = false
 
 	// enabled flag testing below
 	body.Cost = &oneHundred
@@ -313,6 +317,7 @@ func TestRewards(t *testing.T) {
 	a.Equal(400, resp.StatusCode)
 
 	body.GlobalCooldownEnabled = false
+	body.StreamMaxCount = nil
 	body.StreamMaxEnabled = true
 	b, _ = json.Marshal(body)
 	req, _ = http.NewRequest(http.MethodPatch, ts.URL+Reward{}.Path(), bytes.NewBuffer(b))
