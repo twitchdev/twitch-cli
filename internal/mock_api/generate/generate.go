@@ -151,21 +151,21 @@ func generateUsers(ctx context.Context, count int) error {
 				RewardImage:         sql.NullString{},
 				BackgroundColor:     "#9146FF",
 				IsEnabled:           &t,
-				Cost:                1,
+				Cost:                intPointer(1),
 				Title:               fmt.Sprintf("Fake reward for %v", broadcaster.ID),
 				RewardPrompt:        "",
 				IsUserInputRequired: false,
 				MaxPerStream: database.MaxPerStream{
 					StreamMaxEnabled: false,
-					StreamMaxCount:   0,
+					StreamMaxCount:   intPointer(0),
 				},
 				MaxPerUserPerStream: database.MaxPerUserPerStream{
 					StreamUserMaxEnabled: false,
-					StreamMUserMaxCount:  0,
+					StreamMUserMaxCount:  intPointer(0),
 				},
 				GlobalCooldown: database.GlobalCooldown{
 					GlobalCooldownEnabled: false,
-					GlobalCooldownSeconds: 0,
+					GlobalCooldownSeconds: intPointer(0),
 				},
 				IsPaused:                         false,
 				IsInStock:                        true,
@@ -291,7 +291,7 @@ func generateUsers(ctx context.Context, count int) error {
 						ID:           copoReward.ID,
 						Title:        copoReward.Title,
 						RewardPrompt: copoReward.RewardPrompt,
-						Cost:         copoReward.Cost,
+						Cost:         *copoReward.Cost,
 					},
 					UserInput:        sql.NullString{},
 					RedemptionStatus: "UNFULFILLED",
@@ -549,3 +549,5 @@ func generateAuthorization(ctx context.Context, c database.AuthenticationClient,
 	}
 	return nil
 }
+
+func intPointer(i int) *int { return &i }

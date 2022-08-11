@@ -40,11 +40,11 @@ type PatchAndPostRewardBody struct {
 	BackgroundColor            string `json:"background_color"`
 	IsUserInputRequired        bool   `json:"is_user_input_required"`
 	StreamMaxEnabled           bool   `json:"is_max_per_stream_enabled"`
-	StreamMaxCount             int    `json:"max_per_stream"`
+	StreamMaxCount             *int   `json:"max_per_stream"`
 	StreamUserMaxEnabled       bool   `json:"is_max_per_user_per_stream_enabled"`
-	StreamUserMaxCount         int    `json:"max_per_user_per_stream"`
+	StreamUserMaxCount         *int   `json:"max_per_user_per_stream"`
 	GlobalCooldownEnabled      bool   `json:"is_global_cooldown_enabled"`
-	GlobalCooldownSeconds      int    `json:"global_cooldown_seconds"`
+	GlobalCooldownSeconds      *int   `json:"global_cooldown_seconds"`
 	IsPaused                   bool   `json:"is_paused"`
 	ShouldRedemptionsSkipQueue bool   `json:"should_redemptions_skip_request_queue"`
 }
@@ -164,19 +164,35 @@ func postRewards(w http.ResponseWriter, r *http.Request) {
 		t := true
 		body.IsEnabled = &t
 	}
-	if body.StreamMaxEnabled && body.StreamMaxCount == 0 {
-		mock_errors.WriteBadRequest(w, "max_per_stream required if is_max_per_stream_enabled is true")
-		return
+
+	if body.StreamMaxEnabled {
+		if body.StreamMaxCount == nil {
+			mock_errors.WriteBadRequest(w, "max_per_stream required if is_max_per_stream_enabled is true")
+			return
+		} else if *body.StreamMaxCount == 0 {
+			mock_errors.WriteBadRequest(w, "max_per_stream required must be greater than 0")
+			return
+		}
 	}
 
-	if body.StreamUserMaxEnabled && body.StreamUserMaxCount == 0 {
-		mock_errors.WriteBadRequest(w, "max_per_user_per_stream if is_max_per_user_per_stream_enabled is true")
-		return
+	if body.StreamUserMaxEnabled {
+		if body.StreamUserMaxCount == nil {
+			mock_errors.WriteBadRequest(w, "max_per_user_per_stream required if is_max_per_user_per_stream_enabled is true")
+			return
+		} else if *body.StreamUserMaxCount == 0 {
+			mock_errors.WriteBadRequest(w, "max_per_user_per_stream required must be greater than 0")
+			return
+		}
 	}
 
-	if body.GlobalCooldownEnabled && body.GlobalCooldownSeconds == 0 {
-		mock_errors.WriteBadRequest(w, "global_cooldown_seconds required if is_global_cooldown_enabled is true")
-		return
+	if body.GlobalCooldownEnabled {
+		if body.GlobalCooldownSeconds == nil {
+			mock_errors.WriteBadRequest(w, "global_cooldown_seconds required if is_global_cooldown_enabled is true")
+			return
+		} else if *body.GlobalCooldownSeconds == 0 {
+			mock_errors.WriteBadRequest(w, "global_cooldown_seconds required must be greater than 0")
+			return
+		}
 	}
 
 	create := database.ChannelPointsReward{
@@ -186,12 +202,12 @@ func postRewards(w http.ResponseWriter, r *http.Request) {
 		BackgroundColor:     body.BackgroundColor,
 		IsEnabled:           body.IsEnabled,
 		RewardPrompt:        body.RewardPrompt,
-		Cost:                *body.Cost,
+		Cost:                body.Cost,
 		Title:               body.Title,
 		IsUserInputRequired: body.IsUserInputRequired,
 		MaxPerStream: database.MaxPerStream{
 			StreamMaxEnabled: body.StreamMaxEnabled,
-			StreamMaxCount:   body.StreamUserMaxCount,
+			StreamMaxCount:   body.StreamMaxCount,
 		},
 		MaxPerUserPerStream: database.MaxPerUserPerStream{
 			StreamUserMaxEnabled: body.StreamUserMaxEnabled,
@@ -216,7 +232,7 @@ func postRewards(w http.ResponseWriter, r *http.Request) {
 		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
-	bytes, err := json.Marshal(models.APIResponse{Data: dbr.Data})
+	bytes, _ := json.Marshal(models.APIResponse{Data: dbr.Data})
 	w.Write(bytes)
 }
 
@@ -228,6 +244,7 @@ func patchRewards(w http.ResponseWriter, r *http.Request) {
 		mock_errors.WriteUnauthorized(w, "Broadcaster ID does not match token.")
 		return
 	}
+
 	user, err := db.NewQuery(r, 100).GetUser(database.User{ID: userCtx.UserID})
 	if err != nil {
 		mock_errors.WriteServerError(w, err.Error())
@@ -243,6 +260,7 @@ func patchRewards(w http.ResponseWriter, r *http.Request) {
 		mock_errors.WriteBadRequest(w, "ID is required")
 		return
 	}
+
 	var body PatchAndPostRewardBody
 	err = json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
@@ -250,24 +268,42 @@ func patchRewards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if body.Cost == nil || *body.Cost == 0 {
-		mock_errors.WriteBadRequest(w, "Cost must be greater than 0")
-		return
+	if body.Cost != nil {
+		if *body.Cost == 0 {
+			mock_errors.WriteBadRequest(w, "Cost must be greater than 0")
+			return
+		}
+
 	}
 
-	if body.StreamMaxEnabled && body.StreamMaxCount == 0 {
-		mock_errors.WriteBadRequest(w, "max_per_stream required if is_max_per_stream_enabled is true")
-		return
+	if body.StreamMaxEnabled {
+		if body.StreamMaxCount == nil {
+			mock_errors.WriteBadRequest(w, "max_per_stream required if is_max_per_stream_enabled is true")
+			return
+		} else if *body.StreamMaxCount == 0 {
+			mock_errors.WriteBadRequest(w, "max_per_stream required must be greater than 0")
+			return
+		}
 	}
 
-	if body.StreamUserMaxEnabled && body.StreamUserMaxCount == 0 {
-		mock_errors.WriteBadRequest(w, "max_per_user_per_stream if is_max_per_user_per_stream_enabled is true")
-		return
+	if body.StreamUserMaxEnabled {
+		if body.StreamUserMaxCount == nil {
+			mock_errors.WriteBadRequest(w, "max_per_user_per_stream required if is_max_per_user_per_stream_enabled is true")
+			return
+		} else if *body.StreamUserMaxCount == 0 {
+			mock_errors.WriteBadRequest(w, "max_per_user_per_stream required must be greater than 0")
+			return
+		}
 	}
 
-	if body.GlobalCooldownEnabled && body.GlobalCooldownSeconds == 0 {
-		mock_errors.WriteBadRequest(w, "global_cooldown_seconds required if is_global_cooldown_enabled is true")
-		return
+	if body.GlobalCooldownEnabled {
+		if body.GlobalCooldownSeconds == nil {
+			mock_errors.WriteBadRequest(w, "global_cooldown_seconds required if is_global_cooldown_enabled is true")
+			return
+		} else if *body.GlobalCooldownSeconds == 0 {
+			mock_errors.WriteBadRequest(w, "global_cooldown_seconds required must be greater than 0")
+			return
+		}
 	}
 
 	update := database.ChannelPointsReward{
@@ -277,12 +313,12 @@ func patchRewards(w http.ResponseWriter, r *http.Request) {
 		BackgroundColor:     body.BackgroundColor,
 		IsEnabled:           body.IsEnabled,
 		RewardPrompt:        body.RewardPrompt,
-		Cost:                *body.Cost,
+		Cost:                body.Cost,
 		Title:               body.Title,
 		IsUserInputRequired: body.IsUserInputRequired,
 		MaxPerStream: database.MaxPerStream{
 			StreamMaxEnabled: body.StreamMaxEnabled,
-			StreamMaxCount:   body.StreamUserMaxCount,
+			StreamMaxCount:   body.StreamMaxCount,
 		},
 		MaxPerUserPerStream: database.MaxPerUserPerStream{
 			StreamUserMaxEnabled: body.StreamUserMaxEnabled,
@@ -307,7 +343,7 @@ func patchRewards(w http.ResponseWriter, r *http.Request) {
 		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
-	bytes, err := json.Marshal(models.APIResponse{Data: dbr.Data})
+	bytes, _ := json.Marshal(models.APIResponse{Data: dbr.Data})
 	w.Write(bytes)
 }
 

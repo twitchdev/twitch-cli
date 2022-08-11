@@ -229,7 +229,7 @@ func patchPredictions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.NewQuery(r, 100).UpdatePrediction(database.Prediction{ID: body.ID, Status: body.Status, WinningOutcomeID: &body.WinningOutcomeID})
+	err = db.NewQuery(r, 100).UpdatePrediction(database.Prediction{ID: body.ID, Status: body.Status, WinningOutcomeID: &body.WinningOutcomeID, BroadcasterID: body.BroadcasterID})
 	if err != nil {
 		mock_errors.WriteBadRequest(w, "error updating prediction")
 		return

@@ -308,13 +308,13 @@ func TestChannelPoints(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
 	bTrue := true
-
+	pHundred := 100
 	reward := ChannelPointsReward{
 		ID:                         util.RandomGUID(),
 		BroadcasterID:              TEST_USER_ID,
 		BackgroundColor:            "#fff",
 		IsEnabled:                  &bTrue,
-		Cost:                       100,
+		Cost:                       &pHundred,
 		Title:                      "1234",
 		RewardPrompt:               "",
 		IsUserInputRequired:        false,
@@ -326,7 +326,8 @@ func TestChannelPoints(t *testing.T) {
 	err := q.InsertChannelPointsReward(reward)
 	a.Nil(err)
 
-	reward.Cost = 101
+	pCost := 101
+	reward.Cost = &pCost
 	err = q.UpdateChannelPointsReward(reward)
 	a.Nil(err)
 
@@ -334,7 +335,7 @@ func TestChannelPoints(t *testing.T) {
 	a.Nil(err)
 	rewards := dbr.Data.([]ChannelPointsReward)
 	a.GreaterOrEqual(len(rewards), 1)
-	a.Equal(101, rewards[0].Cost)
+	a.Equal(&pCost, rewards[0].Cost)
 
 	redemption := ChannelPointsRedemption{
 		ID:               util.RandomGUID(),

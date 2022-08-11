@@ -25,11 +25,10 @@ type InternalCursor struct {
 }
 
 // generates SELECT SQL for use with querying on an interface for easier querying. Generates the WHERE clause using a provided interface
-func generateSQL(s string, i interface{}, seperator string) string {
-	if seperator == "" {
-		seperator = "and"
+func generateSQL(s string, i interface{}, separator string) string {
+	if separator == "" {
+		separator = "and"
 	}
-
 	t := reflect.TypeOf(i)
 	v := reflect.ValueOf(i)
 
@@ -51,25 +50,21 @@ func generateSQL(s string, i interface{}, seperator string) string {
 
 		switch f := field.Interface().(type) {
 		case sql.NullString:
-			if f.Valid == false {
+			if !f.Valid {
 				continue
 			}
-			break
 		case string:
 			if field.Interface().(string) == "" {
 				continue
 			}
-			break
 		case bool:
-			if f == false {
+			if !f {
 				continue
 			}
-			break
 		case int:
 			if f == 0 {
 				continue
 			}
-			break
 		case float64:
 			if f == 0.0 {
 				continue
@@ -94,7 +89,7 @@ func generateSQL(s string, i interface{}, seperator string) string {
 		return s
 	}
 
-	w := strings.Join(whereClause, fmt.Sprintf(" %v ", seperator))
+	w := strings.Join(whereClause, fmt.Sprintf(" %v ", separator))
 	s = fmt.Sprintf("%v where %v", s, w)
 	return s
 }
@@ -136,12 +131,36 @@ func generateInsertSQL(table string, pk string, i interface{}, upsert bool) stri
 }
 
 func generateUpdateSQL(table string, pk []string, i interface{}) string {
+	updateClause := generateStructUpdateString(i)
+	s := fmt.Sprintf("update %v set %v", table, strings.Join(updateClause, ", "))
+	if len(pk) == 0 {
+		return s
+	}
+
+	whereClause := []string{}
+	for _, key := range pk {
+		whereClause = append(whereClause, fmt.Sprintf("%v=:%v", key, key))
+	}
+	return fmt.Sprintf("%v where %v", s, strings.Join(whereClause, " AND "))
+}
+
+func generateStructUpdateString(i interface{}) []string {
 	t := reflect.TypeOf(i)
 	v := reflect.ValueOf(i)
 
 	updateClause := []string{}
 	for index := 0; index < t.NumField(); index++ {
 		field := v.Field(index)
+
+		switch v.Field(index).Kind() {
+		case reflect.Ptr:
+			if v.Field(index).IsNil() {
+				continue
+			}
+		case reflect.Struct:
+			nested := generateStructUpdateString(field.Interface())
+			updateClause = append(updateClause, nested...)
+		}
 
 		db := t.Field(index).Tag.Get("db")
 		if db == "" {
@@ -162,43 +181,26 @@ func generateUpdateSQL(table string, pk []string, i interface{}) string {
 
 		switch f := field.Interface().(type) {
 		case sql.NullString:
-			if f.Valid == false {
+			if !f.Valid {
 				continue
 			}
-			break
 		case string:
 			if field.Interface().(string) == "" {
 				continue
 			}
-			break
 		case bool:
-			if f == false {
+			if !f {
 				continue
 			}
-			break
 		case int:
 			if f == 0 {
 				continue
 			}
-			break
 		default:
 			break
 		}
-		if v.Field(index).Kind() == reflect.Ptr {
-			if v.Field(index).IsNil() {
-				continue
-			}
-		}
+
 		updateClause = append(updateClause, fmt.Sprintf("%v=:%v", db, db))
 	}
-	s := fmt.Sprintf("update %v set %v", table, strings.Join(updateClause, ", "))
-	if len(pk) == 0 {
-		return s
-	}
-
-	whereClause := []string{}
-	for _, key := range pk {
-		whereClause = append(whereClause, fmt.Sprintf("%v=:%v", key, key))
-	}
-	return fmt.Sprintf("%v where %v", s, strings.Join(whereClause, " AND "))
+	return updateClause
 }
