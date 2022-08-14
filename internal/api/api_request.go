@@ -23,7 +23,9 @@ type apiRequestResponse struct {
 
 func apiRequest(method string, url string, payload []byte, p apiRequestParameters) (apiRequestResponse, error) {
 	req, err := request.NewRequest(method, url, bytes.NewBuffer(payload))
-
+	if err != nil {
+		return apiRequestResponse{}, err
+	}
 	req.Header.Set("Client-ID", p.ClientID)
 	req.Header.Set("Content-Type", "application/json")
 	rl := rate.NewLimiter(rate.Every(time.Minute), 800)

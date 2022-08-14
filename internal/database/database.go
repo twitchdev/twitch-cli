@@ -57,7 +57,7 @@ func getDatabase() (sqlx.DB, error) {
 			continue
 		}
 
-		if needToInit == true {
+		if needToInit {
 			err = initDatabase(*db)
 			if err != nil {
 				log.Printf("%#v", err)

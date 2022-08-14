@@ -4,7 +4,6 @@ package database
 
 import (
 	"database/sql"
-	"errors"
 	"time"
 )
 
@@ -124,7 +123,7 @@ func (q *Query) UpdateSegment(p ScheduleSegment) error {
 func (q *Query) GetVacations(p ScheduleSegment) (ScheduleVacation, error) {
 	v := ScheduleVacation{}
 	err := q.DB.Get(&v, "select id,starttime,endtime from stream_schedule where is_vacation=true and datetime(endtime) > datetime('now') and broadcaster_id= $1 limit 1", p.UserID)
-	if errors.As(err, &sql.ErrNoRows) {
+	if err == sql.ErrNoRows {
 		return v, nil
 	}
 	return v, err

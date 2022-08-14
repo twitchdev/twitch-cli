@@ -5,7 +5,6 @@ package channels
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/mattn/go-sqlite3"
@@ -115,7 +114,6 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Print("here")
 	var params PatchInformationEndpointRequest
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
@@ -124,6 +122,10 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u, err := db.NewQuery(r, 100).GetUser(database.User{ID: broadcasterID})
+	if err != nil {
+		mock_errors.WriteBadRequest(w, "Error writing request")
+		return
+	}
 
 	var gameID = u.CategoryID
 	if params.GameID == "" || params.GameID == "0" {
