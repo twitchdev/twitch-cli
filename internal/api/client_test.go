@@ -35,9 +35,10 @@ func TestNewClient(t *testing.T) {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	defer resp.Body.Close()
+	a.NoError(err)
 	a.Equal(ok, string(body), "Body mismatch")
 
 	req, _ = http.NewRequest(http.MethodGet, "potato", nil)
-	resp, err = c.Do(req)
+	_, err = c.Do(req)
 	a.NotNil(err)
 }

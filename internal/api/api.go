@@ -35,6 +35,8 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	var err error
 	var cursor string
 
+	isExtensionsEndpoint := false // https://github.com/twitchdev/twitch-cli/issues/157
+
 	data.Data = make([]interface{}, 0)
 	client, err := GetClientInformation()
 	if err != nil {
@@ -100,11 +102,30 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			fmt.Println("Endpoint responded with status 204")
 			return
 		}
-
-		err = json.Unmarshal(resp.Body, &apiResponse)
-		if err != nil {
-			fmt.Printf("Error unmarshalling body: %v", err)
-			return
+		if strings.Contains(u.String(), "extensions/live") {
+			// https://github.com/twitchdev/twitch-cli/issues/157
+			isExtensionsEndpoint = true
+			var extensionsBody models.ExtensionAPIResponse
+			err = json.Unmarshal(resp.Body, &extensionsBody)
+			if err != nil {
+				fmt.Printf("Error unmarshalling body: %v", err)
+				return
+			}
+			apiResponse = models.APIResponse{
+				Data:    extensionsBody.Data,
+				Status:  extensionsBody.Status,
+				Error:   extensionsBody.Error,
+				Message: extensionsBody.Message,
+				Pagination: &models.APIPagination{
+					Cursor: *extensionsBody.Pagination,
+				},
+			}
+		} else {
+			err = json.Unmarshal(resp.Body, &apiResponse)
+			if err != nil {
+				fmt.Printf("Error unmarshalling body: %v", err)
+				return
+			}
 		}
 
 		if runCounter == 1 {
@@ -158,10 +179,26 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		data.Data = make([]interface{}, 0)
 	}
 
-	d, err := json.Marshal(data)
-	if err != nil {
-		log.Printf("Error marshalling json: %v", err)
-		return
+	var d []byte
+	if isExtensionsEndpoint {
+		extensionBody := models.ExtensionAPIResponse{
+			Data:       data.Data,
+			Pagination: &data.Pagination.Cursor,
+			Error:      data.Error,
+			Status:     data.Status,
+			Message:    data.Message,
+		}
+		d, err = json.Marshal(extensionBody)
+		if err != nil {
+			log.Printf("Error marshalling json: %v", err)
+			return
+		}
+	} else {
+		d, err = json.Marshal(data)
+		if err != nil {
+			log.Printf("Error marshalling json: %v", err)
+			return
+		}
 	}
 
 	if prettyPrint {

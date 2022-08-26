@@ -27,7 +27,7 @@ func TestApiRequest(t *testing.T) {
 
 	defer ts.Close()
 
-	params := *&apiRequestParameters{
+	params := apiRequestParameters{
 		ClientID: "1234",
 		Token:    "4567",
 	}

@@ -308,7 +308,7 @@ func (q *Query) SearchChannels(query string, live_only bool) (*DBResponse, error
 	r := []SearchChannel{}
 	stmt := `select u1.id, u1.user_login, u1.display_name, u1.category_id, u1.title, u1.stream_language, c.category_name, case when s.id is null then 'false' else 'true' end is_live, s.started_at from users u1 left join streams s on u1.id = s.broadcaster_id left join categories c on u1.category_id = c.id where lower(u1.user_login) like lower($1)`
 
-	if live_only == true {
+	if live_only {
 		stmt = `select u1.id, u1.user_login, u1.display_name, u1.category_id, u1.title, u1.stream_language, c.category_name, case when s.id is null then 'false' else 'true' end is_live, s.started_at from users u1 left join streams s on u1.id = s.broadcaster_id left join categories c on u1.category_id = c.id where lower(u1.user_login) like lower($1) and is_live='true'`
 	}
 

@@ -43,8 +43,6 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	time.Sleep(10)
-
 	db, err = NewConnection()
 	if err != nil {
 		log.Print(err)
@@ -95,7 +93,7 @@ func TestMain(m *testing.M) {
 func TestRetriveFromDB(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	ecParams := *&EventCacheParameters{
+	ecParams := EventCacheParameters{
 		ID:        util.RandomGUID(),
 		Event:     "foo",
 		JSON:      "bar",
@@ -565,11 +563,11 @@ func TestQuery(t *testing.T) {
 
 	q.Set("before", query.PaginationCursor)
 	request.URL.RawQuery = q.Encode()
-	query = db.NewQuery(request, 100)
+	db.NewQuery(request, 100)
 
 	q.Set("after", "notbase64")
 	request.URL.RawQuery = q.Encode()
-	query = db.NewQuery(request, 100)
+	db.NewQuery(request, 100)
 }
 
 func TestStreams(t *testing.T) {

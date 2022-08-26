@@ -47,7 +47,7 @@ func (q *Query) InsertOrUpdateAuthenticationClient(client AuthenticationClient, 
 	db := q.DB
 
 	stmt := `insert into clients values(:id, :secret, :is_extension, :name)`
-	if upsert == true {
+	if upsert {
 		stmt += ` on conflict(id) do update set secret=:secret, is_extension:is_extension, name=:name`
 	}
 

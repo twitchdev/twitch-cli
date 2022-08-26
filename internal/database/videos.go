@@ -146,7 +146,7 @@ func (q *Query) GetClips(c Clip, startDate string, endDate string) (*DBResponse,
 	if startDate != "" {
 		c.StartedAt = startDate
 		c.EndedAt = endDate
-		sql += fmt.Sprintf(" and datetime(c.created_at) > datetime(:started_at) and datetime(c.created_at) < datetime(:ended_at) ")
+		sql += " and datetime(c.created_at) > datetime(:started_at) and datetime(c.created_at) < datetime(:ended_at) "
 	}
 	sql += q.SQL
 	rows, err := q.DB.NamedQuery(sql, c)
