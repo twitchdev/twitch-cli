@@ -21,9 +21,14 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 
 	p.Transport = res.Transport
 
-	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
+	e, err := types.GetByTriggerAndTransport(res.Event, p.Transport)
 	if err != nil {
 		return "", err
+	}
+
+	topic := e.GetTopic(p.Transport, res.Event)
+	if topic == "" && e.GetEventSubAlias(res.Event) != "" {
+		topic = res.Event
 	}
 
 	if p.ForwardAddress != "" {
@@ -33,7 +38,7 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 			ForwardAddress:      p.ForwardAddress,
 			Secret:              p.Secret,
 			JSON:                []byte(res.JSON),
-			Event:               res.Event,
+			Event:               topic,
 			Type:                EventSubMessageTypeNotification,
 			SubscriptionVersion: e.SubscriptionVersion(),
 		})
