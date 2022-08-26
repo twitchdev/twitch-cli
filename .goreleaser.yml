@@ -28,6 +28,18 @@ builds:
       - linux
     goarch:
       - amd64
+  - id: twitch-linux-arm64
+    ldflags:
+      - -s -w -X main.buildVersion={{ .Version }}
+    binary: twitch
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-gnu-gcc-6
+      - CXX=aarch64-linux-gnu-g++-6
+    goos:
+      - linux
+    goarch:
+      - arm64 
   - id: twitch-windows-x64
     ldflags: 
     - -s -w -X main.buildVersion={{ .Version }} 
