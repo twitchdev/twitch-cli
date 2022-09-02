@@ -81,20 +81,7 @@ brews:
     folder: Formula
     homepage: https://github.com/twitchdev/twitch-cli
     description: CLI for Twitch's developer offerings
-    custom_block: | 
-      head "https://github.com/twitchdev/twitch-cli.git", branch: "main"
-      head do
-        depends_on "go" => :build
-      end
     install: |
-      v = version
-      if build.head? 
-        v = "head"
-        ldflags = "-X main.buildVersion=#{v}"
-        system "go", "build", "-ldflags=#{ldflags}"
-        mv "twitch-cli", "twitch"
-      end
-      
       bin.install "twitch"
     test: |
       system "#{bin}/twitch", "version"
