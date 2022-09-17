@@ -119,7 +119,7 @@ func cmdRun(cmd *cobra.Command, args []string) {
 		body = getBodyFromFile(body[1:])
 	}
 
-	if cmd.PersistentFlags().Lookup("autopaginate").Changed {
+	if cmd.Name() == "get" && cmd.PersistentFlags().Lookup("autopaginate").Changed {
 		api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, &autoPaginate)
 	} else {
 		api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, nil) // only set on when the user changed the flag
