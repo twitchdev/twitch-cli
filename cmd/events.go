@@ -47,7 +47,7 @@ var triggerCmd = &cobra.Command{
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: events.ValidTriggers(),
 	Run:       triggerCmdRun,
-	Example:   `twitch trigger subscribe`,
+	Example:   `twitch event trigger subscribe`,
 	Aliases: []string{
 		"fire", "emit",
 	},
@@ -72,7 +72,7 @@ var retriggerCmd = &cobra.Command{
 	Use:     "retrigger",
 	Short:   "Refires events based on the event ID. Can be forwarded to the local webserver for event testing.",
 	Run:     retriggerCmdRun,
-	Example: `twitch trigger subscribe`,
+	Example: `twitch event retrigger subscribe`,
 }
 
 func init() {
