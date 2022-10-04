@@ -4,10 +4,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 
 	"github.com/spf13/cobra"
 	"github.com/twitchdev/twitch-cli/internal/events"
+	"github.com/twitchdev/twitch-cli/internal/events/mock_wss_server"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
 	"github.com/twitchdev/twitch-cli/internal/events/verify"
 )
@@ -31,6 +33,7 @@ var (
 	count          int
 	description    string
 	gameID         string
+	debug          bool
 )
 
 var eventCmd = &cobra.Command{
@@ -75,9 +78,16 @@ var retriggerCmd = &cobra.Command{
 	Example: `twitch event retrigger subscribe`,
 }
 
+var startWebsocketServerCmd = &cobra.Command{
+	Use:     "start-websocket-server",
+	Short:   "Starts a local websocket server at wss://localhost:8000",
+	Run:     startWebsocketServerCmdRun,
+	Example: `twitch event start-websocket-server`,
+}
+
 func init() {
 	rootCmd.AddCommand(eventCmd)
-	eventCmd.AddCommand(triggerCmd, retriggerCmd, verifyCmd)
+	eventCmd.AddCommand(triggerCmd, retriggerCmd, verifyCmd, startWebsocketServerCmd)
 
 	// trigger flags
 	// flags for forwarding functionality/changing payloads
@@ -109,6 +119,10 @@ func init() {
 	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	verifyCmd.MarkFlagRequired("forward-address")
+
+	// start-websocket-server flags
+	startWebsocketServerCmd.Flags().IntVarP(&port, "port", "p", 8080, "Defines the port that the mock EventSub websocket server will run on.")
+	startWebsocketServerCmd.Flags().BoolVar(&debug, "debug", false, "Set on/off for debug messages for the EventSub WebSocket server.")
 }
 
 func triggerCmdRun(cmd *cobra.Command, args []string) {
@@ -222,4 +236,9 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		println(err.Error())
 		return
 	}
+}
+
+func startWebsocketServerCmdRun(cmd *cobra.Command, args []string) {
+	log.Printf("Starting mock EventSub WebSocket server on wss://localhost:%v", port)
+	mock_wss_server.StartServer(port, debug)
 }
