@@ -2,6 +2,7 @@ package mock_wss_server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -21,12 +22,17 @@ import (
  * This is a const for now, but it may need to be a flag in the future. */
 const MINIMUM_MESSAGE_FREQUENCY_SECONDS = 10
 
+var connectionURL string
+
 var upgrader = websocket.Upgrader{}
 var connections []WebsocketConnection
+var websocketId string
+var connectedAtTimestamp string
+var shuttingDown = false // Used during reconnect to avoid accepting new messages
 
 var debug = false
 
-func echo(w http.ResponseWriter, r *http.Request) {
+func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
@@ -36,58 +42,64 @@ func echo(w http.ResponseWriter, r *http.Request) {
 
 	// Connection sucessful. WebSocket is now open.
 
-	// RFC3339Nano = "2022-10-04T12:38:15.479Z" ; Specifically, it includes milliseconds, whereas RFC3339 doesn't.
-	connectedAtTimestamp := time.Now().UTC().Format(time.RFC3339Nano)
+	// RFC3339Nano = "2022-10-04T12:38:15.548912638Z07" ; This is used by Twitch in production
+	connectedAtTimestamp = time.Now().UTC().Format(time.RFC3339Nano)
+	conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
 
 	// Generate unique websocket ID.
-	websocketId := util.RandomGUID()
+	websocketId = util.RandomGUID()
 
 	// Add to websocket connection list.
-	connections = append(connections, WebsocketConnection{ID: websocketId})
+	connections = append(connections, WebsocketConnection{ID: websocketId, Conn: conn})
 	printConnections()
 
+	// TODO: Decline websocket if it reached 100 connections from the same application access token
+	// Use "shuttingDown" bool for this
+
 	// Send "websocket_welcome" message
-	welcomeMsg := []byte(fmt.Sprintf(`
-{
-    "metadata": {
-        "message_id": "` + util.RandomGUID() + `",
-        "message_type": "websocket_welcome",
-        "message_timestamp": "` + time.Now().UTC().Format(time.RFC3339Nano) + `"
-    },
-    "payload": {
-        "websocket": {
-            "id": "` + websocketId + `",
-            "status": "connected",
-            "minimum_message_frequency_seconds": ` + fmt.Sprintf("%d", MINIMUM_MESSAGE_FREQUENCY_SECONDS) + `,
-            "connected_at": "` + connectedAtTimestamp + `"
-        }
-    }
-}
-`)) // TODO: Convert to proper JSON in Go
+	welcomeMsg, _ := json.Marshal(
+		WelcomeMessage{
+			Metadata: MessageMetadata{
+				MessageID:        util.RandomGUID(),
+				MessageType:      "websocket_welcome",
+				MessageTimestamp: time.Now().UTC().Format(time.RFC3339Nano),
+			},
+			Payload: WelcomeMessagePayload{
+				Websocket: WelcomeMessagePayloadWebsocket{
+					ID:                             websocketId,
+					Status:                         "connected",
+					MinimumMessageFrequencySeconds: MINIMUM_MESSAGE_FREQUENCY_SECONDS,
+					ConnectedAt:                    connectedAtTimestamp,
+				},
+			},
+		},
+	)
 	conn.WriteMessage(1, welcomeMsg)
 
 	if debug {
 		log.Printf("[DEBUG] Write: %s", welcomeMsg)
 	}
 
+	// TODO: Read messages
 	for {
+		conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
-			close(websocketId)
+			onCloseConnection(websocketId)
 			break
 		}
 		log.Printf("recv: [%d] %s", mt, message)
-		err = conn.WriteMessage(mt, message)
+		/*err = conn.WriteMessage(mt, message)
 		if err != nil {
 			log.Println("write:", err)
-			close(websocketId)
+			onCloseConnection(websocketId)
 			break
-		}
+		}*/
 	}
 }
 
-func close(websocketId string) {
+func onCloseConnection(websocketId string) {
 	log.Printf("Disconnected websocket %s", websocketId)
 
 	// Remove from list
@@ -114,7 +126,57 @@ func printConnections() {
 	log.Printf("Connections: (%d) [ %s ]", len(connections), currentConnections)
 }
 
-func StartServer(port int, enableDebug bool) {
+func terminateServer(server http.Server, ctx context.Context, reconnect bool) {
+	timer := 0
+	if reconnect {
+		timer = 30
+		log.Println("Terminating server with reconnect notice. Shutting down in 30 seconds.")
+	} else {
+		log.Println("Terminating server immediately.")
+	}
+
+	if reconnect {
+		// Stop processing new messages
+		shuttingDown = true
+
+		// Send reconnect notices
+		for _, c := range connections {
+			reconnectMsg, _ := json.Marshal(
+				ReconnectMessage{
+					Metadata: MessageMetadata{
+						MessageID:        util.RandomGUID(),
+						MessageType:      "websocket_reconnect",
+						MessageTimestamp: time.Now().UTC().Format(time.RFC3339Nano),
+					},
+					Payload: ReconnectMessagePayload{
+						Websocket: ReconnectMessagePayloadWebsocket{
+							ID:                             websocketId,
+							Status:                         "reconnecting",
+							MinimumMessageFrequencySeconds: MINIMUM_MESSAGE_FREQUENCY_SECONDS,
+							Url:                            connectionURL,
+							ConnectedAt:                    connectedAtTimestamp,
+							ReconnectingAt:                 time.Now().UTC().Add(time.Second * 30).Format(time.RFC3339Nano),
+						},
+					},
+				},
+			)
+
+			c.Conn.WriteMessage(1, reconnectMsg) // Ignore err here because we're shutting down so it doesn't really matter
+		}
+	}
+
+	// Wait 30 seconds if reconnect, otherwise it'll execute immediately (0 second timer)
+	select {
+	case <-time.After(time.Second * time.Duration(timer)):
+		for _, c := range connections {
+			c.Conn.Close()
+		}
+
+		server.Shutdown(ctx)
+	}
+}
+
+func StartServer(port int, enableDebug bool, reconnectTestTimer int) {
 	debug = enableDebug
 
 	m := http.NewServeMux()
@@ -151,6 +213,18 @@ func StartServer(port int, enableDebug bool) {
 
 	go func() {
 		log.Print("Mock EventSub websocket server started")
+
+		go func() {
+			if reconnectTestTimer != 0 {
+				log.Printf("Reconnect testing enabled. Will be sent in %d seconds.", reconnectTestTimer)
+
+				select {
+				case <-time.After(time.Second * time.Duration(reconnectTestTimer)):
+					terminateServer(s, ctx, true)
+				}
+			}
+		}()
+
 		if err := s.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 			if err != http.ErrServerClosed {
 				log.Fatal(err)
@@ -171,15 +245,19 @@ func StartServer(port int, enableDebug bool) {
 }
 
 func RegisterHandlers(m *http.ServeMux) {
-	m.HandleFunc("/", home)
-	m.HandleFunc("/echo", echo)
+	m.HandleFunc("/debug", debugPageHandler)
+	m.HandleFunc("/eventsub", eventsubHandle)
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
-	homeTemplate.Execute(w, "wss://"+r.Host+"/echo")
+func debugPageHandler(w http.ResponseWriter, r *http.Request) {
+	// Set connection URL for future use
+	// TODO: Find an earlier spot for this. If this debug page is ever removed, then reconnection is broken due to lack of URL
+	connectionURL = "wss://" + r.Host + "/eventsub"
+
+	debugTemplate.Execute(w, connectionURL)
 }
 
-var homeTemplate = template.Must(template.New("").Parse(`
+var debugTemplate = template.Must(template.New("").Parse(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -208,7 +286,7 @@ window.addEventListener("load", function(evt) {
             ws = null;
         }
         ws.onmessage = function(evt) {
-            print("RESPONSE: " + evt.data);
+            print("RECEIVED: " + evt.data);
         }
         ws.onerror = function(evt) {
             print("ERROR: " + evt.data);
@@ -255,5 +333,6 @@ You can change the message and send multiple times.
 `))
 
 type WebsocketConnection struct {
-	ID string
+	ID   string
+	Conn *websocket.Conn
 }

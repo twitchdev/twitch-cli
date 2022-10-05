@@ -17,23 +17,24 @@ import (
 const websubDeprecationNotice = "Halt! It appears you are trying to use WebSub, which has been deprecated. For more information, see: https://discuss.dev.twitch.tv/t/deprecation-of-websub-based-webhooks/32152"
 
 var (
-	isAnonymous    bool
-	forwardAddress string
-	event          string
-	transport      string
-	fromUser       string
-	toUser         string
-	giftUser       string
-	eventID        string
-	secret         string
-	status         string
-	itemID         string
-	itemName       string
-	cost           int64
-	count          int
-	description    string
-	gameID         string
-	debug          bool
+	isAnonymous      bool
+	forwardAddress   string
+	event            string
+	transport        string
+	fromUser         string
+	toUser           string
+	giftUser         string
+	eventID          string
+	secret           string
+	status           string
+	itemID           string
+	itemName         string
+	cost             int64
+	count            int
+	description      string
+	gameID           string
+	debug            bool
+	wssReconnectTest int
 )
 
 var eventCmd = &cobra.Command{
@@ -83,6 +84,9 @@ var startWebsocketServerCmd = &cobra.Command{
 	Short:   "Starts a local websocket server at wss://localhost:8000",
 	Run:     startWebsocketServerCmdRun,
 	Example: `twitch event start-websocket-server`,
+	Aliases: []string{
+		"wss",
+	},
 }
 
 func init() {
@@ -123,6 +127,8 @@ func init() {
 	// start-websocket-server flags
 	startWebsocketServerCmd.Flags().IntVarP(&port, "port", "p", 8080, "Defines the port that the mock EventSub websocket server will run on.")
 	startWebsocketServerCmd.Flags().BoolVar(&debug, "debug", false, "Set on/off for debug messages for the EventSub WebSocket server.")
+	// TODO: This next flag is temporary, until I create a better way to test reconnecting.
+	startWebsocketServerCmd.Flags().IntVarP(&wssReconnectTest, "reconnect", "r", 0, "Used to test WebSocket Reconnect message. Sets delay (in seconds) from startup until the reconnect occurs.")
 }
 
 func triggerCmdRun(cmd *cobra.Command, args []string) {
@@ -240,5 +246,5 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 
 func startWebsocketServerCmdRun(cmd *cobra.Command, args []string) {
 	log.Printf("Starting mock EventSub WebSocket server on wss://localhost:%v", port)
-	mock_wss_server.StartServer(port, debug)
+	mock_wss_server.StartServer(port, debug, wssReconnectTest)
 }
