@@ -100,8 +100,15 @@ func RegisterHandlers(m *http.ServeMux) {
 func loggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%v %v", r.Method, r.URL.Path)
+
+		w.Header().Set("Access-Control-Allow-Headers", "*")
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(200)
+			return
+		}
 
 		next.ServeHTTP(w, r)
 	})
