@@ -19,6 +19,7 @@ var userMethodsSupported = map[string]bool{
 	http.MethodDelete: false,
 	http.MethodPatch:  false,
 	http.MethodPut:    true,
+	"OPTIONS": true,
 }
 
 var userScopesByMethod = map[string][]string{
@@ -27,6 +28,7 @@ var userScopesByMethod = map[string][]string{
 	http.MethodDelete: {},
 	http.MethodPatch:  {},
 	http.MethodPut:    {"user:edit"},
+	"OPTIONS": {},
 }
 
 type User struct {
@@ -61,6 +63,8 @@ func (e UsersEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
+		getUsers(w, r)
+	case "OPTIONS":
 		getUsers(w, r)
 	case http.MethodPut:
 		putUsers(w, r)
