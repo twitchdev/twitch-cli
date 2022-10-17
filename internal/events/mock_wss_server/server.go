@@ -92,14 +92,15 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 		WelcomeMessage{
 			Metadata: MessageMetadata{
 				MessageID:        util.RandomGUID(),
-				MessageType:      "websocket_welcome",
+				MessageType:      "session_welcome",
 				MessageTimestamp: time.Now().UTC().Format(time.RFC3339Nano),
 			},
 			Payload: WelcomeMessagePayload{
-				Websocket: WelcomeMessagePayloadWebsocket{
+				Session: WelcomeMessagePayloadSession{
 					ID:                             wsSrv.websocketId,
 					Status:                         "connected",
 					MinimumMessageFrequencySeconds: MINIMUM_MESSAGE_FREQUENCY_SECONDS,
+					ReconnectUrl:                   nil,
 					ConnectedAt:                    connectedAtTimestamp,
 				},
 			},
@@ -183,17 +184,16 @@ func activateReconnectTest(server http.Server, ctx context.Context) {
 			ReconnectMessage{
 				Metadata: MessageMetadata{
 					MessageID:        util.RandomGUID(),
-					MessageType:      "websocket_reconnect",
+					MessageType:      "session_reconnect",
 					MessageTimestamp: time.Now().UTC().Format(time.RFC3339Nano),
 				},
 				Payload: ReconnectMessagePayload{
-					Websocket: ReconnectMessagePayloadWebsocket{
+					Session: ReconnectMessagePayloadSession{
 						ID:                             wsSrv.websocketId,
 						Status:                         "reconnecting",
-						MinimumMessageFrequencySeconds: MINIMUM_MESSAGE_FREQUENCY_SECONDS,
-						Url:                            wsSrv.connectionUrl,
+						MinimumMessageFrequencySeconds: nil,
+						ReconnectUrl:                   wsSrv.connectionUrl,
 						ConnectedAt:                    c.connectedAtTimestamp,
-						ReconnectingAt:                 time.Now().UTC().Add(time.Second * 30).Format(time.RFC3339Nano),
 					},
 				},
 			},
@@ -308,6 +308,7 @@ func StartIndividualServer(port int, reconnectTestTimer int, m *http.ServeMux, c
 			}
 		}()
 
+		// TODO: Generate crt and key files
 		if err := s.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 			if err != http.ErrServerClosed {
 				log.Fatal(err)
