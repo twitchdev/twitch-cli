@@ -121,7 +121,9 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 			onCloseConnection(*wsSrv, conn)
 			break
 		}
-		log.Printf("recv: [%d] %s", mt, message)
+		if debug {
+			log.Printf("recv: [%d] %s", mt, message)
+		}
 		/*err = conn.WriteMessage(mt, message)
 		if err != nil {
 			log.Println("write:", err)
