@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"text/template"
 	"time"
@@ -310,14 +311,18 @@ func StartIndividualServer(port int, reconnectTestTimer int, m *http.ServeMux, c
 			}
 		}()
 
-		if err := s.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
+		home, _ := util.GetApplicationDir()
+		crtFile := filepath.Join(home, "localhost.crt")
+		keyFile := filepath.Join(home, "localhost.key")
+
+		if err := s.ListenAndServeTLS(crtFile, keyFile); err != nil {
 			if err != http.ErrServerClosed {
 				log.Fatalf(`%v
 ** You need to generate localhost.crt and localhost.key for this to work **
 ** Please run these commands (Note: you'll have a cert error in your web browser, but it'll still start): **
-	openssl genrsa -out localhost.key 2048
-	openssl req -new -x509 -sha256 -key localhost.key -out localhost.crt -days 3650`,
-					err)
+	openssl genrsa -out "%v" 2048
+	openssl req -new -x509 -sha256 -key "%v" -out "%v" -days 3650`,
+					err, keyFile, keyFile, crtFile)
 			}
 		}
 	}()
