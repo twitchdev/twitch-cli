@@ -310,10 +310,14 @@ func StartIndividualServer(port int, reconnectTestTimer int, m *http.ServeMux, c
 			}
 		}()
 
-		// TODO: Generate crt and key files
 		if err := s.ListenAndServeTLS("localhost.crt", "localhost.key"); err != nil {
 			if err != http.ErrServerClosed {
-				log.Fatal(err)
+				log.Fatalf(`%v
+** You need to generate localhost.crt and localhost.key for this to work **
+** Please run these commands (Note: you'll have a cert error in your web browser, but it'll still start): **
+	openssl genrsa -out localhost.key 2048
+	openssl req -new -x509 -sha256 -key localhost.key -out localhost.crt -days 3650`,
+					err)
 			}
 		}
 	}()
