@@ -6,6 +6,7 @@ require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/fatih/color v1.12.0
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/gorilla/websocket v1.5.0
 	github.com/hokaccha/go-prettyjson v0.0.0-20201222001619-a42f9ac2ec8e // indirect
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/lunixbochs/vtclean v1.0.0 // indirect

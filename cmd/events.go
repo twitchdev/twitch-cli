@@ -4,10 +4,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"net/url"
 
 	"github.com/spf13/cobra"
 	"github.com/twitchdev/twitch-cli/internal/events"
+	"github.com/twitchdev/twitch-cli/internal/events/mock_wss_server"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
 	"github.com/twitchdev/twitch-cli/internal/events/verify"
 )
@@ -15,22 +17,24 @@ import (
 const websubDeprecationNotice = "Halt! It appears you are trying to use WebSub, which has been deprecated. For more information, see: https://discuss.dev.twitch.tv/t/deprecation-of-websub-based-webhooks/32152"
 
 var (
-	isAnonymous    bool
-	forwardAddress string
-	event          string
-	transport      string
-	fromUser       string
-	toUser         string
-	giftUser       string
-	eventID        string
-	secret         string
-	status         string
-	itemID         string
-	itemName       string
-	cost           int64
-	count          int
-	description    string
-	gameID         string
+	isAnonymous      bool
+	forwardAddress   string
+	event            string
+	transport        string
+	fromUser         string
+	toUser           string
+	giftUser         string
+	eventID          string
+	secret           string
+	status           string
+	itemID           string
+	itemName         string
+	cost             int64
+	count            int
+	description      string
+	gameID           string
+	debug            bool
+	wssReconnectTest int
 )
 
 var eventCmd = &cobra.Command{
@@ -47,7 +51,7 @@ var triggerCmd = &cobra.Command{
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: events.ValidTriggers(),
 	Run:       triggerCmdRun,
-	Example:   `twitch trigger subscribe`,
+	Example:   `twitch event trigger subscribe`,
 	Aliases: []string{
 		"fire", "emit",
 	},
@@ -72,12 +76,22 @@ var retriggerCmd = &cobra.Command{
 	Use:     "retrigger",
 	Short:   "Refires events based on the event ID. Can be forwarded to the local webserver for event testing.",
 	Run:     retriggerCmdRun,
-	Example: `twitch trigger subscribe`,
+	Example: `twitch event retrigger subscribe`,
+}
+
+var startWebsocketServerCmd = &cobra.Command{
+	Use:     "start-websocket-server",
+	Short:   "Starts a local websocket server at wss://localhost:8000",
+	Run:     startWebsocketServerCmdRun,
+	Example: `twitch event start-websocket-server`,
+	Aliases: []string{
+		"wss",
+	},
 }
 
 func init() {
 	rootCmd.AddCommand(eventCmd)
-	eventCmd.AddCommand(triggerCmd, retriggerCmd, verifyCmd)
+	eventCmd.AddCommand(triggerCmd, retriggerCmd, verifyCmd, startWebsocketServerCmd)
 
 	// trigger flags
 	// flags for forwarding functionality/changing payloads
@@ -109,6 +123,12 @@ func init() {
 	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	verifyCmd.MarkFlagRequired("forward-address")
+
+	// start-websocket-server flags
+	startWebsocketServerCmd.Flags().IntVarP(&port, "port", "p", 8080, "Defines the port that the mock EventSub websocket server will run on.")
+	startWebsocketServerCmd.Flags().BoolVar(&debug, "debug", false, "Set on/off for debug messages for the EventSub WebSocket server.")
+	// TODO: This next flag is temporary, until I create a better way to test reconnecting.
+	startWebsocketServerCmd.Flags().IntVarP(&wssReconnectTest, "reconnect", "r", 0, "Used to test WebSocket Reconnect message. Sets delay (in seconds) from startup until the reconnect occurs.")
 }
 
 func triggerCmdRun(cmd *cobra.Command, args []string) {
@@ -222,4 +242,9 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		println(err.Error())
 		return
 	}
+}
+
+func startWebsocketServerCmdRun(cmd *cobra.Command, args []string) {
+	log.Printf("Starting mock EventSub WebSocket servers on wss://localhost:%v and wss://localhost:%v", port, port+1)
+	mock_wss_server.StartServer(port, debug, wssReconnectTest)
 }

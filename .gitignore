@@ -22,3 +22,8 @@ twitch-cli
 
 # junk files
 .DS_Store
+
+# SSL certs for HTTPS/WSS
+*.crt
+*.csr
+*.key
