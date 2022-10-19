@@ -230,7 +230,7 @@ func activateReconnectTest(server http.Server, ctx context.Context) {
 	}
 }
 
-func StartServer(port int, enableDebug bool, reconnectTestTimer int) {
+func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled bool) {
 	debug = enableDebug
 
 	m := http.NewServeMux()
@@ -259,16 +259,25 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int) {
 	ctx1 = context.WithValue(ctx1, "db", db)
 	ctx2 = context.WithValue(ctx2, "db", db)
 
-	wsServers[0] = &WebsocketServer{0, util.RandomGUID(), fmt.Sprintf("wss://localhost:%v/eventsub", port), []WebsocketConnection{}, false}
-	wsServers[1] = &WebsocketServer{1, util.RandomGUID(), fmt.Sprintf("wss://localhost:%v/eventsub", port+1), []WebsocketConnection{}, true}
+	wsSrv1Url := fmt.Sprintf("ws://localhost:%v/eventsub", port)
+	wsSrv2Url := fmt.Sprintf("ws://localhost:%v/eventsub", port+1)
+
+	// Change to WSS if SSL is enabled via flag
+	if sslEnabled {
+		wsSrv1Url = fmt.Sprintf("wss://localhost:%v/eventsub", port)
+		wsSrv2Url = fmt.Sprintf("wss://localhost:%v/eventsub", port+1)
+	}
+
+	wsServers[0] = &WebsocketServer{0, util.RandomGUID(), wsSrv1Url, []WebsocketConnection{}, false}
+	wsServers[1] = &WebsocketServer{1, util.RandomGUID(), wsSrv2Url, []WebsocketConnection{}, true}
 
 	RegisterHandlers(m)
 
 	stop := make(chan os.Signal)
 	signal.Notify(stop, os.Interrupt)
 
-	s1 := StartIndividualServer(port, reconnectTestTimer, m, ctx1)
-	s2 := StartIndividualServer(port+1, 0, m, ctx2) // Start second server, at a port above. Never has a reconnect timer
+	s1 := StartIndividualServer(port, reconnectTestTimer, sslEnabled, m, ctx1)
+	s2 := StartIndividualServer(port+1, 0, sslEnabled, m, ctx2) // Start second server, at a port above. Never has a reconnect timer
 
 	<-stop // Wait for ctrl + c
 
@@ -286,7 +295,7 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int) {
 	}
 }
 
-func StartIndividualServer(port int, reconnectTestTimer int, m *http.ServeMux, ctx context.Context) http.Server {
+func StartIndividualServer(port int, reconnectTestTimer int, sslEnabled bool, m *http.ServeMux, ctx context.Context) http.Server {
 	s := http.Server{
 		Addr:    fmt.Sprintf(":%v", port),
 		Handler: m,
@@ -311,18 +320,26 @@ func StartIndividualServer(port int, reconnectTestTimer int, m *http.ServeMux, c
 			}
 		}()
 
-		home, _ := util.GetApplicationDir()
-		crtFile := filepath.Join(home, "localhost.crt")
-		keyFile := filepath.Join(home, "localhost.key")
+		if sslEnabled { // Open HTTP server with HTTPS support
+			home, _ := util.GetApplicationDir()
+			crtFile := filepath.Join(home, "localhost.crt")
+			keyFile := filepath.Join(home, "localhost.key")
 
-		if err := s.ListenAndServeTLS(crtFile, keyFile); err != nil {
-			if err != http.ErrServerClosed {
-				log.Fatalf(`%v
-** You need to generate localhost.crt and localhost.key for this to work **
-** Please run these commands (Note: you'll have a cert error in your web browser, but it'll still start): **
-	openssl genrsa -out "%v" 2048
-	openssl req -new -x509 -sha256 -key "%v" -out "%v" -days 3650`,
-					err, keyFile, keyFile, crtFile)
+			if err := s.ListenAndServeTLS(crtFile, keyFile); err != nil {
+				if err != http.ErrServerClosed {
+					log.Fatalf(`%v
+	** You need to generate localhost.crt and localhost.key for this to work **
+	** Please run these commands (Note: you'll have a cert error in your web browser, but it'll still start): **
+		openssl genrsa -out "%v" 2048
+		openssl req -new -x509 -sha256 -key "%v" -out "%v" -days 3650`,
+						err, keyFile, keyFile, crtFile)
+				}
+			}
+		} else { // Open HTTP server without HTTPS support
+			if err := s.ListenAndServe(); err != nil {
+				if err != http.ErrServerClosed {
+					log.Fatalf("%v", err)
+				}
 			}
 		}
 	}()
