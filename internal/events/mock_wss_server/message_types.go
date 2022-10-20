@@ -79,3 +79,21 @@ type ReconnectMessagePayloadSession struct { // <3>
 	ReconnectUrl                   string `json:"reconnect_url"`
 	ConnectedAt                    string `json:"connected_at"`
 }
+
+/* ** Keepalive message **
+{ // <1>
+    "metadata": { // <MessageMetadata>
+        "message_id": "84c1e79a-2a4b-4c13-ba0b-4312293e9308",
+        "message_type": "session_keepalive",
+        "message_timestamp": "2019-11-16T10:11:12.123Z"
+    },
+    "payload": {} // struct{}
+}
+*/
+
+type KeepaliveMessage struct { // <1>
+	Metadata MessageMetadata         `json:"metadata"`
+	Payload  KeepaliveMessagePayload `json:"payload"`
+}
+
+type KeepaliveMessagePayload struct{}

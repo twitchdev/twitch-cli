@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strconv"
+	"sync"
 	"text/template"
 	"time"
 
@@ -25,8 +26,6 @@ import (
  * This is a const for now, but it may need to be a flag in the future. */
 const MINIMUM_MESSAGE_FREQUENCY_SECONDS = 10
 
-//var connectionURL string
-
 var upgrader = websocket.Upgrader{}
 var debug = false
 
@@ -34,17 +33,27 @@ var debug = false
 var wsServers = [2]*WebsocketServer{}
 
 type WebsocketServer struct {
-	serverId          int                   // Int representing the ID of the server (0, 1, 2, ...)
-	websocketId       string                // UUID of the websocket. Used for subscribing via EventSub
-	connectionUrl     string                // URL used to connect to the websocket. Used for reconnect messages
-	connections       []WebsocketConnection // Current clients connected to this websocket
-	deactivatedStatus bool                  // Boolean used for preventing connections/messages during deactivation; Used for reconnect testing
+	serverId          int                    // Int representing the ID of the server (0, 1, 2, ...)
+	websocketId       string                 // UUID of the websocket. Used for subscribing via EventSub
+	connectionUrl     string                 // URL used to connect to the websocket. Used for reconnect messages
+	connections       []*WebsocketConnection // Current clients connected to this websocket
+	deactivatedStatus bool                   // Boolean used for preventing connections/messages during deactivation; Used for reconnect testing
 }
 
 type WebsocketConnection struct {
 	clientId             string
 	Conn                 *websocket.Conn
+	mu                   sync.Mutex
 	connectedAtTimestamp string
+	pingLoopChan         chan struct{}
+	kaLoopChan           chan struct{}
+	closed               bool
+}
+
+func (wc *WebsocketConnection) SendMessage(messageType int, data []byte) error {
+	wc.mu.Lock()
+	defer wc.mu.Unlock()
+	return wc.Conn.WriteMessage(messageType, data)
 }
 
 func eventsubHandle(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +71,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 	// Connection sucessful. WebSocket is open.
 
 	serverId, _ := strconv.Atoi(r.Context().Value("serverId").(string))
-	wsSrv := wsServers[serverId]
+	wsSrv := *wsServers[serverId]
 
 	// Or is it? Check for websocket set to deactivated (due to reconnect), and kick them out if so
 	if wsSrv.deactivatedStatus {
@@ -78,15 +87,14 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 	conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
 
 	// Add to websocket connection list.
-	wsSrv.connections = append(
-		wsSrv.connections,
-		WebsocketConnection{
-			clientId:             util.RandomGUID(),
-			Conn:                 conn,
-			connectedAtTimestamp: connectedAtTimestamp,
-		},
-	)
-	printConnections(*wsSrv)
+	wc := &WebsocketConnection{
+		clientId:             util.RandomGUID(),
+		Conn:                 conn,
+		connectedAtTimestamp: connectedAtTimestamp,
+		closed:               false,
+	}
+	wsSrv.connections = append(wsSrv.connections, wc)
+	printConnections(wsSrv)
 
 	// Send "websocket_welcome" message
 	welcomeMsg, _ := json.Marshal(
@@ -107,11 +115,68 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 			},
 		},
 	)
-	conn.WriteMessage(1, welcomeMsg)
-
+	wc.SendMessage(websocket.TextMessage, welcomeMsg)
 	if debug {
 		log.Printf("[DEBUG] Write: %s", welcomeMsg)
 	}
+
+	// TODO: Look to implement a way to shut off pings. This would be used specifically for testing the timeout feature.
+	// Set up ping/pong handling
+	pingTicker := time.NewTicker(5 * time.Second)
+	wc.pingLoopChan = make(chan struct{}) // Also used for keepalive
+	go func() {
+		// Set pong handler
+		// Weirdly, pongs are not seen as messages read by conn.ReadMessage, so we have to reset the deadline manually
+		conn.SetPongHandler(func(string) error {
+			conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
+			return nil
+		})
+
+		// Ping loop
+		for {
+			select {
+			case <-wc.pingLoopChan:
+				pingTicker.Stop()
+				return
+			case <-pingTicker.C:
+				err := wc.SendMessage(websocket.PingMessage, []byte{})
+				if err != nil {
+					onCloseConnection(*wsServers[1], wc)
+				}
+			}
+		}
+	}()
+
+	// Set up keepalive loop
+	kaTicker := time.NewTicker(10 * time.Second)
+	wc.kaLoopChan = make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-wc.kaLoopChan:
+				kaTicker.Stop()
+			case <-kaTicker.C:
+				keepAliveMsg, _ := json.Marshal(
+					KeepaliveMessage{
+						Metadata: MessageMetadata{
+							MessageID:        util.RandomGUID(),
+							MessageType:      "session_keepalive",
+							MessageTimestamp: time.Now().UTC().Format(time.RFC3339Nano),
+						},
+						Payload: KeepaliveMessagePayload{},
+					},
+				)
+				err := wc.SendMessage(websocket.TextMessage, keepAliveMsg)
+				if err != nil {
+					onCloseConnection(*wsServers[1], wc)
+				}
+
+				if debug {
+					log.Printf("[DEBUG] Write: %s", keepAliveMsg)
+				}
+			}
+		}
+	}()
 
 	// TODO: Read messages
 	for {
@@ -119,13 +184,13 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
-			onCloseConnection(*wsSrv, conn)
+			onCloseConnection(wsSrv, wc)
 			break
 		}
 		if debug {
 			log.Printf("recv: [%d] %s", mt, message)
 		}
-		/*err = conn.WriteMessage(mt, message)
+		/*err = wc.SendMessage(mt, message)
 		if err != nil {
 			log.Println("write:", err)
 			onCloseConnection(websocketId)
@@ -134,7 +199,12 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func onCloseConnection(wsSrv WebsocketServer, conn *websocket.Conn) {
+func onCloseConnection(wsSrv WebsocketServer, wc *WebsocketConnection) {
+	// Close ping loop chan
+	wc.closed = true
+	close(wc.pingLoopChan)
+	close(wc.kaLoopChan)
+
 	// Remove from list
 	c := 0
 	for i := 0; i < len(wsSrv.connections); i++ {
@@ -202,7 +272,7 @@ func activateReconnectTest(server http.Server, ctx context.Context) {
 			},
 		)
 
-		err := c.Conn.WriteMessage(1, reconnectMsg) // Ignore err here because we're shutting down so it doesn't really matter
+		err := c.SendMessage(websocket.TextMessage, reconnectMsg)
 		if err != nil {
 			log.Printf("ERROR (clientId %v): %v", c.clientId, err)
 		} else {
@@ -268,8 +338,8 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 		wsSrv2Url = fmt.Sprintf("wss://localhost:%v/eventsub", port+1)
 	}
 
-	wsServers[0] = &WebsocketServer{0, util.RandomGUID(), wsSrv1Url, []WebsocketConnection{}, false}
-	wsServers[1] = &WebsocketServer{1, util.RandomGUID(), wsSrv2Url, []WebsocketConnection{}, true}
+	wsServers[0] = &WebsocketServer{0, util.RandomGUID(), wsSrv1Url, []*WebsocketConnection{}, false}
+	wsServers[1] = &WebsocketServer{1, util.RandomGUID(), wsSrv2Url, []*WebsocketConnection{}, true}
 
 	RegisterHandlers(m)
 
