@@ -33,6 +33,7 @@ type TriggerParameters struct {
 	Description    string
 	ItemName       string
 	GameID         string
+	EventID        string // Also serves as subscription ID. See https://github.com/twitchdev/twitch-cli/issues/184
 }
 
 type TriggerResponse struct {
@@ -59,8 +60,13 @@ func Fire(p TriggerParameters) (string, error) {
 	if p.GameID == "" {
 		p.GameID = fmt.Sprint(util.RandomInt(10 * 1000))
 	}
+
+	if p.EventID == "" {
+		p.EventID = util.RandomGUID()
+	}
+
 	eventParamaters := events.MockEventParameters{
-		ID:           util.RandomGUID(),
+		ID:           p.EventID,
 		Trigger:      p.Event,
 		Transport:    p.Transport,
 		FromUserID:   p.FromUser,

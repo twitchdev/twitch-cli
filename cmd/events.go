@@ -112,6 +112,7 @@ func init() {
 	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of bits or channel points redeemed/used in the event.")
 	triggerCmd.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 	triggerCmd.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
+	triggerCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
@@ -161,6 +162,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 	for i := 0; i < count; i++ {
 		res, err := trigger.Fire(trigger.TriggerParameters{
 			Event:          args[0],
+			EventID:        eventID,
 			Transport:      transport,
 			ForwardAddress: forwardAddress,
 			FromUser:       fromUser,
