@@ -71,7 +71,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 	// Connection sucessful. WebSocket is open.
 
 	serverId, _ := strconv.Atoi(r.Context().Value("serverId").(string))
-	wsSrv := *wsServers[serverId]
+	wsSrv := wsServers[serverId]
 
 	// Or is it? Check for websocket set to deactivated (due to reconnect), and kick them out if so
 	if wsSrv.deactivatedStatus {
@@ -94,7 +94,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 		closed:               false,
 	}
 	wsSrv.connections = append(wsSrv.connections, wc)
-	printConnections(wsSrv)
+	printConnections(wsSrv.serverId)
 
 	// Send "websocket_welcome" message
 	welcomeMsg, _ := json.Marshal(
@@ -141,7 +141,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 			case <-pingTicker.C:
 				err := wc.SendMessage(websocket.PingMessage, []byte{})
 				if err != nil {
-					onCloseConnection(*wsServers[1], wc)
+					onCloseConnection(wsSrv.serverId, wc)
 				}
 			}
 		}
@@ -168,7 +168,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 				)
 				err := wc.SendMessage(websocket.TextMessage, keepAliveMsg)
 				if err != nil {
-					onCloseConnection(*wsServers[1], wc)
+					onCloseConnection(wsSrv.serverId, wc)
 				}
 
 				if debug {
@@ -184,7 +184,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
-			onCloseConnection(wsSrv, wc)
+			onCloseConnection(wsSrv.serverId, wc)
 			break
 		}
 		if debug {
@@ -199,11 +199,15 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func onCloseConnection(wsSrv WebsocketServer, wc *WebsocketConnection) {
+func onCloseConnection(serverId int, wc *WebsocketConnection) {
 	// Close ping loop chan
+	if !wc.closed {
+		close(wc.pingLoopChan)
+		close(wc.kaLoopChan)
+	}
 	wc.closed = true
-	close(wc.pingLoopChan)
-	close(wc.kaLoopChan)
+
+	wsSrv := wsServers[serverId]
 
 	// Remove from list
 	c := 0
@@ -216,18 +220,19 @@ func onCloseConnection(wsSrv WebsocketServer, wc *WebsocketConnection) {
 	}
 	wsSrv.connections = append(wsSrv.connections[:c], wsSrv.connections[c+1:]...)
 
-	printConnections(wsSrv)
+	printConnections(wsSrv.serverId)
 }
 
-func printConnections(wsSrv WebsocketServer) {
+func printConnections(serverId int) {
 	currentConnections := ""
+	wsSrv := wsServers[serverId]
 	for _, s := range wsSrv.connections {
 		currentConnections += s.clientId + ", "
 	}
 	if currentConnections != "" {
 		currentConnections = string(currentConnections[:len(currentConnections)-2])
 	}
-	log.Printf("[Server %v] Connections: (%d) [ %s ]", wsSrv.serverId, len(wsSrv.connections), currentConnections)
+	log.Printf("[Server %v] Connections: (%d) [ %s ]", serverId, len(wsSrv.connections), currentConnections)
 }
 
 func activateReconnectTest(server http.Server, ctx context.Context) {
@@ -249,7 +254,9 @@ func activateReconnectTest(server http.Server, ctx context.Context) {
 	wsSrv.deactivatedStatus = true     // This server
 	wsAltSrv.deactivatedStatus = false // Other server; We gotta turn it on to accept connections and whatnot
 
-	log.Printf("Connections: %v", len(wsSrv.connections))
+	if debug {
+		log.Printf("Connections at time of close: %v", len(wsSrv.connections))
+	}
 
 	// Send reconnect notices
 	for _, c := range wsSrv.connections {
@@ -460,17 +467,17 @@ window.addEventListener("load", function(evt) {
 
         ws = new WebSocket(wsUrl);
         ws.onopen = function(evt) {
-            print("OPEN");
+            print("OPEN - " + ws.url);
         }
         ws.onclose = function(evt) {
-            print("CLOSE");
+            print("CLOSE - " + ws.url);
             ws = null;
         }
         ws.onmessage = function(evt) {
-            print("RECEIVED: " + evt.data);
+            print("[RECEIVED / " + new Date().toISOString() + "]: " + evt.data);
         }
         ws.onerror = function(evt) {
-            print("ERROR: " + evt.data);
+            print("[ERROR / " + new Date().toISOString() + "]: " + evt.data);
             console.error("ERROR", evt);
         }
         return false;
@@ -490,6 +497,9 @@ window.addEventListener("load", function(evt) {
         ws.close();
         return false;
     };
+	document.getElementById("clear").onclick = function(evt) {
+		output.innerHTML = "";
+	}
 });
 </script>
 </head>
@@ -505,7 +515,8 @@ You can change the message and send multiple times.
 <button id="open">Open</button>
 <button id="close">Close</button>
 <p><input id="input" type="text" value="Hello world!">
-<button id="send">Send</button>
+<button id="send">Send</button><br><br>
+<button id="clear">Clear</button>
 </form>
 </td><td valign="top" width="50%">
 <div id="output" style="max-height: 70vh;overflow-y: scroll;"></div>
