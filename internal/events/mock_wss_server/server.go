@@ -33,11 +33,13 @@ var debug = false
 var wsServers = [2]*WebsocketServer{}
 
 type WebsocketServer struct {
-	serverId          int                    // Int representing the ID of the server (0, 1, 2, ...)
-	websocketId       string                 // UUID of the websocket. Used for subscribing via EventSub
-	connectionUrl     string                 // URL used to connect to the websocket. Used for reconnect messages
-	connections       []*WebsocketConnection // Current clients connected to this websocket
-	deactivatedStatus bool                   // Boolean used for preventing connections/messages during deactivation; Used for reconnect testing
+	serverId             int                    // Int representing the ID of the server (0, 1, 2, ...)
+	websocketId          string                 // UUID of the websocket. Used for subscribing via EventSub
+	connectionUrl        string                 // URL used to connect to the websocket. Used for reconnect messages
+	connections          []*WebsocketConnection // Current clients connected to this websocket
+	deactivatedStatus    bool                   // Boolean used for preventing connections/messages during deactivation; Used for reconnect testing
+	reconnectTestTimeout int                    // Timeout for reconnect testing after first client connects; 0 if reconnect testing not enabled.
+	firstClientConnected bool                   // Whether or not the first client has connected (used for reconnect testing)
 }
 
 type WebsocketConnection struct {
@@ -78,6 +80,22 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Client trying to connect while websocket in reconnect timeout phase. Disconnecting them.")
 		conn.Close()
 		return
+	}
+
+	// Activate reconnect testing upon first client connection
+	if !wsSrv.firstClientConnected {
+		wsSrv.firstClientConnected = true
+
+		if wsSrv.reconnectTestTimeout != 0 {
+			go func() {
+				log.Printf("First client connected; Reconnect testing enabled. Notices will be sent in %d seconds.", wsSrv.reconnectTestTimeout)
+
+				select {
+				case <-time.After(time.Second * time.Duration(wsSrv.reconnectTestTimeout)):
+					activateReconnectTest(r.Context())
+				}
+			}()
+		}
 	}
 
 	// TODO: Decline websocket if it reached 100 connections from the same application access token
@@ -235,7 +253,7 @@ func printConnections(serverId int) {
 	log.Printf("[Server %v] Connections: (%d) [ %s ]", serverId, len(wsSrv.connections), currentConnections)
 }
 
-func activateReconnectTest(server http.Server, ctx context.Context) {
+func activateReconnectTest(ctx context.Context) {
 	timer := 30 // 30 seconds, as used by Twitch
 
 	serverId, _ := strconv.Atoi(ctx.Value("serverId").(string))
@@ -253,6 +271,7 @@ func activateReconnectTest(server http.Server, ctx context.Context) {
 	// Stop processing new messages
 	wsSrv.deactivatedStatus = true     // This server
 	wsAltSrv.deactivatedStatus = false // Other server; We gotta turn it on to accept connections and whatnot
+	log.Printf("Server \"not accepting connections\" status: [Server 0: %v, Server 1: %v]", wsServers[0].deactivatedStatus, wsServers[1].deactivatedStatus)
 
 	if debug {
 		log.Printf("Connections at time of close: %v", len(wsSrv.connections))
@@ -288,8 +307,7 @@ func activateReconnectTest(server http.Server, ctx context.Context) {
 	}
 
 	log.Printf("Reconnect notices sent for server %v", serverId)
-	log.Printf("Server \"not accepting connections\" status: [Server 0: %v, Server 1: %v]", wsServers[0].deactivatedStatus, wsServers[1].deactivatedStatus)
-	log.Printf("Use this URL for connections: %v", wsAltSrv.connectionUrl)
+	log.Printf("Use this new URL for connections: %v", wsAltSrv.connectionUrl)
 
 	// TODO: Transfer subscriptions to the other websocket server.
 
@@ -345,8 +363,24 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 		wsSrv2Url = fmt.Sprintf("wss://localhost:%v/eventsub", port+1)
 	}
 
-	wsServers[0] = &WebsocketServer{0, util.RandomGUID(), wsSrv1Url, []*WebsocketConnection{}, false}
-	wsServers[1] = &WebsocketServer{1, util.RandomGUID(), wsSrv2Url, []*WebsocketConnection{}, true}
+	wsServers[0] = &WebsocketServer{
+		serverId:             0,
+		websocketId:          util.RandomGUID(),
+		connectionUrl:        wsSrv1Url,
+		connections:          []*WebsocketConnection{},
+		deactivatedStatus:    false,
+		reconnectTestTimeout: reconnectTestTimer,
+		firstClientConnected: false,
+	}
+	wsServers[1] = &WebsocketServer{
+		serverId:             1,
+		websocketId:          util.RandomGUID(),
+		connectionUrl:        wsSrv2Url,
+		connections:          []*WebsocketConnection{},
+		deactivatedStatus:    true, // 2nd server is deactivated by default. Will reactivate for reconnect testing.
+		reconnectTestTimeout: 0,    // No reconnect testing
+		firstClientConnected: false,
+	}
 
 	RegisterHandlers(m)
 
@@ -385,17 +419,6 @@ func StartIndividualServer(port int, reconnectTestTimer int, sslEnabled bool, m 
 
 	go func() {
 		log.Printf("Mock EventSub websocket server started on port %d", port)
-
-		go func() {
-			if reconnectTestTimer != 0 {
-				log.Printf("Reconnect testing enabled. Will be sent in %d seconds.", reconnectTestTimer)
-
-				select {
-				case <-time.After(time.Second * time.Duration(reconnectTestTimer)):
-					activateReconnectTest(s, ctx)
-				}
-			}
-		}()
 
 		if sslEnabled { // Open HTTP server with HTTPS support
 			home, _ := util.GetApplicationDir()
