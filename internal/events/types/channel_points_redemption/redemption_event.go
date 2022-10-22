@@ -4,7 +4,6 @@ package channel_points_redemption
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
@@ -27,7 +26,6 @@ var triggerMapping = map[string]map[string]string{
 type Event struct{}
 
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
-	tNow := util.GetTimestamp().Format(time.RFC3339Nano)
 	var event []byte
 	var err error
 
@@ -63,7 +61,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: tNow,
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.RedemptionEventSubEvent{
 				ID:                   params.ID,
@@ -81,7 +79,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Cost:   params.Cost,
 					Prompt: "Redeem Your Test Reward from CLI",
 				},
-				RedeemedAt: tNow,
+				RedeemedAt: params.Timestamp,
 			},
 		}
 

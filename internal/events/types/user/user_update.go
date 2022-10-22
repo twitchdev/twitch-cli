@@ -4,11 +4,9 @@ package user_update
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 var transportsSupported = map[string]bool{
@@ -24,33 +22,33 @@ var triggerMapping = map[string]map[string]string{
 
 type Event struct{}
 
-func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResponse, error) {
+func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
 
-	switch p.Transport {
+	switch params.Transport {
 	case models.TransportEventSub:
 		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
-				ID:      p.ID,
+				ID:      params.ID,
 				Status:  "enabled",
 				Type:    "user.update",
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
-					UserID: p.ToUserID,
+					UserID: params.ToUserID,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.UserUpdateEventSubEvent{
-				UserID:      p.ToUserID,
-				UserLogin:   p.ToUserName,
-				UserName:    p.ToUserName,
-				Description: p.Description,
+				UserID:      params.ToUserID,
+				UserLogin:   params.ToUserName,
+				UserName:    params.ToUserName,
+				Description: params.Description,
 			},
 		}
 
@@ -63,9 +61,9 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 	}
 
 	return events.MockEventResponse{
-		ID:     p.ID,
+		ID:     params.ID,
 		JSON:   event,
-		ToUser: p.ToUserID,
+		ToUser: params.ToUserID,
 	}, nil
 }
 

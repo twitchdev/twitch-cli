@@ -4,11 +4,9 @@ package follow
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 var transportsSupported = map[string]bool{
@@ -24,36 +22,36 @@ var triggerMapping = map[string]map[string]string{
 
 type Event struct{}
 
-func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResponse, error) {
+func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
 
-	switch p.Transport {
+	switch params.Transport {
 	case models.TransportEventSub:
 		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
-				ID:      p.ID,
+				ID:      params.ID,
 				Status:  "enabled",
 				Type:    "channel.follow",
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
-					BroadcasterUserID: p.ToUserID,
+					BroadcasterUserID: params.ToUserID,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.FollowEventSubEvent{
-				UserID:               p.FromUserID,
-				UserLogin:            p.FromUserName,
-				UserName:             p.FromUserName,
-				BroadcasterUserID:    p.ToUserID,
-				BroadcasterUserLogin: p.ToUserID,
-				BroadcasterUserName:  p.ToUserName,
-				FollowedAt:           util.GetTimestamp().Format(time.RFC3339Nano),
+				UserID:               params.FromUserID,
+				UserLogin:            params.FromUserName,
+				UserName:             params.FromUserName,
+				BroadcasterUserID:    params.ToUserID,
+				BroadcasterUserLogin: params.ToUserID,
+				BroadcasterUserName:  params.ToUserName,
+				FollowedAt:           params.Timestamp,
 			},
 		}
 
@@ -66,10 +64,10 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 	}
 
 	return events.MockEventResponse{
-		ID:       p.ID,
+		ID:       params.ID,
 		JSON:     event,
-		FromUser: p.FromUserID,
-		ToUser:   p.ToUserID,
+		FromUser: params.FromUserID,
+		ToUser:   params.ToUserID,
 	}, nil
 }
 

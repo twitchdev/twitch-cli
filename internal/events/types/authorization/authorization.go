@@ -4,7 +4,6 @@ package authorization
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
@@ -52,7 +51,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      1,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.AuthorizationRevokeEvent{
 				ClientID:  clientID,

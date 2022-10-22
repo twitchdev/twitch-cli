@@ -38,6 +38,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	localGoal := util.RandomInt(10*100*100) + localTotal
 	localProgress := localTotal - util.RandomInt(100)
 
+	tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+
 	switch params.Transport {
 	case models.TransportEventSub:
 		body := models.HypeTrainEventSubResponse{
@@ -54,7 +56,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.HypeTrainEventSubEvent{
 				ID:                   params.ID,
@@ -87,8 +89,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					UserNameWhoMadeContribution:  "cli_user2",
 					UserLoginWhoMadeContribution: "cli_user2",
 				},
-				StartedAtTimestamp: util.GetTimestamp().Format(time.RFC3339Nano),
-				ExpiresAtTimestamp: util.GetTimestamp().Add(5 * time.Minute).Format(time.RFC3339Nano),
+				StartedAtTimestamp: params.Timestamp,
+				ExpiresAtTimestamp: tNow.Add(5 * time.Minute).Format(time.RFC3339Nano),
 			},
 		}
 		if params.Trigger == "hype-train-begin" {
@@ -98,13 +100,13 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			body.Event.Level = localLevel
 		}
 		if params.Trigger == "hype-train-end" {
-			body.Event.CooldownEndsAtTimestamp = util.GetTimestamp().Add(1 * time.Hour).Format(time.RFC3339Nano)
-			body.Event.EndedAtTimestamp = util.GetTimestamp().Format(time.RFC3339Nano)
+			body.Event.CooldownEndsAtTimestamp = tNow.Add(1 * time.Hour).Format(time.RFC3339Nano)
+			body.Event.EndedAtTimestamp = params.Timestamp
 			body.Event.ExpiresAtTimestamp = ""
 			body.Event.Goal = 0
 			body.Event.Level = localLevel
 			body.Event.Progress = nil
-			body.Event.StartedAtTimestamp = util.GetTimestamp().Add(5 * -time.Minute).Format(time.RFC3339Nano)
+			body.Event.StartedAtTimestamp = tNow.Add(5 * -time.Minute).Format(time.RFC3339Nano)
 		}
 		event, err = json.Marshal(body)
 		if err != nil {
