@@ -17,11 +17,12 @@ func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
 	params := *&events.MockEventParameters{
-		ToUserID:    user,
-		Description: "Twitch Subscriber Goal",
-		Transport:   models.TransportEventSub,
-		Trigger:     "goal-begin",
-		EventStatus: "subscriber",
+		ToUserID:           user,
+		Description:        "Twitch Subscriber Goal",
+		Transport:          models.TransportEventSub,
+		Trigger:            "goal-begin",
+		SubscriptionStatus: "enabled",
+		EventStatus:        "subscriber",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -36,10 +37,11 @@ func TestEventSub(t *testing.T) {
 	a.Equal("Twitch Subscriber Goal", body.Event.Description, "Expected from goal type %v, got %v", "Twitch Subscriber Goal", body.Event.Type)
 
 	params = *&events.MockEventParameters{
-		ToUserID:    user,
-		Description: "Twitch Follower Goal",
-		Transport:   models.TransportEventSub,
-		Trigger:     "goal-progress",
+		ToUserID:           user,
+		Description:        "Twitch Follower Goal",
+		Transport:          models.TransportEventSub,
+		Trigger:            "goal-progress",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
@@ -52,10 +54,11 @@ func TestEventSub(t *testing.T) {
 	a.Equal(user, body.Event.BroadcasterUserID, "Expected from user %v, got %v", r.ToUser, body.Event.BroadcasterUserID)
 
 	params = *&events.MockEventParameters{
-		ToUserID:    user,
-		Description: "Twitch Follower Goal",
-		Transport:   models.TransportEventSub,
-		Trigger:     "goal-end",
+		ToUserID:           user,
+		Description:        "Twitch Follower Goal",
+		Transport:          models.TransportEventSub,
+		Trigger:            "goal-end",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
