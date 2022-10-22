@@ -21,7 +21,7 @@ func TestEventSub(t *testing.T) {
 		Description: "Twitch Subscriber Goal",
 		Transport:   models.TransportEventSub,
 		Trigger:     "goal-begin",
-		Status:      "subscriber",
+		EventStatus: "subscriber",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
