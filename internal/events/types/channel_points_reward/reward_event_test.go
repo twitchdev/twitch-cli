@@ -18,14 +18,15 @@ func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
-		Transport:  models.TransportEventSub,
-		Trigger:    "add-redemption",
-		ToUserID:   toUser,
-		FromUserID: fromUser,
-		Status:     "tested",
-		ItemID:     "12345678-1234-abcd-5678-000000000000",
-		Cost:       1337,
-		ItemName:   "Testing",
+		Transport:          models.TransportEventSub,
+		Trigger:            "add-redemption",
+		SubscriptionStatus: "enabled",
+		ToUserID:           toUser,
+		FromUserID:         fromUser,
+		EventStatus:        "tested",
+		ItemID:             "12345678-1234-abcd-5678-000000000000",
+		Cost:               1337,
+		ItemName:           "Testing",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -44,10 +45,11 @@ func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  "fake_transport",
-		Trigger:    "add-reward",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          "fake_transport",
+		Trigger:            "add-reward",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err := Event{}.GenerateEvent(params)

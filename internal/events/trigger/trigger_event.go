@@ -5,6 +5,7 @@ package trigger
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -17,22 +18,23 @@ import (
 
 // TriggerParameters defines the parameters used to emit an event.
 type TriggerParameters struct {
-	Event          string
-	Transport      string
-	IsAnonymous    bool
-	FromUser       string
-	ToUser         string
-	GiftUser       string
-	Status         string
-	ItemID         string
-	Cost           int64
-	ForwardAddress string
-	Secret         string
-	Verbose        bool
-	Count          int
-	Description    string
-	ItemName       string
-	GameID         string
+	Event              string
+	Transport          string
+	IsAnonymous        bool
+	FromUser           string
+	ToUser             string
+	GiftUser           string
+	EventStatus        string
+	SubscriptionStatus string
+	ItemID             string
+	Cost               int64
+	ForwardAddress     string
+	Secret             string
+	Verbose            bool
+	Count              int
+	Description        string
+	ItemName           string
+	GameID             string
 }
 
 type TriggerResponse struct {
@@ -60,20 +62,21 @@ func Fire(p TriggerParameters) (string, error) {
 		p.GameID = fmt.Sprint(util.RandomInt(10 * 1000))
 	}
 	eventParamaters := events.MockEventParameters{
-		ID:           util.RandomGUID(),
-		Trigger:      p.Event,
-		Transport:    p.Transport,
-		FromUserID:   p.FromUser,
-		FromUserName: "testFromUser",
-		ToUserID:     p.ToUser,
-		ToUserName:   "testBroadcaster",
-		IsAnonymous:  p.IsAnonymous,
-		Cost:         p.Cost,
-		Status:       p.Status,
-		ItemID:       p.ItemID,
-		Description:  p.Description,
-		ItemName:     p.ItemName,
-		GameID:       p.GameID,
+		ID:                 util.RandomGUID(),
+		Trigger:            p.Event,
+		Transport:          p.Transport,
+		FromUserID:         p.FromUser,
+		FromUserName:       "testFromUser",
+		ToUserID:           p.ToUser,
+		ToUserName:         "testBroadcaster",
+		IsAnonymous:        p.IsAnonymous,
+		Cost:               p.Cost,
+		EventStatus:        p.EventStatus,
+		ItemID:             p.ItemID,
+		Description:        p.Description,
+		ItemName:           p.ItemName,
+		GameID:             p.GameID,
+		SubscriptionStatus: p.SubscriptionStatus,
 	}
 
 	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
@@ -114,6 +117,14 @@ func Fire(p TriggerParameters) (string, error) {
 	if topic == "" && e.GetEventSubAlias(p.Event) != "" {
 		topic = p.Event
 	}
+
+	messageType := EventSubMessageTypeNotification
+	// Set to "revocation" if SubscriptionStatus is not set to "enabled"
+	// We don't have to worry about "webhook_callback_verification" in this bit of code, since it's an entirely different command. All this code is from "event trigger".
+	if !strings.EqualFold(p.SubscriptionStatus, "enabled") {
+		messageType = EventSubMessageTypeRevocation
+	}
+
 	if p.ForwardAddress != "" {
 		resp, err := ForwardEvent(ForwardParamters{
 			ID:                  resp.ID,
@@ -122,7 +133,7 @@ func Fire(p TriggerParameters) (string, error) {
 			Secret:              p.Secret,
 			ForwardAddress:      p.ForwardAddress,
 			Event:               topic,
-			Type:                EventSubMessageTypeNotification,
+			Type:                messageType,
 			SubscriptionVersion: e.SubscriptionVersion(),
 		})
 		if err != nil {

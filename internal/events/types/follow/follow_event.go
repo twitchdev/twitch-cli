@@ -4,6 +4,7 @@ package follow
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
@@ -24,20 +25,20 @@ var triggerMapping = map[string]map[string]string{
 
 type Event struct{}
 
-func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResponse, error) {
+func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
 
-	switch p.Transport {
+	switch params.Transport {
 	case models.TransportEventSub:
 		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
-				ID:      p.ID,
-				Status:  "enabled",
+				ID:      params.ID,
+				Status:  params.SubscriptionStatus,
 				Type:    "channel.follow",
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
-					BroadcasterUserID: p.ToUserID,
+					BroadcasterUserID: params.ToUserID,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
@@ -47,12 +48,12 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 			Event: models.FollowEventSubEvent{
-				UserID:               p.FromUserID,
-				UserLogin:            p.FromUserName,
-				UserName:             p.FromUserName,
-				BroadcasterUserID:    p.ToUserID,
-				BroadcasterUserLogin: p.ToUserID,
-				BroadcasterUserName:  p.ToUserName,
+				UserID:               params.FromUserID,
+				UserLogin:            params.FromUserName,
+				UserName:             params.FromUserName,
+				BroadcasterUserID:    params.ToUserID,
+				BroadcasterUserLogin: params.ToUserID,
+				BroadcasterUserName:  params.ToUserName,
 				FollowedAt:           util.GetTimestamp().Format(time.RFC3339Nano),
 			},
 		}
@@ -61,15 +62,31 @@ func (e Event) GenerateEvent(p events.MockEventParameters) (events.MockEventResp
 		if err != nil {
 			return events.MockEventResponse{}, err
 		}
+
+		// Delete event info if Subscription.Status is not set to "enabled"
+		if !strings.EqualFold(params.SubscriptionStatus, "enabled") {
+			var i interface{}
+			if err := json.Unmarshal([]byte(event), &i); err != nil {
+				return events.MockEventResponse{}, err
+			}
+			if m, ok := i.(map[string]interface{}); ok {
+				delete(m, "event") // Matches JSON key defined in body variable above
+			}
+
+			event, err = json.Marshal(i)
+			if err != nil {
+				return events.MockEventResponse{}, err
+			}
+		}
 	default:
 		return events.MockEventResponse{}, nil
 	}
 
 	return events.MockEventResponse{
-		ID:       p.ID,
+		ID:       params.ID,
 		JSON:     event,
-		FromUser: p.FromUserID,
-		ToUser:   p.ToUserID,
+		FromUser: params.FromUserID,
+		ToUser:   params.ToUserID,
 	}, nil
 }
 

@@ -18,10 +18,11 @@ func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
 	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
-		Trigger:    "poll-begin",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "poll-begin",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -34,10 +35,11 @@ func TestEventSub(t *testing.T) {
 	a.Empty(body.Event.EndedAt)
 
 	params = *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
-		Trigger:    "poll-progress",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "poll-progress",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
@@ -50,10 +52,11 @@ func TestEventSub(t *testing.T) {
 	a.Empty(body.Event.EndedAt)
 
 	params = *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
-		Trigger:    "poll-end",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "poll-end",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
