@@ -19,11 +19,12 @@ func TestEventSub(t *testing.T) {
 	ten := 10
 
 	params := *&events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
-		Trigger:    "subscribe-message",
-		Cost:       int64(ten),
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "subscribe-message",
+		SubscriptionStatus: "enabled",
+		Cost:               int64(ten),
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -36,12 +37,13 @@ func TestEventSub(t *testing.T) {
 	a.GreaterOrEqual(body.Event.CumulativeMonths, 10)
 
 	params = *&events.MockEventParameters{
-		FromUserID:  fromUser,
-		ToUserID:    toUser,
-		Transport:   models.TransportEventSub,
-		Trigger:     "subscribe-message",
-		Cost:        int64(ten),
-		IsAnonymous: true,
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "subscribe-message",
+		SubscriptionStatus: "enabled",
+		Cost:               int64(ten),
+		IsAnonymous:        true,
 	}
 
 	r, err = Event{}.GenerateEvent(params)

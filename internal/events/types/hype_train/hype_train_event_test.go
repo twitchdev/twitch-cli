@@ -17,9 +17,10 @@ func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
 	params := *&events.MockEventParameters{
-		ToUserID:  toUser,
-		Transport: models.TransportEventSub,
-		Trigger:   "hype-train-begin",
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "hype-train-begin",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -33,9 +34,10 @@ func TestEventSub(t *testing.T) {
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 
 	params = *&events.MockEventParameters{
-		ToUserID:  toUser,
-		Transport: models.TransportEventSub,
-		Trigger:   "hype-train-progress",
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "hype-train-progress",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err = Event{}.GenerateEvent(params)

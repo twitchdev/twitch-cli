@@ -4,6 +4,7 @@ package channel_points_redemption
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
@@ -29,8 +30,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var event []byte
 	var err error
 
-	if params.Status == "" {
-		params.Status = "unfulfilled"
+	if params.EventStatus == "" {
+		params.EventStatus = "unfulfilled"
 	}
 
 	if params.ItemID == "" {
@@ -50,7 +51,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		body := *&models.RedemptionEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
-				Status:  "enabled",
+				Status:  params.SubscriptionStatus,
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
@@ -72,7 +73,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				UserLogin:            params.FromUserName,
 				UserName:             params.FromUserName,
 				UserInput:            "Test Input From CLI",
-				Status:               params.Status,
+				Status:               params.EventStatus,
 				Reward: models.RedemptionReward{
 					ID:     params.ItemID,
 					Title:  params.ItemName,
@@ -86,6 +87,22 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
+		}
+
+		// Delete event info if Subscription.Status is not set to "enabled"
+		if !strings.EqualFold(params.SubscriptionStatus, "enabled") {
+			var i interface{}
+			if err := json.Unmarshal([]byte(event), &i); err != nil {
+				return events.MockEventResponse{}, err
+			}
+			if m, ok := i.(map[string]interface{}); ok {
+				delete(m, "event") // Matches JSON key defined in body variable above
+			}
+
+			event, err = json.Marshal(i)
+			if err != nil {
+				return events.MockEventResponse{}, err
+			}
 		}
 	default:
 		return events.MockEventResponse{}, nil

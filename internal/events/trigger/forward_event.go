@@ -36,6 +36,7 @@ type header struct {
 const (
 	EventSubMessageTypeNotification = "notification"
 	EventSubMessageTypeVerification = "webhook_callback_verification"
+	EventSubMessageTypeRevocation   = "revocation"
 )
 
 var notificationHeaders = map[string][]header{
@@ -73,6 +74,8 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 			req.Header.Add("Twitch-Eventsub-Message-Type", EventSubMessageTypeNotification)
 		case EventSubMessageTypeVerification:
 			req.Header.Add("Twitch-Eventsub-Message-Type", EventSubMessageTypeVerification)
+		case EventSubMessageTypeRevocation:
+			req.Header.Add("Twitch-Eventsub-Message-Type", EventSubMessageTypeRevocation)
 		}
 	}
 

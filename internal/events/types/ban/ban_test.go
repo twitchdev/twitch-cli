@@ -17,10 +17,11 @@ var toUser = "4567"
 func TestEventSubBan(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 	params := events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
-		Trigger:    "ban",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "ban",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -36,10 +37,11 @@ func TestEventSubBan(t *testing.T) {
 
 	// test for unban
 	params = events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
-		Trigger:    "unban",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "unban",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err = Event{}.GenerateEvent(params)
