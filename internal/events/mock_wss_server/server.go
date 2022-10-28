@@ -291,7 +291,7 @@ func activateReconnectTest(ctx context.Context) {
 						ID:                             wsSrv.websocketId,
 						Status:                         "reconnecting",
 						MinimumMessageFrequencySeconds: nil,
-						ReconnectUrl:                   wsSrv.connectionUrl,
+						ReconnectUrl:                   wsAltSrv.connectionUrl,
 						ConnectedAt:                    c.connectedAtTimestamp,
 					},
 				},
@@ -387,8 +387,8 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 	stop := make(chan os.Signal)
 	signal.Notify(stop, os.Interrupt)
 
-	s1 := StartIndividualServer(port, reconnectTestTimer, sslEnabled, m, ctx1)
-	s2 := StartIndividualServer(port+1, 0, sslEnabled, m, ctx2) // Start second server, at a port above. Never has a reconnect timer
+	s1 := StartIndividualServer(port, reconnectTestTimer, sslEnabled, m, ctx1, false)
+	s2 := StartIndividualServer(port+1, 0, sslEnabled, m, ctx2, true) // Start second server, at a port above. Never has a reconnect timer
 
 	<-stop // Wait for ctrl + c
 
@@ -406,7 +406,7 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 	}
 }
 
-func StartIndividualServer(port int, reconnectTestTimer int, sslEnabled bool, m *http.ServeMux, ctx context.Context) http.Server {
+func StartIndividualServer(port int, reconnectTestTimer int, sslEnabled bool, m *http.ServeMux, ctx context.Context, alternateServer bool) http.Server {
 	s := http.Server{
 		Addr:    fmt.Sprintf(":%v", port),
 		Handler: m,
@@ -418,7 +418,11 @@ func StartIndividualServer(port int, reconnectTestTimer int, sslEnabled bool, m 
 	signal.Notify(stop, os.Interrupt)
 
 	go func() {
-		log.Printf("Mock EventSub websocket server started on port %d", port)
+		if !alternateServer {
+			log.Printf("Mock EventSub websocket server started on port %d", port)
+		} else {
+			log.Printf("Started alternate EventSub websocket server on port %d. This one is used for reconnect testing.", port)
+		}
 
 		if sslEnabled { // Open HTTP server with HTTPS support
 			home, _ := util.GetApplicationDir()
