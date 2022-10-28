@@ -264,5 +264,6 @@ func startWebsocketServerCmdRun(cmd *cobra.Command, args []string) {
 	}
 
 	log.Printf("Starting mock EventSub WebSocket servers on %v://localhost:%v/eventsub (alternate on port %v)", wsStr, port, port+1)
+	log.Printf("`Ctrl + C` to exit mock servers.")
 	mock_wss_server.StartServer(port, debug, wssReconnectTest, sslEnabled)
 }
