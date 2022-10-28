@@ -19,7 +19,7 @@ type MessageMetadata struct {
 		"session": { // <3>
 			"id": "AQoQexAWVYKSTIu4ec_2VAxyuhAB",
 			"status": "connected",
-			"minimum_message_frequency_seconds": 10,
+			"keepalive_timeout_seconds": 10,
 			"reconnect_url": null,
 			"connected_at": "2019-11-16T10:11:12.123Z"
 		}
@@ -37,11 +37,11 @@ type WelcomeMessagePayload struct { // <2>
 }
 
 type WelcomeMessagePayloadSession struct { // <3>
-	ID                             string  `json:"id"`
-	Status                         string  `json:"status"`
-	MinimumMessageFrequencySeconds int     `json:"minimum_message_frequency_seconds"`
-	ReconnectUrl                   *string `json:"reconnect_url"`
-	ConnectedAt                    string  `json:"connected_at"`
+	ID                      string  `json:"id"`
+	Status                  string  `json:"status"`
+	KeepaliveTimeoutSeconds int     `json:"keepalive_timeout_seconds"`
+	ReconnectUrl            *string `json:"reconnect_url"`
+	ConnectedAt             string  `json:"connected_at"`
 }
 
 /* ** Reconnect message **
@@ -55,7 +55,7 @@ type WelcomeMessagePayloadSession struct { // <3>
 		"session": { // <3>
 			"id": "AQoQexAWVYKSTIu4ec_2VAxyuhAB",
 			"status": "reconnecting",
-			"minimum_message_frequency_seconds": null,
+			"keepalive_timeout_seconds": null,
 			"reconnect_url": "wss://eventsub-experimental.wss.twitch.tv?...",
 			"connected_at": "2019-11-16T10:11:12.123Z"
 		}
@@ -73,11 +73,11 @@ type ReconnectMessagePayload struct { // <2>
 }
 
 type ReconnectMessagePayloadSession struct { // <3>
-	ID                             string `json:"id"`
-	Status                         string `json:"status"`
-	MinimumMessageFrequencySeconds *int   `json:"minimum_message_frequency_seconds"`
-	ReconnectUrl                   string `json:"reconnect_url"`
-	ConnectedAt                    string `json:"connected_at"`
+	ID                      string `json:"id"`
+	Status                  string `json:"status"`
+	KeepaliveTimeoutSeconds *int   `json:"keepalive_timeout_seconds"`
+	ReconnectUrl            string `json:"reconnect_url"`
+	ConnectedAt             string `json:"connected_at"`
 }
 
 /* ** Keepalive message **
