@@ -118,6 +118,7 @@ func init() {
 	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of bits or channel points redeemed/used in the event.")
 	triggerCmd.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 	triggerCmd.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
+	triggerCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 	triggerCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 
 	// retrigger flags
@@ -131,6 +132,7 @@ func init() {
 	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	verifyCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
+	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 	verifyCmd.MarkFlagRequired("forward-address")
 
 	// start-websocket-server flags
@@ -169,6 +171,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 	for i := 0; i < count; i++ {
 		res, err := trigger.Fire(trigger.TriggerParameters{
 			Event:              args[0],
+			EventID:            eventID,
 			Transport:          transport,
 			ForwardAddress:     forwardAddress,
 			FromUser:           fromUser,
@@ -264,6 +267,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
 		Timestamp:      timestamp,
+		EventID:        eventID,
 	})
 
 	if err != nil {
