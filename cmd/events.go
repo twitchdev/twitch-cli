@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/mock_wss_server"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
 	"github.com/twitchdev/twitch-cli/internal/events/verify"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 const websubDeprecationNotice = "Halt! It appears you are trying to use WebSub, which has been deprecated. For more information, see: https://discuss.dev.twitch.tv/t/deprecation-of-websub-based-webhooks/32152"
@@ -206,6 +208,7 @@ func retriggerCmdRun(cmd *cobra.Command, args []string) {
 	res, err := trigger.RefireEvent(eventID, trigger.TriggerParameters{
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
+		Timestamp:      util.GetTimestamp().Format(time.RFC3339Nano),
 	})
 	if err != nil {
 		fmt.Printf("Error refiring event: %s", err)
@@ -240,11 +243,26 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	if timestamp == "" {
+		timestamp = util.GetTimestamp().Format(time.RFC3339Nano)
+	} else {
+		// Verify custom timestamp
+		_, err := time.Parse(time.RFC3339Nano, timestamp)
+		if err != nil {
+			fmt.Println(
+				`Discarding event: Invalid timestamp provided.
+Please follow RFC3339Nano, which is used by Twitch as seen here:
+https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`)
+			return
+		}
+	}
+
 	_, err := verify.VerifyWebhookSubscription(verify.VerifyParameters{
 		Event:          args[0],
 		Transport:      transport,
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
+		Timestamp:      timestamp,
 	})
 
 	if err != nil {

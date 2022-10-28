@@ -20,6 +20,7 @@ import (
 
 type VerifyParameters struct {
 	Transport      string
+	Timestamp      string
 	Event          string
 	ForwardAddress string
 	Secret         string
@@ -67,6 +68,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 			Event:               event.GetTopic(p.Transport, p.Event),
 			JSON:                body.JSON,
 			Transport:           p.Transport,
+			Timestamp:           p.Timestamp,
 			Secret:              p.Secret,
 			Method:              requestMethod,
 			ForwardAddress:      u.String(),
