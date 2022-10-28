@@ -118,7 +118,7 @@ func init() {
 	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of bits or channel points redeemed/used in the event.")
 	triggerCmd.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 	triggerCmd.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
-	triggerCmd.Flags().StringVarP(&timestamp, "timestamp", "Z", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
+	triggerCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
@@ -130,6 +130,7 @@ func init() {
 	verifyCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
 	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
+	verifyCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	verifyCmd.MarkFlagRequired("forward-address")
 
 	// start-websocket-server flags
@@ -250,7 +251,7 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		_, err := time.Parse(time.RFC3339Nano, timestamp)
 		if err != nil {
 			fmt.Println(
-				`Discarding event: Invalid timestamp provided.
+				`Discarding verify: Invalid timestamp provided.
 Please follow RFC3339Nano, which is used by Twitch as seen here:
 https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`)
 			return
