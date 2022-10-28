@@ -129,6 +129,7 @@ func init() {
 	verifyCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
 	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
+	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 	verifyCmd.MarkFlagRequired("forward-address")
 
 	// start-websocket-server flags
@@ -247,6 +248,7 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		Transport:      transport,
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
+		EventID:        eventID,
 	})
 
 	if err != nil {
