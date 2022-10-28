@@ -4,7 +4,7 @@ package authorization
 
 import (
 	"encoding/json"
-	"time"
+	"strings"
 
 	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
@@ -41,7 +41,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		body := &models.AuthorizationRevokeEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
-				Status:  "enabled",
+				Status:  params.SubscriptionStatus,
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
@@ -52,7 +52,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      1,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.AuthorizationRevokeEvent{
 				ClientID:  clientID,
@@ -64,6 +64,22 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
+		}
+
+		// Delete event info if Subscription.Status is not set to "enabled"
+		if !strings.EqualFold(params.SubscriptionStatus, "enabled") {
+			var i interface{}
+			if err := json.Unmarshal([]byte(event), &i); err != nil {
+				return events.MockEventResponse{}, err
+			}
+			if m, ok := i.(map[string]interface{}); ok {
+				delete(m, "event") // Matches JSON key defined in body variable above
+			}
+
+			event, err = json.Marshal(i)
+			if err != nil {
+				return events.MockEventResponse{}, err
+			}
 		}
 	default:
 		return events.MockEventResponse{}, nil

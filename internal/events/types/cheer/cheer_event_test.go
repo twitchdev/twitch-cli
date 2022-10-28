@@ -17,10 +17,11 @@ var toUser = "4567"
 func TestEventsubCheer(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 	params := events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
-		Trigger:    "cheer",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "cheer",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -36,11 +37,12 @@ func TestEventsubCheer(t *testing.T) {
 
 	// test for anonymous cheers
 	params = events.MockEventParameters{
-		FromUserID:  fromUser,
-		ToUserID:    toUser,
-		Transport:   models.TransportEventSub,
-		IsAnonymous: true,
-		Trigger:     "cheer",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		IsAnonymous:        true,
+		Trigger:            "cheer",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err = Event{}.GenerateEvent(params)

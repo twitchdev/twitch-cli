@@ -5,6 +5,7 @@ package poll
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
@@ -55,7 +56,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		body := &models.PollEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
-				Status:  "enabled",
+				Status:  params.SubscriptionStatus,
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
@@ -66,7 +67,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.PollEventSubEvent{
 				ID:                   util.RandomGUID(),
@@ -83,20 +84,38 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					IsEnabled:     true,
 					AmountPerVote: 500,
 				},
-				StartedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				StartedAt: params.Timestamp,
 			},
 		}
 
+		tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+
 		if params.Trigger == "poll-end" {
-			body.Event.EndedAt = util.GetTimestamp().Add(time.Minute * 15).Format(time.RFC3339Nano)
+			body.Event.EndedAt = tNow.Add(time.Minute * 15).Format(time.RFC3339Nano)
 			body.Event.Status = "completed"
 		} else {
-			body.Event.EndsAt = util.GetTimestamp().Add(time.Minute * 15).Format(time.RFC3339Nano)
+			body.Event.EndsAt = tNow.Add(time.Minute * 15).Format(time.RFC3339Nano)
 		}
 
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
+		}
+
+		// Delete event info if Subscription.Status is not set to "enabled"
+		if !strings.EqualFold(params.SubscriptionStatus, "enabled") {
+			var i interface{}
+			if err := json.Unmarshal([]byte(event), &i); err != nil {
+				return events.MockEventResponse{}, err
+			}
+			if m, ok := i.(map[string]interface{}); ok {
+				delete(m, "event") // Matches JSON key defined in body variable above
+			}
+
+			event, err = json.Marshal(i)
+			if err != nil {
+				return events.MockEventResponse{}, err
+			}
 		}
 	default:
 		return events.MockEventResponse{}, nil

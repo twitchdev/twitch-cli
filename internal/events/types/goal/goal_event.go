@@ -4,6 +4,7 @@ package goal
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
@@ -36,12 +37,13 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var currentAmount int64
 	var targetAmount int64
 
-	goalStartedAt := util.GetTimestamp()
+	goalStartedAt := params.Timestamp
 	currentAmount = util.RandomInt(10 * 10)
 	targetAmount = util.RandomInt(10 * 100)
 
 	if params.Trigger == "goal-end" {
-		endDate := goalStartedAt.Add(time.Hour * 24).Format(time.RFC3339)
+		tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+		endDate := tNow.Add(time.Hour * 24).Format(time.RFC3339)
 		goalEndDate = &endDate
 
 		achieved := util.RandomInt(1) == 1
@@ -64,7 +66,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		body := *&models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
-				Status:  "enabled",
+				Status:  params.SubscriptionStatus,
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
@@ -75,7 +77,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.GoalEventSubEvent{
 				ID:                   params.ID,
@@ -86,7 +88,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Description:          params.Description,
 				CurrentAmount:        currentAmount,
 				TargetAmount:         targetAmount,
-				StartedAt:            goalStartedAt.Format(time.RFC3339Nano),
+				StartedAt:            goalStartedAt,
 				EndedAt:              goalEndDate,
 				IsAchieved:           isAchieved,
 			},
@@ -97,6 +99,21 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			return events.MockEventResponse{}, err
 		}
 
+		// Delete event info if Subscription.Status is not set to "enabled"
+		if !strings.EqualFold(params.SubscriptionStatus, "enabled") {
+			var i interface{}
+			if err := json.Unmarshal([]byte(event), &i); err != nil {
+				return events.MockEventResponse{}, err
+			}
+			if m, ok := i.(map[string]interface{}); ok {
+				delete(m, "event") // Matches JSON key defined in body variable above
+			}
+
+			event, err = json.Marshal(i)
+			if err != nil {
+				return events.MockEventResponse{}, err
+			}
+		}
 	default:
 		return events.MockEventResponse{}, nil
 	}

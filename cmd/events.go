@@ -17,25 +17,27 @@ import (
 const websubDeprecationNotice = "Halt! It appears you are trying to use WebSub, which has been deprecated. For more information, see: https://discuss.dev.twitch.tv/t/deprecation-of-websub-based-webhooks/32152"
 
 var (
-	isAnonymous      bool
-	forwardAddress   string
-	event            string
-	transport        string
-	fromUser         string
-	toUser           string
-	giftUser         string
-	eventID          string
-	secret           string
-	status           string
-	itemID           string
-	itemName         string
-	cost             int64
-	count            int
-	description      string
-	gameID           string
-	debug            bool
-	wssReconnectTest int
-	sslEnabled       bool
+	isAnonymous        bool
+	forwardAddress     string
+	event              string
+	transport          string
+	fromUser           string
+	toUser             string
+	giftUser           string
+	eventID            string
+	secret             string
+	eventStatus        string
+	subscriptionStatus string
+	itemID             string
+	itemName           string
+	cost               int64
+	count              int
+	description        string
+	gameID             string
+	timestamp          string
+	debug              bool
+	wssReconnectTest   int
+	sslEnabled         bool
 )
 
 var eventCmd = &cobra.Command{
@@ -60,7 +62,7 @@ var triggerCmd = &cobra.Command{
 
 var verifyCmd = &cobra.Command{
 	Use:   "verify-subscription [event]",
-	Short: "Mocks the subscription verification event that can be forwarded to a local webserver for testing.",
+	Short: "Mocks the subscription verification event. Can be forwarded to a local webserver for testing.",
 	Long: fmt.Sprintf(`Mocks the subscription verification event that can be forwarded to a local webserver for testing.
 	Supported:
 	%s`, events.ValidTriggers()),
@@ -95,24 +97,27 @@ func init() {
 	eventCmd.AddCommand(triggerCmd, retriggerCmd, verifyCmd, startWebsocketServerCmd)
 
 	// trigger flags
-	// flags for forwarding functionality/changing payloads
+	//// flags for forwarding functionality/changing payloads
 	triggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
 	triggerCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to /EventSub.\nSupported values: %s", events.ValidTransports()))
 	triggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 
-	// per-topic flags
+	// trigger flags
+	//// per-topic flags
 	triggerCmd.Flags().StringVarP(&toUser, "to-user", "t", "", "User ID of the receiver of the event. For example, the user that receives a follow. In most contexts, this is the broadcaster.")
 	triggerCmd.Flags().StringVarP(&fromUser, "from-user", "f", "", "User ID of the user sending the event, for example the user following another user.")
 	triggerCmd.Flags().StringVarP(&giftUser, "gift-user", "g", "", "Used only for \"gift\" events. Denotes the User ID of the gifting user.")
 	triggerCmd.Flags().BoolVarP(&isAnonymous, "anonymous", "a", false, "Denotes if the event is anonymous. Only applies to Gift and Sub events.")
 	triggerCmd.Flags().IntVarP(&count, "count", "c", 1, "Count of events to events. This will simulate a sub gift, or large number of cheers.")
-	triggerCmd.Flags().StringVarP(&status, "status", "S", "", "Status of the event object, currently applies to channel points redemptions.")
+	triggerCmd.Flags().StringVarP(&eventStatus, "event-status", "S", "", "Status of the Event object (.event.status in JSON); currently applies to channel points redemptions.")
+	triggerCmd.Flags().StringVarP(&subscriptionStatus, "subscription-status", "r", "enabled", "Status of the Subscription object (.subscription.status in JSON). Defaults to \"enabled\".")
 	triggerCmd.Flags().StringVarP(&itemID, "item-id", "i", "", "Manually set the ID of the event payload item (for example the reward ID in redemption events). For stream events, this is the game ID.")
 	triggerCmd.Flags().StringVarP(&itemName, "item-name", "n", "", "Manually set the name of the event payload item (for example the reward ID in redemption events). For stream events, this is the game title.")
 	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of bits or channel points redeemed/used in the event.")
 	triggerCmd.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 	triggerCmd.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
 	triggerCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
+	triggerCmd.Flags().StringVarP(&timestamp, "timestamp", "Z", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
@@ -161,21 +166,23 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 
 	for i := 0; i < count; i++ {
 		res, err := trigger.Fire(trigger.TriggerParameters{
-			Event:          args[0],
-			EventID:        eventID,
-			Transport:      transport,
-			ForwardAddress: forwardAddress,
-			FromUser:       fromUser,
-			ToUser:         toUser,
-			GiftUser:       giftUser,
-			Secret:         secret,
-			IsAnonymous:    isAnonymous,
-			Status:         status,
-			ItemID:         itemID,
-			Cost:           cost,
-			Description:    description,
-			ItemName:       itemName,
-			GameID:         gameID,
+			Event:              args[0],
+			EventID:            eventID,
+			Transport:          transport,
+			ForwardAddress:     forwardAddress,
+			FromUser:           fromUser,
+			ToUser:             toUser,
+			GiftUser:           giftUser,
+			Secret:             secret,
+			IsAnonymous:        isAnonymous,
+			EventStatus:        eventStatus,
+			ItemID:             itemID,
+			Cost:               cost,
+			Description:        description,
+			ItemName:           itemName,
+			GameID:             gameID,
+			SubscriptionStatus: subscriptionStatus,
+			Timestamp:          timestamp,
 		})
 
 		if err != nil {

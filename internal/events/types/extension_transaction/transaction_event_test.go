@@ -20,10 +20,11 @@ func TestEventsubTransaction(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
-		Trigger:    "transaction",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          models.TransportEventSub,
+		Trigger:            "transaction",
+		SubscriptionStatus: "enabled",
 	}
 
 	viper.Set("clientId", clientId)
@@ -44,10 +45,11 @@ func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
 	params := events.MockEventParameters{
-		FromUserID: fromUser,
-		ToUserID:   toUser,
-		Transport:  "fake_transport",
-		Trigger:    "transaction",
+		FromUserID:         fromUser,
+		ToUserID:           toUser,
+		Transport:          "fake_transport",
+		Trigger:            "transaction",
+		SubscriptionStatus: "enabled",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
