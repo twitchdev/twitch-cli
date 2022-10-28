@@ -24,7 +24,7 @@ import (
 
 /* Minimum time between messages before the server disconnects a client. AKA, "timeout period"
  * This is a const for now, but it may need to be a flag in the future. */
-const MINIMUM_MESSAGE_FREQUENCY_SECONDS = 10
+const KEEPALIVE_TIMEOUT_SECONDS = 10
 
 var upgrader = websocket.Upgrader{}
 var debug = false
@@ -86,9 +86,13 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 	if !wsSrv.firstClientConnected {
 		wsSrv.firstClientConnected = true
 
-		if wsSrv.reconnectTestTimeout != 0 {
+		if wsSrv.reconnectTestTimeout >= 0 {
 			go func() {
 				log.Printf("First client connected; Reconnect testing enabled. Notices will be sent in %d seconds.", wsSrv.reconnectTestTimeout)
+				duration := time.Second * time.Duration(wsSrv.reconnectTestTimeout)
+				if duration == 0 {
+					duration = time.Second * 1
+				}
 
 				select {
 				case <-time.After(time.Second * time.Duration(wsSrv.reconnectTestTimeout)):
@@ -102,7 +106,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 
 	// RFC3339Nano = "2022-10-04T12:38:15.548912638Z07" ; This is used by Twitch in production
 	connectedAtTimestamp := time.Now().UTC().Format(time.RFC3339Nano)
-	conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
+	conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
 
 	// Add to websocket connection list.
 	wc := &WebsocketConnection{
@@ -124,11 +128,11 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 			},
 			Payload: WelcomeMessagePayload{
 				Session: WelcomeMessagePayloadSession{
-					ID:                             wsSrv.websocketId,
-					Status:                         "connected",
-					MinimumMessageFrequencySeconds: MINIMUM_MESSAGE_FREQUENCY_SECONDS,
-					ReconnectUrl:                   nil,
-					ConnectedAt:                    connectedAtTimestamp,
+					ID:                      wsSrv.websocketId,
+					Status:                  "connected",
+					KeepaliveTimeoutSeconds: KEEPALIVE_TIMEOUT_SECONDS,
+					ReconnectUrl:            nil,
+					ConnectedAt:             connectedAtTimestamp,
 				},
 			},
 		},
@@ -146,7 +150,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 		// Set pong handler
 		// Weirdly, pongs are not seen as messages read by conn.ReadMessage, so we have to reset the deadline manually
 		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
+			conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
 			return nil
 		})
 
@@ -198,7 +202,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Read messages
 	for {
-		conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
+		conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
@@ -288,11 +292,11 @@ func activateReconnectTest(ctx context.Context) {
 				},
 				Payload: ReconnectMessagePayload{
 					Session: ReconnectMessagePayloadSession{
-						ID:                             wsSrv.websocketId,
-						Status:                         "reconnecting",
-						MinimumMessageFrequencySeconds: nil,
-						ReconnectUrl:                   wsSrv.connectionUrl,
-						ConnectedAt:                    c.connectedAtTimestamp,
+						ID:                      wsSrv.websocketId,
+						Status:                  "reconnecting",
+						KeepaliveTimeoutSeconds: nil,
+						ReconnectUrl:            wsAltSrv.connectionUrl,
+						ConnectedAt:             c.connectedAtTimestamp,
 					},
 				},
 			},
@@ -378,7 +382,7 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 		connectionUrl:        wsSrv2Url,
 		connections:          []*WebsocketConnection{},
 		deactivatedStatus:    true, // 2nd server is deactivated by default. Will reactivate for reconnect testing.
-		reconnectTestTimeout: 0,    // No reconnect testing
+		reconnectTestTimeout: -1,   // No reconnect testing
 		firstClientConnected: false,
 	}
 
@@ -387,8 +391,8 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 	stop := make(chan os.Signal)
 	signal.Notify(stop, os.Interrupt)
 
-	s1 := StartIndividualServer(port, reconnectTestTimer, sslEnabled, m, ctx1)
-	s2 := StartIndividualServer(port+1, 0, sslEnabled, m, ctx2) // Start second server, at a port above. Never has a reconnect timer
+	s1 := StartIndividualServer(port, sslEnabled, m, ctx1, false)
+	s2 := StartIndividualServer(port+1, sslEnabled, m, ctx2, true) // Start second server, at a port above.
 
 	<-stop // Wait for ctrl + c
 
@@ -406,7 +410,7 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 	}
 }
 
-func StartIndividualServer(port int, reconnectTestTimer int, sslEnabled bool, m *http.ServeMux, ctx context.Context) http.Server {
+func StartIndividualServer(port int, sslEnabled bool, m *http.ServeMux, ctx context.Context, alternateServer bool) http.Server {
 	s := http.Server{
 		Addr:    fmt.Sprintf(":%v", port),
 		Handler: m,
@@ -418,7 +422,11 @@ func StartIndividualServer(port int, reconnectTestTimer int, sslEnabled bool, m 
 	signal.Notify(stop, os.Interrupt)
 
 	go func() {
-		log.Printf("Mock EventSub websocket server started on port %d", port)
+		if !alternateServer {
+			log.Printf("Mock EventSub websocket server started on port %d", port)
+		} else {
+			log.Printf("Started alternate EventSub websocket server on port %d. This one is used for reconnect testing.", port)
+		}
 
 		if sslEnabled { // Open HTTP server with HTTPS support
 			home, _ := util.GetApplicationDir()
