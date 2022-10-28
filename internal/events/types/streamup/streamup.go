@@ -5,7 +5,6 @@ package streamup
 import (
 	"encoding/json"
 	"strings"
-	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
@@ -54,7 +53,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.StreamUpEventSubEvent{
 				ID:                   util.RandomUserID(),
@@ -62,7 +61,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
 				Type:                 "live",
-				StartedAt:            util.GetTimestamp().Format(time.RFC3339Nano),
+				StartedAt:            params.Timestamp,
 			},
 		}
 		event, err = json.Marshal(body)

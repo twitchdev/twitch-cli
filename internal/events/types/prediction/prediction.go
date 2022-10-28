@@ -97,7 +97,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.PredictionEventSubEvent{
 				ID:                   util.RandomGUID(),
@@ -106,17 +106,19 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserName:  params.ToUserName,
 				Title:                params.Description,
 				Outcomes:             outcomes,
-				StartedAt:            util.GetTimestamp().Format(time.RFC3339Nano),
+				StartedAt:            params.Timestamp,
 			},
 		}
 
+		tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+
 		if params.Trigger == "prediction-begin" || params.Trigger == "prediction-progress" {
-			body.Event.LocksAt = util.GetTimestamp().Add(time.Minute * 10).Format(time.RFC3339Nano)
+			body.Event.LocksAt = tNow.Add(time.Minute * 10).Format(time.RFC3339Nano)
 		} else if params.Trigger == "prediction-lock" {
-			body.Event.LockedAt = util.GetTimestamp().Add(time.Minute * 10).Format(time.RFC3339Nano)
+			body.Event.LockedAt = tNow.Add(time.Minute * 10).Format(time.RFC3339Nano)
 		} else if params.Trigger == "prediction-end" {
 			body.Event.WinningOutcomeID = outcomes[0].ID
-			body.Event.EndedAt = util.GetTimestamp().Add(time.Minute * 10).Format(time.RFC3339Nano)
+			body.Event.EndedAt = tNow.Add(time.Minute * 10).Format(time.RFC3339Nano)
 			body.Event.Status = "resolved"
 		}
 

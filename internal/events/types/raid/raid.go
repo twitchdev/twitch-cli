@@ -5,7 +5,6 @@ package raid
 import (
 	"encoding/json"
 	"strings"
-	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
@@ -46,7 +45,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.RaidEvent{
 				ToBroadcasterUserID:      params.ToUserID,

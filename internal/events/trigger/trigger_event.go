@@ -35,6 +35,7 @@ type TriggerParameters struct {
 	Description        string
 	ItemName           string
 	GameID             string
+	Timestamp          string
 }
 
 type TriggerResponse struct {
@@ -61,6 +62,20 @@ func Fire(p TriggerParameters) (string, error) {
 	if p.GameID == "" {
 		p.GameID = fmt.Sprint(util.RandomInt(10 * 1000))
 	}
+
+	if p.Timestamp == "" {
+		p.Timestamp = util.GetTimestamp().Format(time.RFC3339Nano)
+	} else {
+		// Verify custom timestamp
+		_, err := time.Parse(time.RFC3339Nano, p.Timestamp)
+		if err != nil {
+			return "", fmt.Errorf(
+				`Discarding event: Invalid timestamp provided.
+Please follow RFC3339Nano, which is used by Twitch as seen here:
+https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`)
+		}
+	}
+
 	eventParamaters := events.MockEventParameters{
 		ID:                 util.RandomGUID(),
 		Trigger:            p.Event,
@@ -77,6 +92,7 @@ func Fire(p TriggerParameters) (string, error) {
 		ItemName:           p.ItemName,
 		GameID:             p.GameID,
 		SubscriptionStatus: p.SubscriptionStatus,
+		Timestamp:          p.Timestamp,
 	}
 
 	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
@@ -108,7 +124,7 @@ func Fire(p TriggerParameters) (string, error) {
 		FromUser:  resp.FromUser,
 		ToUser:    resp.ToUser,
 		Transport: p.Transport,
-		Timestamp: util.GetTimestamp().Format(time.RFC3339Nano),
+		Timestamp: p.Timestamp,
 	})
 	if err != nil {
 		return "", err
@@ -129,6 +145,7 @@ func Fire(p TriggerParameters) (string, error) {
 		resp, err := ForwardEvent(ForwardParamters{
 			ID:                  resp.ID,
 			Transport:           p.Transport,
+			Timestamp:           p.Timestamp,
 			JSON:                resp.JSON,
 			Secret:              p.Secret,
 			ForwardAddress:      p.ForwardAddress,

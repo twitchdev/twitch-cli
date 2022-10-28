@@ -22,6 +22,7 @@ type MockEventParameters struct {
 	IsPermanent        bool
 	Description        string
 	GameID             string
+	Timestamp          string
 }
 
 type MockEventResponse struct {

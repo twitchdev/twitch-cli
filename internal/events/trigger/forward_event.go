@@ -20,6 +20,7 @@ type ForwardParamters struct {
 	ForwardAddress      string
 	JSON                []byte
 	Transport           string
+	Timestamp           string
 	Secret              string
 	Event               string
 	Method              string
@@ -79,7 +80,7 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 	}
 
 	if p.Secret != "" {
-		getSignatureHeader(req, p.ID, p.Secret, p.Transport, p.JSON)
+		getSignatureHeader(req, p.ID, p.Secret, p.Transport, p.Timestamp, p.JSON)
 	}
 
 	client := &http.Client{
@@ -96,13 +97,13 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 	return resp, nil
 }
 
-func getSignatureHeader(req *http.Request, id string, secret string, transport string, payload []byte) {
+func getSignatureHeader(req *http.Request, id string, secret string, transport string, timestamp string, payload []byte) {
 	mac := hmac.New(sha256.New, []byte(secret))
 	ts := util.GetTimestamp()
 	switch transport {
 	case models.TransportEventSub:
-		req.Header.Set("Twitch-Eventsub-Message-Timestamp", ts.Format(time.RFC3339Nano))
-		prefix := ts.AppendFormat([]byte(id), time.RFC3339Nano)
+		req.Header.Set("Twitch-Eventsub-Message-Timestamp", timestamp)
+		prefix := ts.AppendFormat([]byte(id), timestamp)
 		mac.Write(prefix)
 		mac.Write(payload)
 		req.Header.Set("Twitch-Eventsub-Message-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))

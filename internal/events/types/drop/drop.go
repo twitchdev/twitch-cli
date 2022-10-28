@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
@@ -54,7 +53,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Events: []models.DropsEntitlementEventSubEvent{
 				{
@@ -69,7 +68,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 						UserID:         params.ToUserID,
 						UserName:       params.ToUserName,
 						UserLogin:      params.ToUserName,
-						CreatedAt:      util.GetTimestamp().Format(time.RFC3339Nano),
+						CreatedAt:      params.Timestamp,
 					},
 				},
 			},

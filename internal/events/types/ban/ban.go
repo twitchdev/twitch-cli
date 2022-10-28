@@ -5,7 +5,6 @@ package ban
 import (
 	"encoding/json"
 	"strings"
-	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
@@ -47,7 +46,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 		if params.Trigger == "ban" {
 			reason := "This is a test event"
-			endsAt := util.GetTimestamp().Format(time.RFC3339Nano)
+			endsAt := params.Timestamp
 			ban.Reason = &reason
 			ban.EndsAt = &endsAt
 			ban.IsPermanent = &params.IsPermanent
@@ -67,7 +66,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: ban,
 		}

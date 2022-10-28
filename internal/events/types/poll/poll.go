@@ -67,7 +67,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Callback: "null",
 				},
 				Cost:      0,
-				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				CreatedAt: params.Timestamp,
 			},
 			Event: models.PollEventSubEvent{
 				ID:                   util.RandomGUID(),
@@ -84,15 +84,17 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					IsEnabled:     true,
 					AmountPerVote: 500,
 				},
-				StartedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				StartedAt: params.Timestamp,
 			},
 		}
 
+		tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+
 		if params.Trigger == "poll-end" {
-			body.Event.EndedAt = util.GetTimestamp().Add(time.Minute * 15).Format(time.RFC3339Nano)
+			body.Event.EndedAt = tNow.Add(time.Minute * 15).Format(time.RFC3339Nano)
 			body.Event.Status = "completed"
 		} else {
-			body.Event.EndsAt = util.GetTimestamp().Add(time.Minute * 15).Format(time.RFC3339Nano)
+			body.Event.EndsAt = tNow.Add(time.Minute * 15).Format(time.RFC3339Nano)
 		}
 
 		event, err = json.Marshal(body)
