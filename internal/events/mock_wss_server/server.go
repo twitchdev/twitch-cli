@@ -86,9 +86,13 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 	if !wsSrv.firstClientConnected {
 		wsSrv.firstClientConnected = true
 
-		if wsSrv.reconnectTestTimeout != 0 {
+		if wsSrv.reconnectTestTimeout >= 0 {
 			go func() {
 				log.Printf("First client connected; Reconnect testing enabled. Notices will be sent in %d seconds.", wsSrv.reconnectTestTimeout)
+				duration := time.Second * time.Duration(wsSrv.reconnectTestTimeout)
+				if duration == 0 {
+					duration = time.Millisecond * 200
+				}
 
 				select {
 				case <-time.After(time.Second * time.Duration(wsSrv.reconnectTestTimeout)):
@@ -378,7 +382,7 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 		connectionUrl:        wsSrv2Url,
 		connections:          []*WebsocketConnection{},
 		deactivatedStatus:    true, // 2nd server is deactivated by default. Will reactivate for reconnect testing.
-		reconnectTestTimeout: 0,    // No reconnect testing
+		reconnectTestTimeout: -1,   // No reconnect testing
 		firstClientConnected: false,
 	}
 
@@ -387,8 +391,8 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 	stop := make(chan os.Signal)
 	signal.Notify(stop, os.Interrupt)
 
-	s1 := StartIndividualServer(port, reconnectTestTimer, sslEnabled, m, ctx1, false)
-	s2 := StartIndividualServer(port+1, 0, sslEnabled, m, ctx2, true) // Start second server, at a port above. Never has a reconnect timer
+	s1 := StartIndividualServer(port, sslEnabled, m, ctx1, false)
+	s2 := StartIndividualServer(port+1, sslEnabled, m, ctx2, true) // Start second server, at a port above.
 
 	<-stop // Wait for ctrl + c
 
@@ -406,7 +410,7 @@ func StartServer(port int, enableDebug bool, reconnectTestTimer int, sslEnabled 
 	}
 }
 
-func StartIndividualServer(port int, reconnectTestTimer int, sslEnabled bool, m *http.ServeMux, ctx context.Context, alternateServer bool) http.Server {
+func StartIndividualServer(port int, sslEnabled bool, m *http.ServeMux, ctx context.Context, alternateServer bool) http.Server {
 	s := http.Server{
 		Addr:    fmt.Sprintf(":%v", port),
 		Handler: m,

@@ -137,7 +137,7 @@ func init() {
 	startWebsocketServerCmd.Flags().IntVarP(&port, "port", "p", 8080, "Defines the port that the mock EventSub websocket server will run on.")
 	startWebsocketServerCmd.Flags().BoolVar(&debug, "debug", false, "Set on/off for debug messages for the EventSub WebSocket server.")
 	startWebsocketServerCmd.Flags().BoolVar(&sslEnabled, "ssl", false, "Sets on/off for SSL. Recommended to keep 'false', as most testing does not require this.")
-	startWebsocketServerCmd.Flags().IntVarP(&wssReconnectTest, "reconnect", "r", 0, "Used to test WebSocket Reconnect message. Sets delay (in seconds) from first client connection until the reconnect occurs.")
+	startWebsocketServerCmd.Flags().IntVarP(&wssReconnectTest, "reconnect", "r", -1, "Used to test WebSocket Reconnect message. Sets delay (in seconds) from first client connection until the reconnect occurs.")
 }
 
 func triggerCmdRun(cmd *cobra.Command, args []string) {
