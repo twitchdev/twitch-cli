@@ -91,7 +91,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 				log.Printf("First client connected; Reconnect testing enabled. Notices will be sent in %d seconds.", wsSrv.reconnectTestTimeout)
 				duration := time.Second * time.Duration(wsSrv.reconnectTestTimeout)
 				if duration == 0 {
-					duration = time.Millisecond * 200
+					duration = time.Second * 1
 				}
 
 				select {
