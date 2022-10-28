@@ -23,6 +23,7 @@ type VerifyParameters struct {
 	Event          string
 	ForwardAddress string
 	Secret         string
+	EventID        string
 }
 
 type VerifyResponse struct {
@@ -48,7 +49,11 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		}
 	}
 
-	body, err := generateWebhookSubscriptionBody(p.Transport, event.GetTopic(p.Transport, p.Event), event.SubscriptionVersion(), challenge, p.ForwardAddress)
+	if p.EventID == "" {
+		p.EventID = util.RandomGUID()
+	}
+
+	body, err := generateWebhookSubscriptionBody(p.Transport, p.EventID, event.GetTopic(p.Transport, p.Event), event.SubscriptionVersion(), challenge, p.ForwardAddress)
 	if err != nil {
 		return VerifyResponse{}, err
 	}
@@ -125,17 +130,16 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	return r, nil
 }
 
-func generateWebhookSubscriptionBody(transport string, event string, subscriptionVersion string, challenge string, callback string) (trigger.TriggerResponse, error) {
+func generateWebhookSubscriptionBody(transport string, eventID string, event string, subscriptionVersion string, challenge string, callback string) (trigger.TriggerResponse, error) {
 	var res []byte
 	var err error
-	id := util.RandomGUID()
 	ts := util.GetTimestamp().Format(time.RFC3339Nano)
 	switch transport {
 	case models.TransportEventSub:
 		body := models.EventsubSubscriptionVerification{
 			Challenge: challenge,
 			Subscription: models.EventsubSubscription{
-				ID:      id,
+				ID:      eventID,
 				Status:  "webhook_callback_verification_pending",
 				Type:    event,
 				Version: subscriptionVersion,
@@ -157,7 +161,7 @@ func generateWebhookSubscriptionBody(transport string, event string, subscriptio
 		res = []byte("")
 	}
 	return trigger.TriggerResponse{
-		ID:        id,
+		ID:        eventID,
 		JSON:      res,
 		Timestamp: ts,
 	}, nil

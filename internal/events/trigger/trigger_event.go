@@ -36,6 +36,7 @@ type TriggerParameters struct {
 	ItemName           string
 	GameID             string
 	Timestamp          string
+	EventID            string // Also serves as subscription ID. See https://github.com/twitchdev/twitch-cli/issues/184
 }
 
 type TriggerResponse struct {
@@ -63,6 +64,10 @@ func Fire(p TriggerParameters) (string, error) {
 		p.GameID = fmt.Sprint(util.RandomInt(10 * 1000))
 	}
 
+	if p.EventID == "" {
+		p.EventID = util.RandomGUID()
+	}
+
 	if p.Timestamp == "" {
 		p.Timestamp = util.GetTimestamp().Format(time.RFC3339Nano)
 	} else {
@@ -77,7 +82,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 	}
 
 	eventParamaters := events.MockEventParameters{
-		ID:                 util.RandomGUID(),
+		ID:                 p.EventID,
 		Trigger:            p.Event,
 		Transport:          p.Transport,
 		FromUserID:         p.FromUser,
