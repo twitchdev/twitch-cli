@@ -24,7 +24,7 @@ import (
 
 /* Minimum time between messages before the server disconnects a client. AKA, "timeout period"
  * This is a const for now, but it may need to be a flag in the future. */
-const MINIMUM_MESSAGE_FREQUENCY_SECONDS = 10
+const KEEPALIVE_TIMEOUT_SECONDS = 10
 
 var upgrader = websocket.Upgrader{}
 var debug = false
@@ -106,7 +106,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 
 	// RFC3339Nano = "2022-10-04T12:38:15.548912638Z07" ; This is used by Twitch in production
 	connectedAtTimestamp := time.Now().UTC().Format(time.RFC3339Nano)
-	conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
+	conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
 
 	// Add to websocket connection list.
 	wc := &WebsocketConnection{
@@ -128,11 +128,11 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 			},
 			Payload: WelcomeMessagePayload{
 				Session: WelcomeMessagePayloadSession{
-					ID:                             wsSrv.websocketId,
-					Status:                         "connected",
-					MinimumMessageFrequencySeconds: MINIMUM_MESSAGE_FREQUENCY_SECONDS,
-					ReconnectUrl:                   nil,
-					ConnectedAt:                    connectedAtTimestamp,
+					ID:                      wsSrv.websocketId,
+					Status:                  "connected",
+					KeepaliveTimeoutSeconds: KEEPALIVE_TIMEOUT_SECONDS,
+					ReconnectUrl:            nil,
+					ConnectedAt:             connectedAtTimestamp,
 				},
 			},
 		},
@@ -150,7 +150,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 		// Set pong handler
 		// Weirdly, pongs are not seen as messages read by conn.ReadMessage, so we have to reset the deadline manually
 		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
+			conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
 			return nil
 		})
 
@@ -202,7 +202,7 @@ func eventsubHandle(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Read messages
 	for {
-		conn.SetReadDeadline(time.Now().Add(time.Second * MINIMUM_MESSAGE_FREQUENCY_SECONDS))
+		conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
 		mt, message, err := conn.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
@@ -292,11 +292,11 @@ func activateReconnectTest(ctx context.Context) {
 				},
 				Payload: ReconnectMessagePayload{
 					Session: ReconnectMessagePayloadSession{
-						ID:                             wsSrv.websocketId,
-						Status:                         "reconnecting",
-						MinimumMessageFrequencySeconds: nil,
-						ReconnectUrl:                   wsAltSrv.connectionUrl,
-						ConnectedAt:                    c.connectedAtTimestamp,
+						ID:                      wsSrv.websocketId,
+						Status:                  "reconnecting",
+						KeepaliveTimeoutSeconds: nil,
+						ReconnectUrl:            wsAltSrv.connectionUrl,
+						ConnectedAt:             c.connectedAtTimestamp,
 					},
 				},
 			},
