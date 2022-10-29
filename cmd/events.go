@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/mock_wss_server"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
 	"github.com/twitchdev/twitch-cli/internal/events/verify"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 const websubDeprecationNotice = "Halt! It appears you are trying to use WebSub, which has been deprecated. For more information, see: https://discuss.dev.twitch.tv/t/deprecation-of-websub-based-webhooks/32152"
@@ -118,7 +120,7 @@ func init() {
 	triggerCmd.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 	triggerCmd.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
 	triggerCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
-	triggerCmd.Flags().StringVarP(&timestamp, "timestamp", "Z", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
+	triggerCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
@@ -130,6 +132,7 @@ func init() {
 	verifyCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
 	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
+	verifyCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 	verifyCmd.MarkFlagRequired("forward-address")
 
@@ -209,6 +212,7 @@ func retriggerCmdRun(cmd *cobra.Command, args []string) {
 	res, err := trigger.RefireEvent(eventID, trigger.TriggerParameters{
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
+		Timestamp:      util.GetTimestamp().Format(time.RFC3339Nano),
 	})
 	if err != nil {
 		fmt.Printf("Error refiring event: %s", err)
@@ -243,11 +247,26 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	if timestamp == "" {
+		timestamp = util.GetTimestamp().Format(time.RFC3339Nano)
+	} else {
+		// Verify custom timestamp
+		_, err := time.Parse(time.RFC3339Nano, timestamp)
+		if err != nil {
+			fmt.Println(
+				`Discarding verify: Invalid timestamp provided.
+Please follow RFC3339Nano, which is used by Twitch as seen here:
+https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`)
+			return
+		}
+	}
+
 	_, err := verify.VerifyWebhookSubscription(verify.VerifyParameters{
 		Event:          args[0],
 		Transport:      transport,
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
+		Timestamp:      timestamp,
 		EventID:        eventID,
 	})
 

@@ -35,6 +35,7 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 		resp, err := ForwardEvent(ForwardParamters{
 			ID:                  id,
 			Transport:           res.Transport,
+			Timestamp:           p.Timestamp,
 			ForwardAddress:      p.ForwardAddress,
 			Secret:              p.Secret,
 			JSON:                []byte(res.JSON),

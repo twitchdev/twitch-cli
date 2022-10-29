@@ -12,7 +12,6 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/request"
-	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 type ForwardParamters struct {
@@ -99,11 +98,12 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 
 func getSignatureHeader(req *http.Request, id string, secret string, transport string, timestamp string, payload []byte) {
 	mac := hmac.New(sha256.New, []byte(secret))
-	ts := util.GetTimestamp()
+	ts, _ := time.Parse(time.RFC3339Nano, timestamp)
+
 	switch transport {
 	case models.TransportEventSub:
 		req.Header.Set("Twitch-Eventsub-Message-Timestamp", timestamp)
-		prefix := ts.AppendFormat([]byte(id), timestamp)
+		prefix := ts.AppendFormat([]byte(id), time.RFC3339Nano)
 		mac.Write(prefix)
 		mac.Write(payload)
 		req.Header.Set("Twitch-Eventsub-Message-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))
