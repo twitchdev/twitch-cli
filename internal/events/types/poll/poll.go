@@ -88,7 +88,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			},
 		}
 
-		tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+		tNow, _ := time.Parse(time.RFC3339Nano, params.Timestamp)
 
 		if params.Trigger == "poll-end" {
 			body.Event.EndedAt = tNow.Add(time.Minute * 15).Format(time.RFC3339Nano)

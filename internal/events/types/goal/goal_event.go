@@ -42,7 +42,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	targetAmount = util.RandomInt(10 * 100)
 
 	if params.Trigger == "goal-end" {
-		tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+		tNow, _ := time.Parse(time.RFC3339Nano, params.Timestamp)
 		endDate := tNow.Add(time.Hour * 24).Format(time.RFC3339)
 		goalEndDate = &endDate
 

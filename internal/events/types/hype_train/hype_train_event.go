@@ -39,7 +39,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	localGoal := util.RandomInt(10*100*100) + localTotal
 	localProgress := localTotal - util.RandomInt(100)
 
-	tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+	tNow, _ := time.Parse(time.RFC3339Nano, params.Timestamp)
 
 	switch params.Transport {
 	case models.TransportEventSub:

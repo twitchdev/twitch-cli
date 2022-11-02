@@ -110,7 +110,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			},
 		}
 
-		tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+		tNow, _ := time.Parse(time.RFC3339Nano, params.Timestamp)
 
 		if params.Trigger == "prediction-begin" || params.Trigger == "prediction-progress" {
 			body.Event.LocksAt = tNow.Add(time.Minute * 10).Format(time.RFC3339Nano)
