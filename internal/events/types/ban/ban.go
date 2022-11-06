@@ -5,6 +5,7 @@ package ban
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
@@ -46,9 +47,20 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 		if params.Trigger == "ban" {
 			reason := "This is a test event"
-			endsAt := params.Timestamp
+			bannedAt := params.Timestamp
+			var endsAt *string = nil
+
+			if !params.IsPermanent {
+				// Timeout uses channel.ban as well, which is why IsPermanent exists
+				// Set ends_at to be 3 minutes in the future
+				tNow, _ := time.Parse(time.RFC3339Nano, params.Timestamp)
+				tLater := tNow.Add(time.Minute * 10).Format(time.RFC3339Nano)
+				endsAt = &tLater
+			}
+
 			ban.Reason = &reason
-			ban.EndsAt = &endsAt
+			ban.BannedAt = &bannedAt
+			ban.EndsAt = endsAt
 			ban.IsPermanent = &params.IsPermanent
 		}
 

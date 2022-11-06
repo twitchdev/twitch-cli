@@ -13,6 +13,7 @@ type BanEventSubEvent struct {
 	ModeratorUserLogin   string  `json:"moderator_user_login"`
 	ModeratorUserName    string  `json:"moderator_user_name"`
 	Reason               *string `json:"reason,omitempty"`
+	BannedAt             *string `json:"banned_at,omitempty"`
 	EndsAt               *string `json:"ends_at,omitempty"`
 	IsPermanent          *bool   `json:"is_permanent,omitempty"`
 }
