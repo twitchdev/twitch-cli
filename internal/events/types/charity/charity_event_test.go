@@ -15,12 +15,19 @@ var fromUser = "1234"
 var toUser = "4567"
 
 func TestEventSubCharity(t *testing.T) {
+	testEventSubCharity(t, "charity-donate")
+	testEventSubCharity(t, "charity-start")
+	testEventSubCharity(t, "charity-progress")
+	testEventSubCharity(t, "charity-stop")
+}
+
+func testEventSubCharity(t *testing.T, trigger string) {
 	a := test_setup.SetupTestEnv(t)
 	params := events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          models.TransportEventSub,
-		Trigger:            "charity",
+		Trigger:            trigger,
 		SubscriptionStatus: "enabled",
 	}
 
@@ -33,7 +40,10 @@ func TestEventSubCharity(t *testing.T) {
 	a.Nil(err, "Error unmarshalling JSON")
 
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
-	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
+	if trigger == "charity-donate" {
+		a.Equal(fromUser, *body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
+
+	}
 }
 
 func TestFakeTransport(t *testing.T) {
@@ -43,7 +53,7 @@ func TestFakeTransport(t *testing.T) {
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
-		Trigger:    "charity",
+		Trigger:    "charity-donate",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -54,7 +64,16 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("charity")
+	r := Event{}.ValidTrigger("charity-donate")
+	a.Equal(true, r)
+
+	r = Event{}.ValidTrigger("charity-start")
+	a.Equal(true, r)
+
+	r = Event{}.ValidTrigger("charity-progress")
+	a.Equal(true, r)
+
+	r = Event{}.ValidTrigger("charity-stop")
 	a.Equal(true, r)
 
 	r = Event{}.ValidTrigger("notcharity")
@@ -74,6 +93,15 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "charity")
+	r := Event{}.GetTopic(models.TransportEventSub, "charity-donate")
+	a.NotNil(r)
+
+	r = Event{}.GetTopic(models.TransportEventSub, "charity-start")
+	a.NotNil(r)
+
+	r = Event{}.GetTopic(models.TransportEventSub, "charity-progress")
+	a.NotNil(r)
+
+	r = Event{}.GetTopic(models.TransportEventSub, "charity-stop")
 	a.NotNil(r)
 }
