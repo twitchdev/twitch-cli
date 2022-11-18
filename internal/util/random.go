@@ -57,14 +57,16 @@ func RandomInt(max int64) int64 {
 	return someInt.Int64()
 }
 
-// RandomType generates a fake type; Either bits or subscription, in roughly even distribution
+// RandomType generates a fake type; Either bits, subscription, or other, in roughly even distribution
 func RandomType() string {
 	someInt, err := rand.Int(rand.Reader, big.NewInt(1*10*100*100*100))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if (someInt.Int64() % 2) == 0 {
+	if (someInt.Int64() % 3) == 0 {
 		return "bits"
+	} else if (someInt.Int64() % 3) == 1 {
+		return "other"
 	} else {
 		return "subscription"
 	}
