@@ -43,6 +43,7 @@ func All() []events.MockEvent {
 		extension_transaction.Event{},
 		follow.Event{},
 		gift.Event{},
+		goal.Event{},
 		hype_train.Event{},
 		moderator_change.Event{},
 		poll.Event{},
@@ -53,7 +54,6 @@ func All() []events.MockEvent {
 		streamdown.Event{},
 		subscribe.Event{},
 		subscription_message.Event{},
-		goal.Event{},
 		user_update.Event{},
 	}
 }
