@@ -18,25 +18,27 @@ import (
 
 // TriggerParameters defines the parameters used to emit an event.
 type TriggerParameters struct {
-	Event              string
-	Transport          string
-	IsAnonymous        bool
-	FromUser           string
-	ToUser             string
-	GiftUser           string
-	EventStatus        string
-	SubscriptionStatus string
-	ItemID             string
-	Cost               int64
-	ForwardAddress     string
-	Secret             string
-	Verbose            bool
-	Count              int
-	Description        string
-	ItemName           string
-	GameID             string
-	Timestamp          string
-	EventID            string // Also serves as subscription ID. See https://github.com/twitchdev/twitch-cli/issues/184
+	Event               string
+	Transport           string
+	IsAnonymous         bool
+	FromUser            string
+	ToUser              string
+	GiftUser            string
+	EventStatus         string
+	SubscriptionStatus  string
+	ItemID              string
+	Cost                int64
+	ForwardAddress      string
+	Secret              string
+	Verbose             bool
+	Count               int
+	Description         string
+	ItemName            string
+	GameID              string
+	Timestamp           string
+	EventID             string // Also serves as subscription ID. See https://github.com/twitchdev/twitch-cli/issues/184
+	CharityCurrentValue int
+	CharityTargetValue  int
 }
 
 type TriggerResponse struct {
@@ -82,22 +84,24 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 	}
 
 	eventParamaters := events.MockEventParameters{
-		ID:                 p.EventID,
-		Trigger:            p.Event,
-		Transport:          p.Transport,
-		FromUserID:         p.FromUser,
-		FromUserName:       "testFromUser",
-		ToUserID:           p.ToUser,
-		ToUserName:         "testBroadcaster",
-		IsAnonymous:        p.IsAnonymous,
-		Cost:               p.Cost,
-		EventStatus:        p.EventStatus,
-		ItemID:             p.ItemID,
-		Description:        p.Description,
-		ItemName:           p.ItemName,
-		GameID:             p.GameID,
-		SubscriptionStatus: p.SubscriptionStatus,
-		Timestamp:          p.Timestamp,
+		ID:                  p.EventID,
+		Trigger:             p.Event,
+		Transport:           p.Transport,
+		FromUserID:          p.FromUser,
+		FromUserName:        "testFromUser",
+		ToUserID:            p.ToUser,
+		ToUserName:          "testBroadcaster",
+		IsAnonymous:         p.IsAnonymous,
+		Cost:                p.Cost,
+		EventStatus:         p.EventStatus,
+		ItemID:              p.ItemID,
+		Description:         p.Description,
+		ItemName:            p.ItemName,
+		GameID:              p.GameID,
+		SubscriptionStatus:  p.SubscriptionStatus,
+		Timestamp:           p.Timestamp,
+		CharityCurrentValue: p.CharityCurrentValue,
+		CharityTargetValue:  p.CharityTargetValue,
 	}
 
 	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)

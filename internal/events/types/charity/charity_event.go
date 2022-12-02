@@ -52,52 +52,80 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		campaign_id = &randomID
 		user_id = &params.FromUserID
 		user_login_name = &params.FromUserName
+
+		currentValue := params.CharityCurrentValue
+		if params.CharityCurrentValue == 0 {
+			// params.CharityCurrentValue default is zero, so this sets it to something in the middle if the default is used
+			// If someone uses the flag to set this to "0" manually, it'll set it to 10000, but since charity-donate never has 0 value this is on them.
+			currentValue = 10000
+		}
+
 		amount = &models.CharityEventSubEventAmount{
-			Value:         10000,
+			Value:         currentValue,
 			DecimalPlaces: 2,
 			Currency:      "USD",
 		}
 	}
+
 	if params.Trigger == "charity-start" {
 		id = &randomID
 		charity_description = &charityDescription
 		charity_website = &charityWebsite
 		current_amount = &models.CharityEventSubEventAmount{
-			Value:         0,
+			Value:         params.CharityCurrentValue,
 			DecimalPlaces: 2,
 			Currency:      "USD",
 		}
 		target_amount = &models.CharityEventSubEventAmount{
-			Value:         1500000,
+			Value:         params.CharityTargetValue,
 			DecimalPlaces: 2,
 			Currency:      "USD",
 		}
 		started_at = &params.Timestamp
 	}
+
 	if params.Trigger == "charity-progress" {
 		id = &randomID
+
+		currentValue := params.CharityCurrentValue
+		if params.CharityCurrentValue == 0 {
+			// params.CharityCurrentValue default is zero, so this sets it to something in the middle if the default is used
+			// If someone uses the flag to set this to "0" manually, it'll set it to 260000, but since charity-progress never has 0 value this is on them.
+			currentValue = 260000
+		}
+
 		current_amount = &models.CharityEventSubEventAmount{
-			Value:         260000,
+			Value:         currentValue,
 			DecimalPlaces: 2,
 			Currency:      "USD",
 		}
 		target_amount = &models.CharityEventSubEventAmount{
-			Value:         1500000,
+			Value:         params.CharityTargetValue,
 			DecimalPlaces: 2,
 			Currency:      "USD",
 		}
 	}
+
 	if params.Trigger == "charity-stop" {
 		id = &randomID
 		charity_description = &charityDescription
 		charity_website = &charityWebsite
+
+		currentValue := params.CharityCurrentValue
+		if params.CharityCurrentValue == 0 {
+			// params.CharityCurrentValue default is zero, so this sets it to something in the middle if the default is used
+			// If someone uses the flag to set this to "0" manually, it'll set it to 1450000 even though it's possible for this call to have the value "0" in production.
+			// Should be fixed later with improvements to params. It's tech debt for now.
+			currentValue = 1450000
+		}
+
 		current_amount = &models.CharityEventSubEventAmount{
-			Value:         1450000,
+			Value:         currentValue,
 			DecimalPlaces: 2,
 			Currency:      "USD",
 		}
 		target_amount = &models.CharityEventSubEventAmount{
-			Value:         1500000,
+			Value:         params.CharityTargetValue,
 			DecimalPlaces: 2,
 			Currency:      "USD",
 		}
