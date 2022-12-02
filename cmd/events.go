@@ -19,27 +19,29 @@ import (
 const websubDeprecationNotice = "Halt! It appears you are trying to use WebSub, which has been deprecated. For more information, see: https://discuss.dev.twitch.tv/t/deprecation-of-websub-based-webhooks/32152"
 
 var (
-	isAnonymous        bool
-	forwardAddress     string
-	event              string
-	transport          string
-	fromUser           string
-	toUser             string
-	giftUser           string
-	eventID            string
-	secret             string
-	eventStatus        string
-	subscriptionStatus string
-	itemID             string
-	itemName           string
-	cost               int64
-	count              int
-	description        string
-	gameID             string
-	timestamp          string
-	debug              bool
-	wssReconnectTest   int
-	sslEnabled         bool
+	isAnonymous         bool
+	forwardAddress      string
+	event               string
+	transport           string
+	fromUser            string
+	toUser              string
+	giftUser            string
+	eventID             string
+	secret              string
+	eventStatus         string
+	subscriptionStatus  string
+	itemID              string
+	itemName            string
+	cost                int64
+	count               int
+	description         string
+	gameID              string
+	timestamp           string
+	charityCurrentValue int
+	charityTargetValue  int
+	debug               bool
+	wssReconnectTest    int
+	sslEnabled          bool
 )
 
 var eventCmd = &cobra.Command{
@@ -121,6 +123,8 @@ func init() {
 	triggerCmd.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
 	triggerCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 	triggerCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
+	triggerCmd.Flags().IntVar(&charityCurrentValue, "charity-current-value", 0, "Only used for \"charity-*\" events. Manually set the current dollar value for charity events.")
+	triggerCmd.Flags().IntVar(&charityTargetValue, "charity-target-value", 1500000, "Only used for \"charity-*\" events. Manually set the current dollar value for charity events")
 
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
@@ -170,23 +174,25 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 
 	for i := 0; i < count; i++ {
 		res, err := trigger.Fire(trigger.TriggerParameters{
-			Event:              args[0],
-			EventID:            eventID,
-			Transport:          transport,
-			ForwardAddress:     forwardAddress,
-			FromUser:           fromUser,
-			ToUser:             toUser,
-			GiftUser:           giftUser,
-			Secret:             secret,
-			IsAnonymous:        isAnonymous,
-			EventStatus:        eventStatus,
-			ItemID:             itemID,
-			Cost:               cost,
-			Description:        description,
-			ItemName:           itemName,
-			GameID:             gameID,
-			SubscriptionStatus: subscriptionStatus,
-			Timestamp:          timestamp,
+			Event:               args[0],
+			EventID:             eventID,
+			Transport:           transport,
+			ForwardAddress:      forwardAddress,
+			FromUser:            fromUser,
+			ToUser:              toUser,
+			GiftUser:            giftUser,
+			Secret:              secret,
+			IsAnonymous:         isAnonymous,
+			EventStatus:         eventStatus,
+			ItemID:              itemID,
+			Cost:                cost,
+			Description:         description,
+			ItemName:            itemName,
+			GameID:              gameID,
+			SubscriptionStatus:  subscriptionStatus,
+			Timestamp:           timestamp,
+			CharityCurrentValue: charityCurrentValue,
+			CharityTargetValue:  charityTargetValue,
 		})
 
 		if err != nil {

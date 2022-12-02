@@ -10,6 +10,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/ban"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_redemption"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_reward"
+	"github.com/twitchdev/twitch-cli/internal/events/types/charity"
 	"github.com/twitchdev/twitch-cli/internal/events/types/cheer"
 	"github.com/twitchdev/twitch-cli/internal/events/types/drop"
 	"github.com/twitchdev/twitch-cli/internal/events/types/extension_transaction"
@@ -36,11 +37,13 @@ func All() []events.MockEvent {
 		ban.Event{},
 		channel_points_redemption.Event{},
 		channel_points_reward.Event{},
+		charity.Event{},
 		cheer.Event{},
 		drop.Event{},
 		extension_transaction.Event{},
 		follow.Event{},
 		gift.Event{},
+		goal.Event{},
 		hype_train.Event{},
 		moderator_change.Event{},
 		poll.Event{},
@@ -51,7 +54,6 @@ func All() []events.MockEvent {
 		streamdown.Event{},
 		subscribe.Event{},
 		subscription_message.Event{},
-		goal.Event{},
 		user_update.Event{},
 	}
 }

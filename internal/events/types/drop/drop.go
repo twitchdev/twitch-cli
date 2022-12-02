@@ -39,6 +39,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 	switch params.Transport {
 	case models.TransportEventSub:
+		campaignId := util.RandomGUID()
+
 		body := &models.DropsEntitlementEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
@@ -47,6 +49,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
 					OrganizationID: params.FromUserID,
+					CategoryID:     params.GameID,
+					CampaignID:     campaignId,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
@@ -61,8 +65,8 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					Data: models.DropsEntitlementEventSubEventData{
 						OrganizationID: params.FromUserID,
 						CategoryID:     params.GameID,
-						CategoryName:   "",
-						CampaignID:     util.RandomGUID(),
+						CategoryName:   "Special Events",
+						CampaignID:     campaignId,
 						EntitlementID:  util.RandomGUID(),
 						BenefitID:      params.ItemID,
 						UserID:         params.ToUserID,

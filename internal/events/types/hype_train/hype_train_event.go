@@ -39,7 +39,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	localGoal := util.RandomInt(10*100*100) + localTotal
 	localProgress := localTotal - util.RandomInt(100)
 
-	tNow, _ := time.Parse(params.Timestamp, time.RFC3339Nano)
+	tNow, _ := time.Parse(time.RFC3339Nano, params.Timestamp)
 
 	switch params.Transport {
 	case models.TransportEventSub:
@@ -90,6 +90,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 					UserNameWhoMadeContribution:  "cli_user2",
 					UserLoginWhoMadeContribution: "cli_user2",
 				},
+				Level:              localLevel,
 				StartedAtTimestamp: params.Timestamp,
 				ExpiresAtTimestamp: tNow.Add(5 * time.Minute).Format(time.RFC3339Nano),
 			},
@@ -97,15 +98,11 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		if params.Trigger == "hype-train-begin" {
 			body.Event.Progress = &localTotal
 		}
-		if params.Trigger == "hype-train-progress" {
-			body.Event.Level = localLevel
-		}
 		if params.Trigger == "hype-train-end" {
 			body.Event.CooldownEndsAtTimestamp = tNow.Add(1 * time.Hour).Format(time.RFC3339Nano)
 			body.Event.EndedAtTimestamp = params.Timestamp
 			body.Event.ExpiresAtTimestamp = ""
 			body.Event.Goal = 0
-			body.Event.Level = localLevel
 			body.Event.Progress = nil
 			body.Event.StartedAtTimestamp = tNow.Add(5 * -time.Minute).Format(time.RFC3339Nano)
 		}

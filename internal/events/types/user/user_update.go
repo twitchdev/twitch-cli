@@ -13,11 +13,11 @@ import (
 var transportsSupported = map[string]bool{
 	models.TransportEventSub: true,
 }
-var triggers = []string{"user.update"}
+var triggers = []string{"user-update"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
-		"user.update": "user.update",
+		"user-update": "user.update",
 	},
 }
 
@@ -46,10 +46,12 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				CreatedAt: params.Timestamp,
 			},
 			Event: models.UserUpdateEventSubEvent{
-				UserID:      params.ToUserID,
-				UserLogin:   params.ToUserName,
-				UserName:    params.ToUserName,
-				Description: params.Description,
+				UserID:        params.ToUserID,
+				UserLogin:     params.ToUserName,
+				UserName:      params.ToUserName,
+				Email:         "stream-lover@example.com",
+				EmailVerified: true,
+				Description:   params.Description,
 			},
 		}
 

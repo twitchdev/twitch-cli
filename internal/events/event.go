@@ -5,24 +5,26 @@ package events
 // MockEventParameters are used to craft the event; most of this data is prepopulated by lower services, such as the from/to users to avoid
 // replicating logic across files
 type MockEventParameters struct {
-	ID                 string
-	Transport          string
-	Trigger            string
-	FromUserID         string
-	FromUserName       string
-	ToUserID           string
-	ToUserName         string
-	IsAnonymous        bool
-	IsGift             bool
-	EventStatus        string
-	SubscriptionStatus string
-	ItemID             string
-	ItemName           string
-	Cost               int64
-	IsPermanent        bool
-	Description        string
-	GameID             string
-	Timestamp          string
+	ID                  string
+	Transport           string
+	Trigger             string
+	FromUserID          string
+	FromUserName        string
+	ToUserID            string
+	ToUserName          string
+	IsAnonymous         bool
+	IsGift              bool
+	EventStatus         string
+	SubscriptionStatus  string
+	ItemID              string
+	ItemName            string
+	Cost                int64
+	IsPermanent         bool
+	Description         string
+	GameID              string
+	Timestamp           string
+	CharityCurrentValue int
+	CharityTargetValue  int
 }
 
 type MockEventResponse struct {

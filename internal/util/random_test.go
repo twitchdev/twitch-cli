@@ -45,7 +45,12 @@ func TestRandomType(t *testing.T) {
 	for i := 0; i < 20; i++ {
 		randomType := RandomType()
 
-		a.NotEmpty(randomType)
+		knownValue := false
+		if randomType == "bits" || randomType == "subscription" || randomType == "other" {
+			knownValue = true
+		}
+
+		a.Equal(true, knownValue)
 	}
 }
 
