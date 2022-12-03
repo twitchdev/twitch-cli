@@ -137,7 +137,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
-				Type:    "channel.charity_campaign.donate",
+				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
 				Status:  params.SubscriptionStatus,
 				Cost:    0,
