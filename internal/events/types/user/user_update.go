@@ -33,7 +33,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  params.SubscriptionStatus,
-				Type:    "user.update",
+				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
 					UserID: params.ToUserID,
