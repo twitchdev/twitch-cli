@@ -45,7 +45,7 @@ Used to either create or send mock events for use with local webhooks testing.
 | `remove-reward`       | Channel Points EventSub event for a Custom Reward being removed.                                                                     |
 | `revoke`              | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly.                           |
 | `stream-change`       | Stream Changed event.                                                                                                                |
-| `streamdown`          | Sstream offline event.                                                                                                               |
+| `streamdown`          | Stream offline event.                                                                                                               |
 | `streamup`            | Stream online event.                                                                                                                 |
 | `subscribe-message`   | Subscription Message event.                                                                                                          |
 | `subscribe`           | A standard subscription event. Triggers a basic tier 1 sub.                                                                          |
@@ -154,7 +154,7 @@ Allows you to test if your webserver responds to subscription requests properly.
 | `remove-reward`       | Channel Points EventSub event for a Custom Reward being removed.                                                                     |
 | `revoke`              | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly.                           |
 | `stream-change`       | Stream Changed event.                                                                                                                |
-| `streamdown`          | Sstream offline event.                                                                                                               |
+| `streamdown`          | Stream offline event.                                                                                                               |
 | `streamup`            | Stream online event.                                                                                                                 |
 | `subscribe-message`   | Subscription Message event.                                                                                                          |
 | `subscribe`           | A standard subscription event. Triggers a basic tier 1 sub.                                                                          |
