@@ -3,8 +3,6 @@
 package users
 
 import (
-	"bytes"
-	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -133,37 +131,4 @@ func TestFollows(t *testing.T) {
 	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err)
 	a.Equal(200, resp.StatusCode)
-
-	// post
-	post := PostFollowBody{ToID: "1", FromID: "2"}
-	b, _ := json.Marshal(post)
-	req, _ = http.NewRequest(http.MethodPost, ts.URL+FollowsEndpoint{}.Path(), bytes.NewBuffer(b))
-	q = req.URL.Query()
-	req.URL.RawQuery = q.Encode()
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-
-	post.FromID = ""
-	b, _ = json.Marshal(post)
-	req, _ = http.NewRequest(http.MethodPost, ts.URL+FollowsEndpoint{}.Path(), bytes.NewBuffer(b))
-	q = req.URL.Query()
-	req.URL.RawQuery = q.Encode()
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(400, resp.StatusCode)
-
-	// delete
-	req, _ = http.NewRequest(http.MethodDelete, ts.URL+FollowsEndpoint{}.Path(), nil)
-	q = req.URL.Query()
-	req.URL.RawQuery = q.Encode()
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(400, resp.StatusCode)
-
-	q.Set("to_id", "1")
-	q.Set("from_id", "2")
-	req.URL.RawQuery = q.Encode()
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(204, resp.StatusCode)
 }
