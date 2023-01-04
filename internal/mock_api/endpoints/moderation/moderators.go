@@ -22,7 +22,7 @@ var moderatorsMethodsSupported = map[string]bool{
 }
 
 var moderatorsScopesByMethod = map[string][]string{
-	http.MethodGet:    {"moderation:read"},
+	http.MethodGet:    {"moderation:read", "channel:manage:moderators"},
 	http.MethodPost:   {},
 	http.MethodDelete: {},
 	http.MethodPatch:  {},

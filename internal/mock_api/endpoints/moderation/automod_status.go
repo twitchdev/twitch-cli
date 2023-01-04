@@ -83,25 +83,13 @@ func postAutomodStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, data := range body.Data {
-		if data.MessageID == "" || data.MessageText == "" || data.UserID == "" {
-			mock_errors.WriteBadRequest(w, "msg_id, msg_text, and user_id are required")
+		if data.MessageID == "" || data.MessageText == "" {
+			mock_errors.WriteBadRequest(w, "msg_id and msg_text are required")
 			return
 		}
 
-		shouldPermit := true
+		shouldPermit := util.RandomInt(2) == 0
 
-		dbr, err := db.NewQuery(r, 100).GetBans(database.UserRequestParams{BroadcasterID: userCtx.UserID, UserID: data.UserID})
-		if err != nil {
-			mock_errors.WriteServerError(w, "error getting ban status")
-			return
-		}
-
-		bans := dbr.Data.([]database.Ban)
-		if len(bans) > 0 {
-			shouldPermit = false
-		} else {
-			shouldPermit = util.RandomInt(2) == 0
-		}
 		response = append(response, PostAutomodStatusResponse{MessageID: data.MessageID, IsPermitted: shouldPermit})
 	}
 

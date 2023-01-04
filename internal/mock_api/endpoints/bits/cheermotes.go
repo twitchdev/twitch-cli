@@ -32,6 +32,10 @@ var cheermotesScopesByMethod = map[string][]string{
 type Cheermotes struct{}
 
 type CheermotesResponse struct {
+	Data []CheermotesResponseData `json:"data"`
+}
+
+type CheermotesResponseData struct {
 	Prefix       string      `json:"prefix"`
 	Order        int         `json:"order"`
 	LastUpdated  string      `json:"last_updated"`
@@ -93,9 +97,9 @@ func (e Cheermotes) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCheermotes(w http.ResponseWriter, r *http.Request) {
-	cheermoteBody := []CheermotesResponse{}
+	cheermoteBody := CheermotesResponse{}
 	for i := 0; i < len(defaultTypes); i++ {
-		cheermote := CheermotesResponse{
+		cheermote := CheermotesResponseData{
 			Prefix:       defaultPrefixes[i],
 			Order:        i + 1,
 			LastUpdated:  util.GetTimestamp().Format(time.RFC3339),
@@ -125,7 +129,7 @@ func getCheermotes(w http.ResponseWriter, r *http.Request) {
 			})
 		}
 
-		cheermoteBody = append(cheermoteBody, cheermote)
+		cheermoteBody.Data = append(cheermoteBody.Data, cheermote)
 	}
 
 	response, _ := json.Marshal(cheermoteBody)

@@ -65,6 +65,7 @@ type Ban struct {
 	UserLogin          string  `db:"user_login" json:"user_login"`
 	UserName           string  `db:"user_name" json:"user_name"`
 	ExpiresAt          *string `db:"expires_at" json:"expires_at"`
+	CreatedAt          string  `db:"created_at" json:"created_at"`
 	Reason             string  `json:"reason"`
 	ModeratorID        string  `json:"moderator_id"`
 	ModeratorUserLogin string  `json:"moderator_login"`
@@ -184,7 +185,7 @@ func (q *Query) InsertBan(p UserRequestParams) error {
 
 func (q *Query) GetBans(p UserRequestParams) (*DBResponse, error) {
 	r := []Ban{}
-	stmt := generateSQL("select b.user_id, b.expires_at, u1.display_name as user_name, u1.user_login from bans b join users u1 on b.user_id=u1.id", p, SEP_AND)
+	stmt := generateSQL("select b.user_id, b.expires_at, b.created_at, u1.display_name as user_name, u1.user_login from bans b join users u1 on b.user_id=u1.id", p, SEP_AND)
 	rows, err := q.DB.NamedQuery(stmt+q.SQL, p)
 	if err != nil {
 		return nil, err
