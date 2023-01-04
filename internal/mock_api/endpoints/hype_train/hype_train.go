@@ -130,6 +130,11 @@ func getHypeTrainEvents(w http.ResponseWriter, r *http.Request) {
 		events = append(events, h)
 	}
 
-	bytes, _ := json.Marshal(models.APIResponse{Data: events})
+	bytes, _ := json.Marshal(
+		models.APIResponse{
+			Data:       events,
+			Pagination: &models.APIPagination{}, // Since these are randomly generated, true pagination isn't implemented
+		},
+	)
 	w.Write(bytes)
 }

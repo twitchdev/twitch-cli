@@ -31,7 +31,7 @@ var channelEmotesScopesByMethod = map[string][]string{
 
 type ChannelEmotes struct{}
 
-func (e ChannelEmotes) Path() string { return "/chat/emotes/channel" }
+func (e ChannelEmotes) Path() string { return "/chat/emotes" }
 
 func (e ChannelEmotes) GetRequiredScopes(method string) []string {
 	return channelEmotesScopesByMethod[method]
@@ -61,7 +61,6 @@ func getChannelEmotes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	setID := fmt.Sprint(util.RandomInt(10 * 1000))
-	ownerID := util.RandomUserID()
 	for _, v := range defaultEmoteTypes {
 		emoteType := v
 		for i := 0; i < 5; i++ {
@@ -71,13 +70,25 @@ func getChannelEmotes(w http.ResponseWriter, r *http.Request) {
 				ID:   fmt.Sprint(id),
 				Name: name,
 				Images: EmotesImages{
-					ImageURL1X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v1/%v/1.0", id),
-					ImageURL2X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v1/%v/2.0", id),
-					ImageURL4X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v1/%v/4.0", id),
+					ImageURL1X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v2/%v/static/light/1.0", id),
+					ImageURL2X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v2/%v/static/light/2.0", id),
+					ImageURL4X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v2/%v/static/light/3.0", id),
 				},
 				EmoteType:  &emoteType,
 				EmoteSetID: &setID,
-				OwnerID:    &ownerID,
+				Format: []string{
+					"static",
+					"animated",
+				},
+				Scale: []string{
+					"1.0",
+					"2.0",
+					"3.0",
+				},
+				ThemeMode: []string{
+					"light",
+					"dark",
+				},
 			}
 			if emoteType == "subscription" {
 				thousand := "1000"
@@ -91,6 +102,11 @@ func getChannelEmotes(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	bytes, _ := json.Marshal(models.APIResponse{Data: emotes})
+	bytes, _ := json.Marshal(
+		models.APIResponse{
+			Data:     emotes,
+			Template: templateEmoteURL,
+		},
+	)
 	w.Write(bytes)
 }
