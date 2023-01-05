@@ -461,13 +461,14 @@ func generateUsers(ctx context.Context, count int) error {
 			StreamID:         &s.ID,
 			BroadcasterID:    s.Broacaster,
 			Title:            "Sample stream!",
-			VideoDescription: "",
+			VideoDescription: "Such an interesting stream today...",
 			CreatedAt:        util.GetTimestamp().Format(time.RFC3339),
 			PublishedAt:      util.GetTimestamp().Format(time.RFC3339),
 			Viewable:         "public",
 			ViewCount:        0,
 			Duration:         "1h0m0s",
 			VideoLanguage:    "en",
+			Type:             "archive",
 		}
 		err := db.NewQuery(nil, 100).InsertVideo(v)
 		if err != nil {

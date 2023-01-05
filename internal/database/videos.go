@@ -14,7 +14,7 @@ type Video struct {
 	BroadcasterLogin string              `db:"broadcaster_login" json:"user_login" dbi:"false"`
 	BroadcasterName  string              `db:"broadcaster_name" json:"user_name" dbi:"false"`
 	Title            string              `db:"title" json:"title"`
-	VideoDescription string              `db:"video_description" json:"video_description"`
+	VideoDescription string              `db:"video_description" json:"description"`
 	CreatedAt        string              `db:"created_at" json:"created_at"`
 	PublishedAt      string              `db:"published_at" json:"published_at"`
 	Viewable         string              `db:"viewable" json:"viewable"`
@@ -98,6 +98,10 @@ func (q *Query) GetVideos(v Video, period string, sort string) (*DBResponse, err
 			return nil, err
 		}
 		r[i].MutedSegments = vms
+
+		if r[i].Type == "" {
+			r[i].Type = "archive"
+		}
 	}
 
 	dbr := DBResponse{

@@ -38,6 +38,9 @@ type ChannelTeamResponse struct {
 	ThumbnailURL       string  `json:"thumbnail_url"`
 	TeamName           string  `json:"team_name"`
 	TeamDisplayName    string  `json:"team_display_name"`
+	BroadcasterID      string  `json:"broadcaster_id"`
+	BroadcasterName    string  `json:"broadcaster_name"`
+	BroadcasterLogin   string  `json:"broadcaster_login"`
 }
 
 func (e ChannelTeams) Path() string { return "/teams/channel" }
@@ -68,6 +71,17 @@ func getChannelTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get user information
+	userdbr, err := db.NewQuery(r, 1).GetUser(database.User{ID: r.URL.Query().Get("broadcaster_id")})
+	if err != nil {
+		mock_errors.WriteServerError(w, "error fetching user")
+		return
+	}
+	broadcasterID := r.URL.Query().Get("broadcaster_id")
+	broadcasterLogin := userdbr.UserLogin
+	broadcasterName := userdbr.DisplayName
+
+	// Get team information
 	dbr, err := db.NewQuery(r, 100).GetTeamByBroadcaster(r.URL.Query().Get("broadcaster_id"))
 	if err != nil {
 		mock_errors.WriteServerError(w, "error fetching team")
@@ -89,6 +103,9 @@ func getChannelTeams(w http.ResponseWriter, r *http.Request) {
 			ThumbnailURL:       t.ThumbnailURL,
 			TeamName:           t.TeamName,
 			TeamDisplayName:    t.TeamDisplayName,
+			BroadcasterID:      broadcasterID,
+			BroadcasterLogin:   broadcasterLogin,
+			BroadcasterName:    broadcasterName,
 		})
 	}
 
