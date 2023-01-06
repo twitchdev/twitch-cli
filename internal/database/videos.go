@@ -41,7 +41,7 @@ type Clip struct {
 	BroadcasterID   string  `db:"broadcaster_id" json:"broadcaster_id"`
 	BroadcasterName string  `db:"broadcaster_name" json:"broadcaster_name" dbi:"false"`
 	CreatorID       string  `db:"creator_id" json:"creator_id"`
-	CreatorName     string  `db:"creator_name" json:"creator_login" dbi:"false"`
+	CreatorName     string  `db:"creator_name" json:"creator_name" dbi:"false"`
 	VideoID         string  `db:"video_id" json:"video_id"`
 	GameID          string  `db:"game_id" json:"game_id"`
 	Language        string  `db:"language" dbi:"false" json:"language"`
@@ -49,6 +49,7 @@ type Clip struct {
 	ViewCount       int     `db:"view_count" json:"view_count"`
 	CreatedAt       string  `db:"created_at" json:"created_at"`
 	Duration        float64 `db:"duration" json:"duration"`
+	VodOffset       int     `db:"vod_offset" json:"vod_offset"`
 	// calculated fields
 	URL          string `json:"url"`
 	ThumbnailURL string `json:"thumbnail_url"`
@@ -146,7 +147,7 @@ func (q *Query) InsertClip(c Clip) error {
 
 func (q *Query) GetClips(c Clip, startDate string, endDate string) (*DBResponse, error) {
 	var r []Clip
-	sql := generateSQL("select c.id, c.broadcaster_id, c.creator_id, c.video_id, c.game_id, c.title, c.view_count, c.duration, datetime(c.created_at) as created_at,  u1.display_name as broadcaster_name, u1.stream_language as language, u2.display_name as creator_name from clips c join users u1 on c.broadcaster_id = u1.id join users u2 on c.creator_id = u2.id ", c, SEP_AND)
+	sql := generateSQL("select c.id, c.broadcaster_id, c.creator_id, c.video_id, c.game_id, c.title, c.view_count, c.duration, c.vod_offset, datetime(c.created_at) as created_at,  u1.display_name as broadcaster_name, u1.stream_language as language, u2.display_name as creator_name from clips c join users u1 on c.broadcaster_id = u1.id join users u2 on c.creator_id = u2.id ", c, SEP_AND)
 	if startDate != "" {
 		c.StartedAt = startDate
 		c.EndedAt = endDate

@@ -145,6 +145,7 @@ func postClips(w http.ResponseWriter, r *http.Request) {
 		VideoID:       "",
 		Duration:      33.3,
 		CreatedAt:     util.GetTimestamp().Format(time.RFC3339),
+		VodOffset:     int(util.RandomInt(3000)),
 	}
 
 	err = db.NewQuery(r, 100).InsertClip(clip)

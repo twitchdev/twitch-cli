@@ -24,6 +24,7 @@ const TEST_USER_LOGIN = "testing_user1"
 const TEST_USER_ID_2 = "2"
 const TEST_USER_LOGIN_2 = "second_user"
 const CATEGORY_ID = "1"
+const IGDB_ID = "123"
 
 var db CLIDatabase
 var q *Query
@@ -49,7 +50,7 @@ func TestMain(m *testing.M) {
 	}
 	q = db.NewQuery(nil, 100)
 
-	err = q.InsertCategory(Category{Name: "test", ID: CATEGORY_ID, ViewerCount: 0, BoxartURL: ""}, false)
+	err = q.InsertCategory(Category{Name: "test", ID: CATEGORY_ID, IGDB: IGDB_ID, ViewerCount: 0, BoxartURL: ""}, false)
 	log.Print(err)
 
 	err = q.InsertUser(User{
@@ -170,7 +171,7 @@ func TestAPI(t *testing.T) {
 func TestCategories(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	c := Category{Name: "test", ID: CATEGORY_ID}
+	c := Category{Name: "test", ID: CATEGORY_ID, IGDB: IGDB_ID}
 	err := q.InsertCategory(c, false)
 	a.NotNil(err)
 
@@ -180,6 +181,7 @@ func TestCategories(t *testing.T) {
 	categories := dbr.Data.([]Category)
 	a.Len(categories, 1)
 	a.Equal(c.ID, categories[0].ID)
+	a.Equal(c.IGDB, categories[0].IGDB)
 
 	// search
 	dbr, err = q.SearchCategories("es")
@@ -771,6 +773,7 @@ func TestVideos(t *testing.T) {
 		ViewCount:     100,
 		Duration:      1234.5,
 		CreatedAt:     util.GetTimestamp().Format(time.RFC3339),
+		VodOffset:     int(util.RandomInt(3000)),
 	}
 
 	err = q.InsertClip(c)

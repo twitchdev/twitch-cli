@@ -5,12 +5,13 @@ package database
 import "log"
 
 type DropsEntitlement struct {
-	ID        string `db:"id" json:"id" dbs:"de.id"`
-	UserID    string `db:"user_id" json:"user_id"`
-	BenefitID string `db:"benefit_id" json:"benefit_id"`
-	GameID    string `db:"game_id" json:"game_id"`
-	Timestamp string `db:"timestamp" json:"timestamp"`
-	Status    string `db:"status" json:"fulfillment_status"`
+	ID          string `db:"id" json:"id" dbs:"de.id"`
+	UserID      string `db:"user_id" json:"user_id"`
+	BenefitID   string `db:"benefit_id" json:"benefit_id"`
+	GameID      string `db:"game_id" json:"game_id"`
+	Timestamp   string `db:"timestamp" json:"timestamp"`
+	Status      string `db:"status" json:"fulfillment_status"`
+	LastUpdated string `db:"last_updated" json:"last_updated"`
 }
 
 func (q *Query) GetDropsEntitlements(de DropsEntitlement) (*DBResponse, error) {

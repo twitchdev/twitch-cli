@@ -63,6 +63,7 @@ func generateUsers(ctx context.Context, count int) error {
 		category := database.Category{
 			ID:   fmt.Sprintf("%v", util.RandomInt(10*100*100)),
 			Name: c,
+			IGDB: fmt.Sprintf("%v", util.RandomInt(10*100*100)),
 		}
 
 		err := db.NewQuery(nil, 100).InsertCategory(category, false)
@@ -181,12 +182,13 @@ func generateUsers(ctx context.Context, count int) error {
 		}
 
 		entitlement := database.DropsEntitlement{
-			ID:        util.RandomGUID(),
-			BenefitID: benefitID,
-			GameID:    dropsGameID,
-			UserID:    broadcaster.ID,
-			Timestamp: util.GetTimestamp().Format(time.RFC3339Nano),
-			Status:    "CLAIMED",
+			ID:          util.RandomGUID(),
+			BenefitID:   benefitID,
+			GameID:      dropsGameID,
+			UserID:      broadcaster.ID,
+			Timestamp:   util.GetTimestamp().Format(time.RFC3339Nano),
+			Status:      "CLAIMED",
+			LastUpdated: util.GetTimestamp().Format(time.RFC3339Nano),
 		}
 		err = db.NewQuery(nil, 1000).InsertDropsEntitlement(entitlement)
 		if err != nil {
@@ -500,6 +502,7 @@ func generateUsers(ctx context.Context, count int) error {
 			ViewCount:     0,
 			CreatedAt:     util.GetTimestamp().Format(time.RFC3339),
 			Duration:      30.1,
+			VodOffset:     int(util.RandomInt(3000)),
 		}
 		err = db.NewQuery(nil, 100).InsertClip(c)
 		if err != nil {
