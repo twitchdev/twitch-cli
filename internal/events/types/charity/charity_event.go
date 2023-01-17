@@ -43,6 +43,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var stopped_at *string
 
 	randomID := util.RandomGUID()
+	randomID2 := util.RandomGUID()
 	charityName := "Example Charity"
 	charityLogo := "https://abc.cloudfront.net/ppgf/1000/100.png"
 	charityDescription := "Example Description"
@@ -50,6 +51,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 	if params.Trigger == "charity-donate" {
 		campaign_id = &randomID
+		id = &randomID2
 		user_id = &params.FromUserID
 		user_login_name = &params.FromUserName
 
