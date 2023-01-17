@@ -30,6 +30,7 @@ type User struct {
 	Title           string         `db:"title" json:"title"`
 	Language        string         `db:"stream_language" json:"stream_language"`
 	Delay           int            `db:"delay" json:"delay" dbi:"force"`
+	ChatColor       string         `db:"chat_color" json:"-"`
 }
 
 type Follow struct {
@@ -74,6 +75,12 @@ type SearchChannel struct {
 	StartedAt    *string  `db:"started_at" json:"started_at"`
 	// calculated fields
 	ThumbNailURL string `json:"thumbnail_url"`
+}
+
+type VIP struct {
+	BroadcasterID string `db:"broadcaster_id"`
+	UserID        string `db:"user_id"`
+	CreatedAt     string `db:"created_at"`
 }
 
 func (q *Query) GetUser(u User) (User, error) {
@@ -161,7 +168,7 @@ func (q *Query) GetChannels(u User) (*DBResponse, error) {
 }
 
 func (q *Query) InsertUser(u User, upsert bool) error {
-	stmt := generateInsertSQL("users", "id", u, true)
+	stmt := generateInsertSQL("users", "id", u, upsert)
 	_, err := q.DB.NamedExec(stmt, u)
 	return err
 }
@@ -345,4 +352,41 @@ func (q *Query) SearchChannels(query string, live_only bool) (*DBResponse, error
 	dbr.Cursor = q.PaginationCursor
 
 	return &dbr, err
+}
+
+func (q *Query) GetVIPsByBroadcaster(broadcaster string) (*DBResponse, error) {
+	var r []VIP
+
+	err := q.DB.Select(&r, "SELECT * FROM vips WHERE broadcaster_id=$1", broadcaster)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	dbr := DBResponse{
+		Data:  r,
+		Limit: q.Limit,
+		Total: len(r),
+	}
+
+	if len(r) != q.Limit {
+		q.PaginationCursor = ""
+	}
+
+	dbr.Cursor = q.PaginationCursor
+
+	return &dbr, err
+}
+
+func (q *Query) AddVIP(p UserRequestParams) error {
+	stmt := generateInsertSQL("vips", "user_id", p, false)
+	p.CreatedAt = util.GetTimestamp().UTC().Format(time.RFC3339)
+	_, err := q.DB.NamedExec(stmt, p)
+	return err
+}
+
+func (q *Query) DeleteVIP(broadcaster string, user string) error {
+	_, err := q.DB.Exec(`delete from vips where broadcaster_id=$1 and user_id=$2`, broadcaster, user)
+	return err
 }

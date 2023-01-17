@@ -5,7 +5,6 @@ package channels
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -92,6 +91,49 @@ func TestEditors(t *testing.T) {
 	a.Equal(200, resp.StatusCode)
 }
 
+func TestVIPs(t *testing.T) {
+	a := test_setup.SetupTestEnv(t)
+	ts := test_server.SetupTestServer(Vips{})
+
+	// get
+	req, _ := http.NewRequest(http.MethodGet, ts.URL+Vips{}.Path(), nil)
+	q := req.URL.Query()
+	req.URL.RawQuery = q.Encode()
+	resp, err := http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	q.Set("broadcaster_id", "1")
+	q.Set("user_id", "3")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(200, resp.StatusCode)
+
+	// post
+	req, _ = http.NewRequest(http.MethodPost, ts.URL+Vips{}.Path(), nil)
+	q.Set("broadcaster_id", "1")
+	q.Set("user_id", "2")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(422, resp.StatusCode)
+
+	req, _ = http.NewRequest(http.MethodPost, ts.URL+Vips{}.Path(), nil)
+	q.Set("user_id", "-1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(404, resp.StatusCode)
+
+	req, _ = http.NewRequest(http.MethodPost, ts.URL+Vips{}.Path(), nil)
+	q.Del("user_id")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+}
+
 func TestInformation(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 	ts := test_server.SetupTestServer(InformationEndpoint{})
@@ -129,7 +171,6 @@ func TestInformation(t *testing.T) {
 	q.Set("broadcaster_id", "2")
 	req.URL.RawQuery = q.Encode()
 	resp, err = http.DefaultClient.Do(req)
-	log.Print(resp.StatusCode)
 	a.Nil(err, resp.StatusCode)
 	a.Equal(401, resp.StatusCode)
 

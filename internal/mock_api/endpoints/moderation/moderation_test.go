@@ -120,9 +120,9 @@ func TestAutoModStatus(t *testing.T) {
 
 func TestBanned(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
-	ts := test_server.SetupTestServer(Bans{})
+	ts := test_server.SetupTestServer(Banned{})
 
-	req, _ := http.NewRequest(http.MethodGet, ts.URL+Bans{}.Path(), nil)
+	req, _ := http.NewRequest(http.MethodGet, ts.URL+Banned{}.Path(), nil)
 	q := req.URL.Query()
 	req.URL.RawQuery = q.Encode()
 	resp, err := http.DefaultClient.Do(req)
@@ -140,4 +140,54 @@ func TestBanned(t *testing.T) {
 	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err)
 	a.Equal(200, resp.StatusCode)
+}
+
+func TestBans(t *testing.T) {
+	a := test_setup.SetupTestEnv(t)
+	ts := test_server.SetupTestServer(Bans{})
+
+	// post
+	req, _ := http.NewRequest(http.MethodPost, ts.URL+Bans{}.Path(), nil)
+	q := req.URL.Query()
+	req.URL.RawQuery = q.Encode()
+	resp, err := http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(401, resp.StatusCode)
+
+	q.Set("broadcaster_id", "1")
+	q.Set("moderator_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	body := PostBansRequestBody{
+		Data: PostBansRequestBodyData{
+			UserID: "99",
+			Reason: "test",
+		},
+	}
+
+	b, _ := json.Marshal(body)
+	req, _ = http.NewRequest(http.MethodPost, ts.URL+Bans{}.Path(), bytes.NewBuffer(b))
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(200, resp.StatusCode)
+
+	// delete
+	q.Set("broadcaster_id", "1")
+	q.Set("moderator_id", "1")
+	req, _ = http.NewRequest(http.MethodDelete, ts.URL+Bans{}.Path(), nil)
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	q.Set("user_id", "99")
+	req, _ = http.NewRequest(http.MethodDelete, ts.URL+Bans{}.Path(), nil)
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(204, resp.StatusCode)
 }

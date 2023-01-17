@@ -15,16 +15,16 @@ import (
 
 var moderatorsMethodsSupported = map[string]bool{
 	http.MethodGet:    true,
-	http.MethodPost:   false,
-	http.MethodDelete: false,
+	http.MethodPost:   true,
+	http.MethodDelete: true,
 	http.MethodPatch:  false,
 	http.MethodPut:    false,
 }
 
 var moderatorsScopesByMethod = map[string][]string{
 	http.MethodGet:    {"moderation:read", "channel:manage:moderators"},
-	http.MethodPost:   {},
-	http.MethodDelete: {},
+	http.MethodPost:   {"channel:manage:moderators"},
+	http.MethodDelete: {"channel:manage:moderators"},
 	http.MethodPatch:  {},
 	http.MethodPut:    {},
 }
@@ -48,6 +48,12 @@ func (e Moderators) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		getModerators(w, r)
 		break
+	case http.MethodPost:
+		postModerators(w, r)
+		break
+	case http.MethodDelete:
+		deleteModerators(w, r)
+		break
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -55,12 +61,14 @@ func (e Moderators) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func getModerators(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
-	dbr := &database.DBResponse{}
-	var err error
 	if !userCtx.MatchesBroadcasterIDParam(r) {
 		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
 		return
 	}
+
+	dbr := &database.DBResponse{}
+	var err error
+
 	bans := []database.Moderator{}
 	userIDs := r.URL.Query()["user_id"]
 	if len(userIDs) > 0 {
@@ -88,4 +96,139 @@ func getModerators(w http.ResponseWriter, r *http.Request) {
 
 	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
+}
+
+func postModerators(w http.ResponseWriter, r *http.Request) {
+	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
+	if !userCtx.MatchesBroadcasterIDParam(r) {
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
+		return
+	}
+
+	broadcasterID := r.URL.Query().Get("broadcaster_id")
+	if broadcasterID == "" {
+		mock_errors.WriteBadRequest(w, "Missing required parameter broadcaster_id")
+		return
+	}
+
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		mock_errors.WriteBadRequest(w, "Missing required parameter user_id")
+		return
+	}
+
+	// Check if user exists
+	user, err := db.NewQuery(r, 100).GetUser(database.User{ID: userID})
+	if err != nil {
+		mock_errors.WriteServerError(w, "error pulling user: "+err.Error())
+		return
+	}
+	if user.ID == "" {
+		mock_errors.WriteBadRequest(w, "User specified in user_id doesn't exist")
+		return
+	}
+
+	// Check if user is already a moderator on the channel, or is the broadcaster
+	isModerator := false
+	if broadcasterID == userID {
+		isModerator = true
+	} else {
+		moderatorListDbr, err := db.NewQuery(r, 1000).GetModeratorsForBroadcaster(broadcasterID)
+		if err != nil {
+			mock_errors.WriteServerError(w, err.Error())
+			return
+		}
+		for _, mod := range moderatorListDbr.Data.([]database.Moderator) {
+			if mod.UserID == userID {
+				isModerator = true
+			}
+		}
+	}
+	if isModerator {
+		mock_errors.WriteUnauthorized(w, "The user specified in parameter moderator_id is already a moderator on this channel")
+		return
+	}
+
+	// Check if the user is banned from the channel
+	dbr, err := db.NewQuery(r, 100).GetBans(database.UserRequestParams{BroadcasterID: broadcasterID, UserID: userID})
+	if err != nil {
+		mock_errors.WriteServerError(w, "error fetching bans")
+		return
+	}
+	if len(dbr.Data.([]database.Ban)) != 0 {
+		mock_errors.WriteBadRequest(w, "User cannot become a moderator because they are banned.")
+		return
+	}
+
+	// Check if the user is a VIP
+	vipDbr, err := db.NewQuery(r, 100).GetVIPsByBroadcaster(broadcasterID)
+	if err != nil {
+		mock_errors.WriteServerError(w, "error fetching vips: "+err.Error())
+		return
+	}
+	for _, vip := range vipDbr.Data.([]database.VIP) {
+		if vip.UserID == userID {
+			mock_errors.WriteUnprocessableEntity(w, "The user is currently a VIP. They must be removed as a VIP to become a moderator.")
+			return
+		}
+	}
+
+	err = db.NewQuery(r, 100).AddModerator(database.UserRequestParams{BroadcasterID: broadcasterID, UserID: userID})
+	if err != nil {
+		mock_errors.WriteServerError(w, "error adding moderator")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func deleteModerators(w http.ResponseWriter, r *http.Request) {
+	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
+	if !userCtx.MatchesBroadcasterIDParam(r) {
+		mock_errors.WriteUnauthorized(w, "broadcaster_id does not match token")
+		return
+	}
+
+	broadcasterID := r.URL.Query().Get("broadcaster_id")
+	if broadcasterID == "" {
+		mock_errors.WriteBadRequest(w, "Missing required parameter broadcaster_id")
+		return
+	}
+
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		mock_errors.WriteBadRequest(w, "Missing required parameter user_id")
+		return
+	}
+
+	// Check if user is a moderator on the channel
+	isModerator := false
+	moderatorListDbr, err := db.NewQuery(r, 1000).GetModeratorsForBroadcaster(broadcasterID)
+	if err != nil {
+		mock_errors.WriteServerError(w, err.Error())
+		return
+	}
+	for _, mod := range moderatorListDbr.Data.([]database.Moderator) {
+		if mod.UserID == userID {
+			isModerator = true
+		}
+	}
+	if !isModerator {
+		mock_errors.WriteBadRequest(w, "The user specified in parameter moderator_id is not a moderator on this channel")
+		return
+	}
+
+	// Check if the user is the broadcaster
+	if userID == broadcasterID {
+		mock_errors.WriteBadRequest(w, "The broadcaster cannot be removed as a moderator")
+		return
+	}
+
+	err = db.NewQuery(r, 100).RemoveModerator(broadcasterID, userID)
+	if err != nil {
+		mock_errors.WriteServerError(w, "error removing moderator: "+err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

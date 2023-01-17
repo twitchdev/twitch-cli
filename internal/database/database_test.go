@@ -23,6 +23,8 @@ const TEST_USER_ID = "1"
 const TEST_USER_LOGIN = "testing_user1"
 const TEST_USER_ID_2 = "2"
 const TEST_USER_LOGIN_2 = "second_user"
+const TEST_USER_ID_99 = "99"
+const TEST_USER_LOGIN_99 = "non_mod_user"
 const CATEGORY_ID = "1"
 const IGDB_ID = "123"
 
@@ -74,6 +76,23 @@ func TestMain(m *testing.M) {
 		ID:              TEST_USER_ID_2,
 		UserLogin:       TEST_USER_LOGIN_2,
 		DisplayName:     TEST_USER_LOGIN_2,
+		Email:           "",
+		BroadcasterType: "partner",
+		UserType:        "testing",
+		UserDescription: "hi mom",
+		CreatedAt:       util.GetTimestamp().Format(time.RFC3339),
+		ModifiedAt:      util.GetTimestamp().Format(time.RFC3339),
+		CategoryID:      sql.NullString{String: "", Valid: false},
+		Title:           "hello",
+		Language:        "en",
+		Delay:           0,
+	}, false)
+	log.Print(err)
+
+	err = q.InsertUser(User{
+		ID:              TEST_USER_ID_99,
+		UserLogin:       TEST_USER_LOGIN_99,
+		DisplayName:     TEST_USER_LOGIN_99,
 		Email:           "",
 		BroadcasterType: "partner",
 		UserType:        "testing",
@@ -215,7 +234,7 @@ func TestUsers(t *testing.T) {
 		Title:           "hello",
 		Language:        "en",
 		Delay:           0,
-	}, false)
+	}, true)
 	a.Nil(err)
 
 	err = q.InsertUser(User{
@@ -232,7 +251,7 @@ func TestUsers(t *testing.T) {
 		Title:           "hello",
 		Language:        "en",
 		Delay:           0,
-	}, false)
+	}, true)
 	a.Nil(err)
 
 	u, err := q.GetUser(User{ID: TEST_USER_ID})
@@ -408,7 +427,7 @@ func TestModeration(t *testing.T) {
 	moderators := dbr.Data.([]Moderator)
 	a.GreaterOrEqual(len(moderators), 1)
 
-	dbr, err = q.GetModeratorsForBroadcaster(TEST_USER_ID, "2")
+	dbr, err = q.GetModeratorsForBroadcaster(TEST_USER_ID)
 	a.Nil(err)
 	moderators = dbr.Data.([]Moderator)
 	a.GreaterOrEqual(len(moderators), 1)

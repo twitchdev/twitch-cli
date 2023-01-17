@@ -8,13 +8,16 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/categories"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/channel_points"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/channels"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/charity"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/chat"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/clips"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/drops"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/goals"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/hype_train"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/moderation"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/polls"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/predictions"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/raids"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/schedule"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/search"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/streams"
@@ -22,6 +25,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/teams"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/users"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/videos"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/whispers"
 )
 
 func All() []mock_api.MockEndpoint {
@@ -35,20 +39,32 @@ func All() []mock_api.MockEndpoint {
 		channels.CommercialEndpoint{},
 		channels.Editors{},
 		channels.InformationEndpoint{},
+		channels.Vips{},
+		charity.CharityCampaign{},
+		charity.CharityDonations{},
+		chat.Announcements{},
 		chat.ChannelBadges{},
 		chat.ChannelEmotes{},
+		chat.Chatters{},
+		chat.Color{},
 		chat.EmoteSets{},
 		chat.GlobalBadges{},
 		chat.GlobalEmotes{},
+		chat.Settings{},
 		clips.Clips{},
 		drops.DropsEntitlements{},
+		goals.Goals{},
 		hype_train.HypeTrainEvents{},
 		moderation.AutomodHeld{},
 		moderation.AutomodStatus{},
+		moderation.Banned{},
 		moderation.Bans{},
+		moderation.Chat{},
 		moderation.Moderators{},
+		moderation.ShieldMode{},
 		polls.Polls{},
 		predictions.Predictions{},
+		raids.Raids{},
 		schedule.Schedule{},
 		schedule.ScheduleICal{},
 		schedule.ScheduleSegment{},
@@ -69,5 +85,6 @@ func All() []mock_api.MockEndpoint {
 		users.FollowsEndpoint{},
 		users.UsersEndpoint{},
 		videos.Videos{},
+		whispers.Whispers{},
 	}
 }

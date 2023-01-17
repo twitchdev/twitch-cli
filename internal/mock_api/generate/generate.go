@@ -118,6 +118,25 @@ func generateUsers(ctx context.Context, count int) error {
 		if err != nil {
 			log.Print(err.Error())
 		}
+
+		// Create user chatroom settings
+		_false := false
+		_10 := 10
+		_60 := 60
+		s := database.ChatSettings{
+			BroadcasterID:                 id,
+			SlowMode:                      &_false,
+			SlowModeWaitTime:              &_10,
+			FollowerMode:                  &_false,
+			FollowerModeDuration:          &_60,
+			SubscriberMode:                &_false,
+			EmoteMode:                     &_false,
+			UniqueChatMode:                &_false,
+			NonModeratorChatDelay:         &_false,
+			NonModeratorChatDelayDuration: &_10,
+		}
+
+		db.NewQuery(nil, 100).InsertChatSettings(s)
 	}
 	// fake team
 	log.Printf("Creating team...")
