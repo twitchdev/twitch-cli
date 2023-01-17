@@ -113,11 +113,11 @@ func TestVIPs(t *testing.T) {
 	// post
 	req, _ = http.NewRequest(http.MethodPost, ts.URL+Vips{}.Path(), nil)
 	q.Set("broadcaster_id", "1")
-	q.Set("user_id", "2")
+	q.Set("user_id", "99")
 	req.URL.RawQuery = q.Encode()
 	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err)
-	a.Equal(422, resp.StatusCode)
+	a.Equal(204, resp.StatusCode)
 
 	req, _ = http.NewRequest(http.MethodPost, ts.URL+Vips{}.Path(), nil)
 	q.Set("user_id", "-1")
