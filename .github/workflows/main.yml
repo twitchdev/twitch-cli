@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v2
       -
         name: Build with xgo
-        uses: crazy-max/ghaction-xgo@v1
+        uses: crazy-max/ghaction-xgo@v2
         with:
           dest: build
           targets: windows/amd64,linux/amd64,darwin/amd64
