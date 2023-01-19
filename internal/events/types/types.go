@@ -22,6 +22,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/poll"
 	"github.com/twitchdev/twitch-cli/internal/events/types/prediction"
 	"github.com/twitchdev/twitch-cli/internal/events/types/raid"
+	"github.com/twitchdev/twitch-cli/internal/events/types/shield_mode"
 	"github.com/twitchdev/twitch-cli/internal/events/types/stream_change"
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamdown"
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamup"
@@ -49,6 +50,7 @@ func All() []events.MockEvent {
 		poll.Event{},
 		prediction.Event{},
 		raid.Event{},
+		shield_mode.Event{},
 		stream_change.Event{},
 		streamup.Event{},
 		streamdown.Event{},
