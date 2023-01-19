@@ -35,6 +35,8 @@ var triggerSupported = map[string]bool{
 	"revoke":              true,
 	"shield-mode-begin":   true,
 	"shield-mode-end":     true,
+	"shoutout-create":     true,
+	"shoutout-received":   true,
 	"stream-change":       true,
 	"streamdown":          true,
 	"streamup":            true,
