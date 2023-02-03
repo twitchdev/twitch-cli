@@ -71,6 +71,7 @@ type SearchChannel struct {
 	Title        string   `db:"title" json:"title"`
 	Language     string   `db:"stream_language" json:"broadcaster_language"`
 	TagIDs       []string `json:"tag_ids" dbi:"false"`
+	Tags         []string `json:"tags" dbi:"false"`
 	IsLive       bool     `json:"is_live" db:"is_live"`
 	StartedAt    *string  `db:"started_at" json:"started_at"`
 	// calculated fields
@@ -335,7 +336,8 @@ func (q *Query) SearchChannels(query string, live_only bool) (*DBResponse, error
 		if c.StartedAt == nil {
 			r[i].StartedAt = &emptyString
 		}
-		r[i].TagIDs = st
+		r[i].TagIDs = st // // Needs to be removed from db when this is fully removed from API
+		r[i].Tags = []string{"English", "CLI Tag"}
 		r[i].ThumbNailURL = "https://static-cdn.jtvnw.net/jtv_user_pictures/3f13ab61-ec78-4fe6-8481-8682cb3b0ac2-channel_offline_image-300x300.png"
 	}
 

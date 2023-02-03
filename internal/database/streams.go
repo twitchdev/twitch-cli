@@ -18,6 +18,7 @@ type Stream struct {
 	StartedAt   string   `db:"started_at" json:"started_at"`
 	IsMature    bool     `db:"is_mature" json:"is_mature"`
 	TagIDs      []string `json:"tag_ids" dbi:"false"`
+	Tags        []string `json:"tags" dbi:"false"`
 	// stored in users, but pulled here for json parsing
 	CategoryID       sql.NullString `db:"category_id" json:"-" dbi:"false"`
 	RealCategoryID   string         `json:"game_id"`
@@ -89,13 +90,9 @@ func (q *Query) GetStream(s Stream) (*DBResponse, error) {
 		r = append(r, s)
 	}
 
-	for i, s := range r {
-		st := []string{}
-		err = q.DB.Select(&st, "select tag_id from stream_tags where user_id=$1", s.UserID)
-		if err != nil {
-			return nil, err
-		}
-		r[i].TagIDs = st
+	for i := range r {
+		r[i].TagIDs = []string{} // Needs to be removed from db when this is fully removed from API
+		r[i].Tags = []string{"English", "CLI Tag"}
 	}
 
 	dbr := DBResponse{

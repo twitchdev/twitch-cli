@@ -15,14 +15,15 @@ import (
 )
 
 type Channel struct {
-	ID           string `db:"id" json:"broadcaster_id"`
-	UserLogin    string `db:"user_login" json:"broadcaster_login"`
-	DisplayName  string `db:"display_name" json:"broadcaster_name"`
-	CategoryID   string `db:"category_id" json:"game_id"`
-	CategoryName string `db:"category_name" json:"game_name" dbi:"false"`
-	Title        string `db:"title" json:"title"`
-	Language     string `db:"stream_language" json:"broadcaster_language"`
-	Delay        int    `dbi:"false" json:"delay"`
+	ID           string   `db:"id" json:"broadcaster_id"`
+	UserLogin    string   `db:"user_login" json:"broadcaster_login"`
+	DisplayName  string   `db:"display_name" json:"broadcaster_name"`
+	CategoryID   string   `db:"category_id" json:"game_id"`
+	CategoryName string   `db:"category_name" json:"game_name" dbi:"false"`
+	Title        string   `db:"title" json:"title"`
+	Language     string   `db:"stream_language" json:"broadcaster_language"`
+	Delay        int      `dbi:"false" json:"delay"`
+	Tags         []string `dbi:"false" json:"tags"`
 }
 
 var informationMethodsSupported = map[string]bool{
@@ -176,6 +177,7 @@ func convertUsers(users []database.User) []Channel {
 			CategoryID:   u.CategoryID.String,
 			CategoryName: u.CategoryName.String,
 			Delay:        u.Delay,
+			Tags:         []string{"English", "CLI Tag"},
 		})
 	}
 	return response

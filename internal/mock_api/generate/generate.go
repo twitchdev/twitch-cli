@@ -263,6 +263,14 @@ func generateUsers(ctx context.Context, count int) error {
 				ChannelPoints: 0,
 				PredictionID:  prediction.ID,
 			},
+			{
+				ID:            util.RandomGUID(),
+				Title:         "Choice3",
+				Color:         "BLUE",
+				Users:         0,
+				ChannelPoints: 0,
+				PredictionID:  prediction.ID,
+			},
 		}
 
 		err = db.NewQuery(nil, 100).InsertPrediction(prediction)

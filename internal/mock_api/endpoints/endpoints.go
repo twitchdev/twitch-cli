@@ -51,6 +51,7 @@ func All() []mock_api.MockEndpoint {
 		chat.GlobalBadges{},
 		chat.GlobalEmotes{},
 		chat.Settings{},
+		chat.Shoutouts{},
 		clips.Clips{},
 		drops.DropsEntitlements{},
 		goals.Goals{},
