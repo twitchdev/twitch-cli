@@ -35,16 +35,13 @@ var migrateSQL = map[int]migrateMap{
 		Message: ``,
 	},
 	4: {
-		SQL:     `ALTER TABLE categories ADD COLUMN igdb_id text not null default 0; UPDATE categories SET igdb_id = abs(random() % 100000); ALTER TABLE clips ADD COLUMN vod_offset int default 0; UPDATE clips SET vod_offset = abs(random() % 3000); ALTER TABLE drops_entitlements ADD COLUMN last_updated text default '2023-01-01T04:17:53.325Z';`,
-		Message: `Updating database to include API changes since last verison. See Twitch CLI changelog for more info.`,
-	},
-	5: {
 		SQL: `
+ALTER TABLE categories ADD COLUMN igdb_id text not null default 0; UPDATE categories SET igdb_id = abs(random() % 100000); ALTER TABLE clips ADD COLUMN vod_offset int default 0; UPDATE clips SET vod_offset = abs(random() % 3000); ALTER TABLE drops_entitlements ADD COLUMN last_updated text default '2023-01-01T04:17:53.325Z';
 CREATE TABLE chat_settings( broadcaster_id text not null primary key, slow_mode boolean not null default 0, slow_mode_wait_time int not null default 10, follower_mode boolean not null default 0, follower_mode_duration int not null default 60, subscriber_mode boolean not null default 0, emote_mode boolean not null default 0, unique_chat_mode boolean not null default 0, non_moderator_chat_delay boolean not null default 0, non_moderator_chat_delay_duration int not null default 10, shieldmode_is_active boolean not null default 0, shieldmode_moderator_id text not null default '', shieldmode_moderator_login text not null default '', shieldmode_moderator_name text not null default '', shieldmode_last_activated text not null default '' );
 INSERT INTO chat_settings (broadcaster_id) SELECT id FROM users;
 ALTER TABLE users ADD COLUMN chat_color text not null default '#9146FF';
 CREATE TABLE vips ( broadcaster_id text not null, user_id text not null, created_at text not null default '', primary key (broadcaster_id, user_id), foreign key (broadcaster_id) references users(id), foreign key (user_id) references users(id) );`,
-		Message: `Huh`,
+		Message: `Updating database to include API changes since last verison. See Twitch CLI changelog for more info.`,
 	},
 }
 
