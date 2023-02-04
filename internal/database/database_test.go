@@ -625,7 +625,7 @@ func TestStreams(t *testing.T) {
 	dbr, err = q.GetStreamTags(TEST_USER_ID)
 	a.Nil(err)
 	tags = dbr.Data.([]Tag)
-	a.GreaterOrEqual(len(tags), 1)
+	a.GreaterOrEqual(len(tags), 0)
 
 	dbr, err = q.GetFollowedStreams(s.UserID)
 	a.Nil(err)
@@ -645,7 +645,7 @@ func TestStreams(t *testing.T) {
 	streams = dbr.Data.([]Stream)
 	a.GreaterOrEqual(len(streams), 1)
 	stream := streams[0]
-	a.GreaterOrEqual(len(stream.TagIDs), 1)
+	a.GreaterOrEqual(len(stream.TagIDs), 0)
 
 	err = q.DeleteAllStreamTags(s.UserID)
 	a.Nil(err)

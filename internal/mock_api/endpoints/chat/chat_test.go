@@ -180,3 +180,24 @@ func TestSettings(t *testing.T) {
 	a.Nil(err)
 	a.Equal(200, resp.StatusCode)
 }
+
+func TestShoutouts(t *testing.T) {
+	a := test_setup.SetupTestEnv(t)
+	ts := test_server.SetupTestServer(Shoutouts{})
+
+	// get
+	req, _ := http.NewRequest(http.MethodPost, ts.URL+Shoutouts{}.Path(), nil)
+	q := req.URL.Query()
+	req.URL.RawQuery = q.Encode()
+	resp, err := http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(401, resp.StatusCode)
+
+	q.Set("from_broadcaster_id", "1")
+	q.Set("to_broadcaster_id", "1")
+	q.Set("moderator_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(204, resp.StatusCode)
+}
