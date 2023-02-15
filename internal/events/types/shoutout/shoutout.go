@@ -172,5 +172,5 @@ func (e Event) GetEventSubAlias(t string) string {
 }
 
 func (e Event) SubscriptionVersion() string {
-	return "beta"
+	return "1"
 }
