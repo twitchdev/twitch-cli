@@ -45,3 +45,7 @@ func WriteNotFound(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusNotFound)
 	w.Write(GetErrorBytes(http.StatusNotFound, errors.New("Not Found"), message))
 }
+func WriteUnprocessableEntity(w http.ResponseWriter, message string) {
+	w.WriteHeader(http.StatusUnprocessableEntity)
+	w.Write(GetErrorBytes(http.StatusUnprocessableEntity, errors.New("Unprocessable Entity"), message))
+}

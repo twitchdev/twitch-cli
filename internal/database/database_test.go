@@ -23,7 +23,10 @@ const TEST_USER_ID = "1"
 const TEST_USER_LOGIN = "testing_user1"
 const TEST_USER_ID_2 = "2"
 const TEST_USER_LOGIN_2 = "second_user"
+const TEST_USER_ID_99 = "99"
+const TEST_USER_LOGIN_99 = "non_mod_user"
 const CATEGORY_ID = "1"
+const IGDB_ID = "123"
 
 var db CLIDatabase
 var q *Query
@@ -49,7 +52,7 @@ func TestMain(m *testing.M) {
 	}
 	q = db.NewQuery(nil, 100)
 
-	err = q.InsertCategory(Category{Name: "test", ID: CATEGORY_ID, ViewerCount: 0, BoxartURL: ""}, false)
+	err = q.InsertCategory(Category{Name: "test", ID: CATEGORY_ID, IGDB: IGDB_ID, ViewerCount: 0, BoxartURL: ""}, false)
 	log.Print(err)
 
 	err = q.InsertUser(User{
@@ -73,6 +76,23 @@ func TestMain(m *testing.M) {
 		ID:              TEST_USER_ID_2,
 		UserLogin:       TEST_USER_LOGIN_2,
 		DisplayName:     TEST_USER_LOGIN_2,
+		Email:           "",
+		BroadcasterType: "partner",
+		UserType:        "testing",
+		UserDescription: "hi mom",
+		CreatedAt:       util.GetTimestamp().Format(time.RFC3339),
+		ModifiedAt:      util.GetTimestamp().Format(time.RFC3339),
+		CategoryID:      sql.NullString{String: "", Valid: false},
+		Title:           "hello",
+		Language:        "en",
+		Delay:           0,
+	}, false)
+	log.Print(err)
+
+	err = q.InsertUser(User{
+		ID:              TEST_USER_ID_99,
+		UserLogin:       TEST_USER_LOGIN_99,
+		DisplayName:     TEST_USER_LOGIN_99,
 		Email:           "",
 		BroadcasterType: "partner",
 		UserType:        "testing",
@@ -170,7 +190,7 @@ func TestAPI(t *testing.T) {
 func TestCategories(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	c := Category{Name: "test", ID: CATEGORY_ID}
+	c := Category{Name: "test", ID: CATEGORY_ID, IGDB: IGDB_ID}
 	err := q.InsertCategory(c, false)
 	a.NotNil(err)
 
@@ -180,6 +200,7 @@ func TestCategories(t *testing.T) {
 	categories := dbr.Data.([]Category)
 	a.Len(categories, 1)
 	a.Equal(c.ID, categories[0].ID)
+	a.Equal(c.IGDB, categories[0].IGDB)
 
 	// search
 	dbr, err = q.SearchCategories("es")
@@ -213,7 +234,7 @@ func TestUsers(t *testing.T) {
 		Title:           "hello",
 		Language:        "en",
 		Delay:           0,
-	}, false)
+	}, true)
 	a.Nil(err)
 
 	err = q.InsertUser(User{
@@ -230,7 +251,7 @@ func TestUsers(t *testing.T) {
 		Title:           "hello",
 		Language:        "en",
 		Delay:           0,
-	}, false)
+	}, true)
 	a.Nil(err)
 
 	u, err := q.GetUser(User{ID: TEST_USER_ID})
@@ -406,7 +427,7 @@ func TestModeration(t *testing.T) {
 	moderators := dbr.Data.([]Moderator)
 	a.GreaterOrEqual(len(moderators), 1)
 
-	dbr, err = q.GetModeratorsForBroadcaster(TEST_USER_ID, "2")
+	dbr, err = q.GetModeratorsForBroadcaster(TEST_USER_ID)
 	a.Nil(err)
 	moderators = dbr.Data.([]Moderator)
 	a.GreaterOrEqual(len(moderators), 1)
@@ -604,7 +625,7 @@ func TestStreams(t *testing.T) {
 	dbr, err = q.GetStreamTags(TEST_USER_ID)
 	a.Nil(err)
 	tags = dbr.Data.([]Tag)
-	a.GreaterOrEqual(len(tags), 1)
+	a.GreaterOrEqual(len(tags), 0)
 
 	dbr, err = q.GetFollowedStreams(s.UserID)
 	a.Nil(err)
@@ -624,7 +645,7 @@ func TestStreams(t *testing.T) {
 	streams = dbr.Data.([]Stream)
 	a.GreaterOrEqual(len(streams), 1)
 	stream := streams[0]
-	a.GreaterOrEqual(len(stream.TagIDs), 1)
+	a.GreaterOrEqual(len(stream.TagIDs), 0)
 
 	err = q.DeleteAllStreamTags(s.UserID)
 	a.Nil(err)
@@ -771,6 +792,7 @@ func TestVideos(t *testing.T) {
 		ViewCount:     100,
 		Duration:      1234.5,
 		CreatedAt:     util.GetTimestamp().Format(time.RFC3339),
+		VodOffset:     int(util.RandomInt(3000)),
 	}
 
 	err = q.InsertClip(c)

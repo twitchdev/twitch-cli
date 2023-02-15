@@ -62,13 +62,30 @@ func getGlobalEmotes(w http.ResponseWriter, r *http.Request) {
 			ID:   fmt.Sprintf("%v", id),
 			Name: name,
 			Images: EmotesImages{
-				ImageURL1X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v1/%v/1.0", id),
-				ImageURL2X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v1/%v/2.0", id),
-				ImageURL4X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v1/%v/4.0", id),
+				ImageURL1X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v2/%v/static/light/1.0", id),
+				ImageURL2X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v2/%v/static/light/2.0", id),
+				ImageURL4X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v2/%v/static/light/3.0", id),
+			},
+			Format: []string{
+				"static",
+			},
+			Scale: []string{
+				"1.0",
+				"2.0",
+				"3.0",
+			},
+			ThemeMode: []string{
+				"light",
+				"dark",
 			},
 		})
 	}
 
-	bytes, _ := json.Marshal(models.APIResponse{Data: emotes})
+	bytes, _ := json.Marshal(
+		models.APIResponse{
+			Data:     emotes,
+			Template: templateEmoteURL,
+		},
+	)
 	w.Write(bytes)
 }

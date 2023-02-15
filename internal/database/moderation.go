@@ -65,6 +65,7 @@ type Ban struct {
 	UserLogin          string  `db:"user_login" json:"user_login"`
 	UserName           string  `db:"user_name" json:"user_name"`
 	ExpiresAt          *string `db:"expires_at" json:"expires_at"`
+	CreatedAt          string  `db:"created_at" json:"created_at"`
 	Reason             string  `json:"reason"`
 	ModeratorID        string  `json:"moderator_id"`
 	ModeratorUserLogin string  `json:"moderator_login"`
@@ -117,7 +118,7 @@ func (q *Query) AddModerator(p UserRequestParams) error {
 	return tx.Commit()
 }
 
-func (q *Query) GetModeratorsForBroadcaster(broadcasterID string, userID string) (*DBResponse, error) {
+func (q *Query) GetModeratorsForBroadcaster(broadcasterID string) (*DBResponse, error) {
 	var r []Moderator
 
 	err := q.DB.Select(&r, "SELECT u1.id as user_id, u1.user_login as user_login, u1.display_name as user_name FROM moderators as m JOIN users u1 ON m.user_id = u1.id where broadcaster_id = $1 ORDER BY m.created_at DESC", broadcasterID)
@@ -161,7 +162,7 @@ func (q *Query) RemoveModerator(broadcaster string, user string) error {
 }
 
 func (q *Query) InsertBan(p UserRequestParams) error {
-	stmt := generateInsertSQL("bans", "id", p, false)
+	stmt := generateInsertSQL("bans", "broadcaster_id", p, false)
 	p.CreatedAt = util.GetTimestamp().UTC().Format(time.RFC3339)
 
 	ma := BanEvent{
@@ -184,7 +185,7 @@ func (q *Query) InsertBan(p UserRequestParams) error {
 
 func (q *Query) GetBans(p UserRequestParams) (*DBResponse, error) {
 	r := []Ban{}
-	stmt := generateSQL("select b.user_id, b.expires_at, u1.display_name as user_name, u1.user_login from bans b join users u1 on b.user_id=u1.id", p, SEP_AND)
+	stmt := generateSQL("select b.user_id, b.expires_at, b.created_at, u1.display_name as user_name, u1.user_login from bans b join users u1 on b.user_id=u1.id", p, SEP_AND)
 	rows, err := q.DB.NamedQuery(stmt+q.SQL, p)
 	if err != nil {
 		return nil, err
@@ -216,6 +217,13 @@ func (q *Query) GetBans(p UserRequestParams) (*DBResponse, error) {
 	dbr.Cursor = q.PaginationCursor
 
 	return &dbr, nil
+}
+
+func (q *Query) DeleteBan(p UserRequestParams) error {
+	tx := q.DB.MustBegin()
+	tx.Exec("DELETE FROM bans WHERE broadcaster_id=$1 AND user_id=$2", p.BroadcasterID, p.UserID)
+	err := tx.Commit()
+	return err
 }
 
 func (q *Query) GetBanEvents(p UserRequestParams) (*DBResponse, error) {

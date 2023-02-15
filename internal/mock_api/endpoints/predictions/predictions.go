@@ -155,8 +155,8 @@ func postPredictions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(body.Outcomes) != 2 {
-		mock_errors.WriteBadRequest(w, "outcomes must be exactly 2 items")
+	if len(body.Outcomes) < 2 || len(body.Outcomes) > 10 {
+		mock_errors.WriteBadRequest(w, "Number of outcomes in the prediction must be equal to or above 2, and equal to or below 10")
 		return
 	}
 

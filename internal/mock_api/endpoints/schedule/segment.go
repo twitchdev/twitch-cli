@@ -92,7 +92,7 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 	}
 	st, err := time.Parse(time.RFC3339, body.StartTime)
 	if err != nil {
-		mock_errors.WriteBadRequest(w, "Invalid timezone provided")
+		mock_errors.WriteBadRequest(w, "Invalid/malformed start_time provided")
 		return
 	}
 	if body.Timezone == "" {
@@ -104,9 +104,13 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 		mock_errors.WriteBadRequest(w, "Invalid timezone provided")
 		return
 	}
+
+	var isRecurring bool
+
 	if body.IsRecurring == nil {
-		mock_errors.WriteBadRequest(w, "Missing is_recurring")
-		return
+		isRecurring = false
+	} else {
+		isRecurring = *body.IsRecurring
 	}
 
 	if len(body.Title) > 140 {
@@ -129,7 +133,7 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 		ID:          eventID,
 		StartTime:   st.UTC().Format(time.RFC3339),
 		EndTime:     et.UTC().Format(time.RFC3339),
-		IsRecurring: *body.IsRecurring,
+		IsRecurring: isRecurring,
 		IsVacation:  false,
 		CategoryID:  body.CategoryID,
 		Title:       body.Title,
@@ -142,7 +146,7 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
-	if *body.IsRecurring {
+	if isRecurring {
 		// just a years worth of recurring events; mock data
 		for i := 0; i < 52; i++ {
 			weekAdd := (i + 1) * 7 * 24
@@ -154,7 +158,7 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 				ID:          eventID,
 				StartTime:   startTime.Format(time.RFC3339),
 				EndTime:     endTime.Format(time.RFC3339),
-				IsRecurring: *body.IsRecurring,
+				IsRecurring: isRecurring,
 				IsVacation:  false,
 				CategoryID:  body.CategoryID,
 				Title:       body.Title,
@@ -176,6 +180,16 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	b := dbr.Data.(database.Schedule)
+
+	// Remove timezone from JSON given in response
+	for i := range b.Segments {
+		b.Segments[i].Timezone = ""
+	}
+
+	if b.Vacation.StartTime == "" && b.Vacation.EndTime == "" {
+		b.Vacation = nil
+	}
+
 	bytes, _ := json.Marshal(b)
 	w.Write(bytes)
 }
@@ -314,6 +328,16 @@ func (e ScheduleSegment) patchSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	b = dbr.Data.(database.Schedule)
+
+	// Remove timezone from JSON given in response
+	for i := range b.Segments {
+		b.Segments[i].Timezone = ""
+	}
+
+	if b.Vacation.StartTime == "" && b.Vacation.EndTime == "" {
+		b.Vacation = nil
+	}
+
 	bytes, _ := json.Marshal(b)
 	w.Write(bytes)
 }

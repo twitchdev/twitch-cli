@@ -21,6 +21,10 @@ type Query struct {
 
 // NewQuery handles the logic for generating the pagination token to pass alongside the DB queries for easier access
 func (c CLIDatabase) NewQuery(r *http.Request, max_limit int) *Query {
+	return c.NewQueryWithDefaultLimit(r, max_limit, 20)
+}
+
+func (c CLIDatabase) NewQueryWithDefaultLimit(r *http.Request, max_limit int, default_limit int) *Query {
 	p := Query{DB: c.DB}
 	if r == nil {
 		return &p
@@ -44,7 +48,7 @@ func (c CLIDatabase) NewQuery(r *http.Request, max_limit int) *Query {
 
 	first, _ := strconv.Atoi(f)
 	if first > max_limit || first <= 0 {
-		first = 20
+		first = default_limit
 	}
 	p.Limit = int(first)
 

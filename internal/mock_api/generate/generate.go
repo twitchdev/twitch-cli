@@ -63,6 +63,7 @@ func generateUsers(ctx context.Context, count int) error {
 		category := database.Category{
 			ID:   fmt.Sprintf("%v", util.RandomInt(10*100*100)),
 			Name: c,
+			IGDB: fmt.Sprintf("%v", util.RandomInt(10*100*100)),
 		}
 
 		err := db.NewQuery(nil, 100).InsertCategory(category, false)
@@ -117,6 +118,25 @@ func generateUsers(ctx context.Context, count int) error {
 		if err != nil {
 			log.Print(err.Error())
 		}
+
+		// Create user chatroom settings
+		_false := false
+		_10 := 10
+		_60 := 60
+		s := database.ChatSettings{
+			BroadcasterID:                 id,
+			SlowMode:                      &_false,
+			SlowModeWaitTime:              &_10,
+			FollowerMode:                  &_false,
+			FollowerModeDuration:          &_60,
+			SubscriberMode:                &_false,
+			EmoteMode:                     &_false,
+			UniqueChatMode:                &_false,
+			NonModeratorChatDelay:         &_false,
+			NonModeratorChatDelayDuration: &_10,
+		}
+
+		db.NewQuery(nil, 100).InsertChatSettings(s)
 	}
 	// fake team
 	log.Printf("Creating team...")
@@ -181,12 +201,13 @@ func generateUsers(ctx context.Context, count int) error {
 		}
 
 		entitlement := database.DropsEntitlement{
-			ID:        util.RandomGUID(),
-			BenefitID: benefitID,
-			GameID:    dropsGameID,
-			UserID:    broadcaster.ID,
-			Timestamp: util.GetTimestamp().Format(time.RFC3339Nano),
-			Status:    "CLAIMED",
+			ID:          util.RandomGUID(),
+			BenefitID:   benefitID,
+			GameID:      dropsGameID,
+			UserID:      broadcaster.ID,
+			Timestamp:   util.GetTimestamp().Format(time.RFC3339Nano),
+			Status:      "CLAIMED",
+			LastUpdated: util.GetTimestamp().Format(time.RFC3339Nano),
 		}
 		err = db.NewQuery(nil, 1000).InsertDropsEntitlement(entitlement)
 		if err != nil {
@@ -238,6 +259,14 @@ func generateUsers(ctx context.Context, count int) error {
 				ID:            util.RandomGUID(),
 				Title:         "Choice2",
 				Color:         "PINK",
+				Users:         0,
+				ChannelPoints: 0,
+				PredictionID:  prediction.ID,
+			},
+			{
+				ID:            util.RandomGUID(),
+				Title:         "Choice3",
+				Color:         "BLUE",
 				Users:         0,
 				ChannelPoints: 0,
 				PredictionID:  prediction.ID,
@@ -461,13 +490,14 @@ func generateUsers(ctx context.Context, count int) error {
 			StreamID:         &s.ID,
 			BroadcasterID:    s.Broacaster,
 			Title:            "Sample stream!",
-			VideoDescription: "",
+			VideoDescription: "Such an interesting stream today...",
 			CreatedAt:        util.GetTimestamp().Format(time.RFC3339),
 			PublishedAt:      util.GetTimestamp().Format(time.RFC3339),
 			Viewable:         "public",
 			ViewCount:        0,
 			Duration:         "1h0m0s",
 			VideoLanguage:    "en",
+			Type:             "archive",
 		}
 		err := db.NewQuery(nil, 100).InsertVideo(v)
 		if err != nil {
@@ -499,6 +529,7 @@ func generateUsers(ctx context.Context, count int) error {
 			ViewCount:     0,
 			CreatedAt:     util.GetTimestamp().Format(time.RFC3339),
 			Duration:      30.1,
+			VodOffset:     int(util.RandomInt(3000)),
 		}
 		err = db.NewQuery(nil, 100).InsertClip(c)
 		if err != nil {

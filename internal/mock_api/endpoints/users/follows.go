@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/mattn/go-sqlite3"
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/mock_errors"
 	"github.com/twitchdev/twitch-cli/internal/models"
@@ -15,23 +14,18 @@ import (
 
 var followMethodsSupported = map[string]bool{
 	http.MethodGet:    true,
-	http.MethodPost:   true,
-	http.MethodDelete: true,
+	http.MethodPost:   false,
+	http.MethodDelete: false,
 	http.MethodPatch:  false,
 	http.MethodPut:    false,
 }
 
 var followScopesByMethod = map[string][]string{
 	http.MethodGet:    {},
-	http.MethodPost:   {"user:edit:follows"},
-	http.MethodDelete: {"user:edit:follows"},
+	http.MethodPost:   {},
+	http.MethodDelete: {},
 	http.MethodPatch:  {},
 	http.MethodPut:    {},
-}
-
-type PostFollowBody struct {
-	ToID   string `json:"to_id"`
-	FromID string `json:"from_id"`
 }
 
 type FollowsEndpoint struct{}
@@ -52,10 +46,6 @@ func (e FollowsEndpoint) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		getFollows(w, r)
-	case http.MethodPost:
-		postFollows(w, r)
-	case http.MethodDelete:
-		deleteFollows(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -102,50 +92,4 @@ func getFollows(w http.ResponseWriter, r *http.Request) {
 
 	json, _ := json.Marshal(body)
 	w.Write(json)
-}
-
-func deleteFollows(w http.ResponseWriter, r *http.Request) {
-	to := r.URL.Query().Get("to_id")
-	from := r.URL.Query().Get("from_id")
-
-	if len(to) == 0 || len(from) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	err := db.NewQuery(r, 100).DeleteFollow(from, to)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-func postFollows(w http.ResponseWriter, r *http.Request) {
-	var body PostFollowBody
-
-	err := json.NewDecoder(r.Body).Decode(&body)
-	if err != nil {
-		mock_errors.WriteBadRequest(w, "error reading body")
-		return
-	}
-	if body.FromID == "" || body.ToID == "" {
-		mock_errors.WriteBadRequest(w, "from_id and to_id are required")
-		return
-	}
-
-	err = db.NewQuery(r, 100).AddFollow(database.UserRequestParams{UserID: body.FromID, BroadcasterID: body.ToID})
-	if err != nil {
-		if database.DatabaseErrorIs(err, sqlite3.ErrConstraintForeignKey) || database.DatabaseErrorIs(err, sqlite3.ErrConstraintUnique) || database.DatabaseErrorIs(err, sqlite3.ErrConstraintPrimaryKey) {
-			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-			return
-		}
-		log.Printf("%#v\n%#v", err, sqlite3.ErrConstraintUnique)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-	return
 }

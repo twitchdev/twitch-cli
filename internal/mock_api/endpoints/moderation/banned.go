@@ -13,7 +13,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
-var bansMethodsSupported = map[string]bool{
+var bannedMethodsSupported = map[string]bool{
 	http.MethodGet:    true,
 	http.MethodPost:   false,
 	http.MethodDelete: false,
@@ -21,7 +21,7 @@ var bansMethodsSupported = map[string]bool{
 	http.MethodPut:    false,
 }
 
-var bansScopesByMethod = map[string][]string{
+var bannedScopesByMethod = map[string][]string{
 	http.MethodGet:    {"moderation:read"},
 	http.MethodPost:   {},
 	http.MethodDelete: {},
@@ -29,31 +29,31 @@ var bansScopesByMethod = map[string][]string{
 	http.MethodPut:    {},
 }
 
-type Bans struct{}
+type Banned struct{}
 
-func (e Bans) Path() string { return "/moderation/banned" }
+func (e Banned) Path() string { return "/moderation/banned" }
 
-func (e Bans) GetRequiredScopes(method string) []string {
-	return bansScopesByMethod[method]
+func (e Banned) GetRequiredScopes(method string) []string {
+	return bannedScopesByMethod[method]
 }
 
-func (e Bans) ValidMethod(method string) bool {
-	return bansMethodsSupported[method]
+func (e Banned) ValidMethod(method string) bool {
+	return bannedMethodsSupported[method]
 }
 
-func (e Bans) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (e Banned) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	db = r.Context().Value("db").(database.CLIDatabase)
 
 	switch r.Method {
 	case http.MethodGet:
-		getBans(w, r)
+		getBanned(w, r)
 		break
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
-func getBans(w http.ResponseWriter, r *http.Request) {
+func getBanned(w http.ResponseWriter, r *http.Request) {
 	userCtx := r.Context().Value("auth").(authentication.UserAuthentication)
 	dbr := &database.DBResponse{}
 	var err error

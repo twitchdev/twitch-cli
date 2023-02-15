@@ -7,6 +7,8 @@ import "github.com/twitchdev/twitch-cli/internal/database"
 var db database.CLIDatabase
 var defaultEmoteTypes = []string{"subscription", "bitstier", "follower"}
 
+const templateEmoteURL = "https://static-cdn.jtvnw.net/emoticons/v2/{{id}}/{{format}}/{{theme_mode}}/{{scale}}"
+
 type BadgesResponse struct {
 	SetID    string          `json:"set_id"`
 	Versions []BadgesVersion `json:"versions"`
@@ -27,6 +29,9 @@ type EmotesResponse struct {
 	EmoteType  *string      `json:"emote_type,omitempty"`
 	EmoteSetID *string      `json:"emote_set_id,omitempty"`
 	OwnerID    *string      `json:"owner_id,omitempty"`
+	Format     []string     `json:"format"`
+	Scale      []string     `json:"scale"`
+	ThemeMode  []string     `json:"theme_mode"`
 }
 
 type EmotesImages struct {

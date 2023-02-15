@@ -14,7 +14,7 @@ type APIResponse struct {
 }
 
 type APIPagination struct {
-	Cursor string `json:"cursor"`
+	Cursor string `json:"cursor,omitempty"`
 }
 
 type BitsLeaderboardDateRange struct {

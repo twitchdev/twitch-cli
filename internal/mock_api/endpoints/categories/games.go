@@ -57,9 +57,10 @@ func getGames(w http.ResponseWriter, r *http.Request) {
 	games := []database.Category{}
 	ids := r.URL.Query()["id"]
 	names := r.URL.Query()["name"]
+	igdb_ids := r.URL.Query()["igdb_id"]
 
-	if len(ids) == 0 && len(names) == 0 {
-		mock_errors.WriteBadRequest(w, "at least one name or id is required")
+	if len(ids) == 0 && len(names) == 0 && len(igdb_ids) == 0 {
+		mock_errors.WriteBadRequest(w, "at least one name, id, or igdb_id is required")
 		return
 	}
 
@@ -78,6 +79,15 @@ func getGames(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, name := range names {
 		dbr, err := db.NewQuery(r, 100).GetCategories(database.Category{Name: name})
+		if err != nil {
+			mock_errors.WriteServerError(w, "error getting category")
+			return
+		}
+		game := dbr.Data.([]database.Category)
+		games = append(games, game...)
+	}
+	for _, igdb_id := range igdb_ids {
+		dbr, err := db.NewQuery(r, 100).GetCategories(database.Category{IGDB: igdb_id})
 		if err != nil {
 			mock_errors.WriteServerError(w, "error getting category")
 			return
