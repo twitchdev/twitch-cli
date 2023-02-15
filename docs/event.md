@@ -77,6 +77,7 @@ Used to either create or send mock events for use with local webhooks testing.
 | `--cost`            | `-C`      | Amount of bits or channel points redeemed/used in the event.                                                                                                  | `-C 250`                                  | N               |
 | `--description`     | `-d`      | Title the stream should be updated/started with.                                                                                                              | `-d Awesome new title!`                   | N               |
 | `--game-id`         | `-G`      | Game ID for Drop or other relevant events.                                                                                                                    | `-G 1234`                                 | N               |
+| `--tier`            |           | Tier of the subscription.              | `--tier 3000` | N          |
 
 
 ```sh

@@ -22,6 +22,7 @@ type MockEventParameters struct {
 	IsPermanent         bool
 	Description         string
 	GameID              string
+	Tier                string
 	Timestamp           string
 	CharityCurrentValue int
 	CharityTargetValue  int
