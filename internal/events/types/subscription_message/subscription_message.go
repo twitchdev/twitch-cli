@@ -58,7 +58,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
-				Tier:                 "1000",
+				Tier:                 params.Tier,
 				Message: models.SubscribeMessageEventSubMessage{
 					Text: "Hello from the Twitch CLI! twitchdevLeek",
 					Emotes: []models.SubscribeMessageEventSubMessageEmote{
@@ -124,6 +124,13 @@ func (e Event) ValidTrigger(t string) bool {
 }
 func (e Event) GetTopic(transport string, trigger string) string {
 	return triggerMapping[transport][trigger]
+}
+func (e Event) GetAllTopicsByTransport(transport string) []string {
+	allTopics := []string{}
+	for _, topic := range triggerMapping[transport] {
+		allTopics = append(allTopics, topic)
+	}
+	return allTopics
 }
 func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases

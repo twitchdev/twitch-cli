@@ -12,6 +12,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/mock_wss_server"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
+	"github.com/twitchdev/twitch-cli/internal/events/types"
 	"github.com/twitchdev/twitch-cli/internal/events/verify"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
@@ -36,6 +37,7 @@ var (
 	count               int
 	description         string
 	gameID              string
+	tier                string
 	timestamp           string
 	charityCurrentValue int
 	charityTargetValue  int
@@ -54,9 +56,9 @@ var triggerCmd = &cobra.Command{
 	Short: "Creates mock events that can be forwarded to a local webserver for event testing.",
 	Long: fmt.Sprintf(`Creates mock events that can be forwarded to a local webserver for event testing.
 	Supported:
-	%s`, events.ValidTriggers()),
+	%s`, types.AllEventTopics()),
 	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: events.ValidTriggers(),
+	ValidArgs: types.AllEventTopics(),
 	Run:       triggerCmdRun,
 	Example:   `twitch event trigger subscribe`,
 	Aliases: []string{
@@ -69,9 +71,9 @@ var verifyCmd = &cobra.Command{
 	Short: "Mocks the subscription verification event. Can be forwarded to a local webserver for testing.",
 	Long: fmt.Sprintf(`Mocks the subscription verification event that can be forwarded to a local webserver for testing.
 	Supported:
-	%s`, events.ValidTriggers()),
+	%s`, types.AllEventTopics()),
 	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: events.ValidTriggers(),
+	ValidArgs: types.AllEventTopics(),
 	Run:       verifyCmdRun,
 	Example:   `twitch event verify-subscription subscribe`,
 	Aliases: []string{
@@ -121,6 +123,7 @@ func init() {
 	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of bits or channel points redeemed/used in the event.")
 	triggerCmd.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 	triggerCmd.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
+	triggerCmd.Flags().StringVarP(&tier, "tier", "", "", "Sets the subscription tier. Valid values are 1000, 2000, and 3000.")
 	triggerCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 	triggerCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	triggerCmd.Flags().IntVar(&charityCurrentValue, "charity-current-value", 0, "Only used for \"charity-*\" events. Manually set the current dollar value for charity events.")
@@ -189,6 +192,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 			Description:         description,
 			ItemName:            itemName,
 			GameID:              gameID,
+			Tier:                tier,
 			SubscriptionStatus:  subscriptionStatus,
 			Timestamp:           timestamp,
 			CharityCurrentValue: charityCurrentValue,

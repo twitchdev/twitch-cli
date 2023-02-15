@@ -17,6 +17,7 @@ var toUser = "4567"
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 	ten := 10
+	tierThree := "3000"
 
 	params := *&events.MockEventParameters{
 		FromUserID:         fromUser,
@@ -44,6 +45,7 @@ func TestEventSub(t *testing.T) {
 		SubscriptionStatus: "enabled",
 		Cost:               int64(ten),
 		IsAnonymous:        true,
+		Tier:               tierThree,
 	}
 
 	r, err = Event{}.GenerateEvent(params)
@@ -53,6 +55,7 @@ func TestEventSub(t *testing.T) {
 	a.Nil(err)
 	a.Nil(body.Event.StreakMonths)
 	a.GreaterOrEqual(body.Event.CumulativeMonths, 10)
+	a.Equal(body.Event.Tier, "3000")
 }
 
 func TestFakeTransport(t *testing.T) {
