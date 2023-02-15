@@ -2,20 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 package events
 
-import "sort"
-
-func ValidTriggers() []string {
-	names := []string{}
-
-	for name, enabled := range triggerSupported {
-		if enabled == true {
-			names = append(names, name)
-		}
-	}
-	sort.Strings(names)
-
-	return names
-}
+import (
+	"sort"
+)
 
 func ValidTransports() []string {
 	names := []string{}

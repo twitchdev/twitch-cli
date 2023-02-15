@@ -12,6 +12,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/mock_wss_server"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
+	"github.com/twitchdev/twitch-cli/internal/events/types"
 	"github.com/twitchdev/twitch-cli/internal/events/verify"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
@@ -54,9 +55,9 @@ var triggerCmd = &cobra.Command{
 	Short: "Creates mock events that can be forwarded to a local webserver for event testing.",
 	Long: fmt.Sprintf(`Creates mock events that can be forwarded to a local webserver for event testing.
 	Supported:
-	%s`, events.ValidTriggers()),
+	%s`, types.AllEventTopics()),
 	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: events.ValidTriggers(),
+	ValidArgs: types.AllEventTopics(),
 	Run:       triggerCmdRun,
 	Example:   `twitch event trigger subscribe`,
 	Aliases: []string{
@@ -69,9 +70,9 @@ var verifyCmd = &cobra.Command{
 	Short: "Mocks the subscription verification event. Can be forwarded to a local webserver for testing.",
 	Long: fmt.Sprintf(`Mocks the subscription verification event that can be forwarded to a local webserver for testing.
 	Supported:
-	%s`, events.ValidTriggers()),
+	%s`, types.AllEventTopics()),
 	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: events.ValidTriggers(),
+	ValidArgs: types.AllEventTopics(),
 	Run:       verifyCmdRun,
 	Example:   `twitch event verify-subscription subscribe`,
 	Aliases: []string{
