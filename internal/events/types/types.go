@@ -4,6 +4,7 @@ package types
 
 import (
 	"errors"
+	"sort"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types/authorization"
@@ -33,7 +34,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
-func All() []events.MockEvent {
+func AllEvents() []events.MockEvent {
 	return []events.MockEvent{
 		authorization.Event{},
 		ban.Event{},
@@ -62,8 +63,23 @@ func All() []events.MockEvent {
 	}
 }
 
+func AllEventTopics() []string {
+	allEvents := []string{}
+
+	for _, e := range AllEvents() {
+		for _, topic := range e.GetAllTopicsByTransport(models.TransportEventSub) {
+			allEvents = append(allEvents, topic)
+		}
+	}
+
+	// Sort the topics alphabetically
+	sort.Strings(allEvents)
+
+	return allEvents
+}
+
 func GetByTriggerAndTransport(trigger string, transport string) (events.MockEvent, error) {
-	for _, e := range All() {
+	for _, e := range AllEvents() {
 		if transport == models.TransportEventSub {
 			newTrigger := e.GetEventSubAlias(trigger)
 			if newTrigger != "" {

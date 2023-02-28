@@ -22,6 +22,7 @@ type MockEventParameters struct {
 	IsPermanent         bool
 	Description         string
 	GameID              string
+	Tier                string
 	Timestamp           string
 	CharityCurrentValue int
 	CharityTargetValue  int
@@ -45,6 +46,9 @@ type MockEvent interface {
 
 	// Returns whether a given event supports a supplied transport
 	ValidTransport(transport string) bool
+
+	// Returns
+	GetAllTopicsByTransport(transport string) []string
 
 	// Returns the string of the topic
 	GetTopic(transport string, trigger string) string

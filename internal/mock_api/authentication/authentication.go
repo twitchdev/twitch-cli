@@ -131,8 +131,20 @@ func (u UserAuthentication) HasOneOfRequiredScope(scopes []string) bool {
 }
 
 func (u *UserAuthentication) MatchesBroadcasterIDParam(r *http.Request) bool {
-	bid := r.URL.Query().Get("broadcaster_id")
-	if bid == "" || bid != u.UserID {
+	return u.MatchesSpecifiedIDParam(r, "broadcaster_id")
+}
+
+func (u *UserAuthentication) MatchesModeratorIDParam(r *http.Request) bool {
+	return u.MatchesSpecifiedIDParam(r, "moderator_id")
+}
+
+func (u *UserAuthentication) MatchesUserIDParam(r *http.Request) bool {
+	return u.MatchesSpecifiedIDParam(r, "user_id")
+}
+
+func (u *UserAuthentication) MatchesSpecifiedIDParam(r *http.Request, param string) bool {
+	id := r.URL.Query().Get(param)
+	if id == "" || id != u.UserID {
 		return false
 	}
 	return true

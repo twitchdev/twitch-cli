@@ -13,6 +13,7 @@ import (
 
 var fromUser = "1234"
 var toUser = "4567"
+var tierTwo = "2000"
 
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
@@ -23,6 +24,7 @@ func TestEventSub(t *testing.T) {
 		Transport:          models.TransportEventSub,
 		SubscriptionStatus: "enabled",
 		Trigger:            "subscribe",
+		Tier:               tierTwo,
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -34,6 +36,7 @@ func TestEventSub(t *testing.T) {
 
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
+	a.Equal(tierTwo, body.Event.Tier, "Expected tier %v, got %v", tierTwo, body.Event.Tier)
 }
 
 func TestFakeTransport(t *testing.T) {

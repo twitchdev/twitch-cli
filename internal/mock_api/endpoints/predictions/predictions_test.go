@@ -80,7 +80,15 @@ func TestPredictions(t *testing.T) {
 	a.Equal(400, resp.StatusCode)
 
 	post.PredictionWindow = 100
+	post.Outcomes = append(post.Outcomes, PostPredictionsBodyOutcomes{Title: "3"})
+	post.Outcomes = append(post.Outcomes, PostPredictionsBodyOutcomes{Title: "4"})
+	post.Outcomes = append(post.Outcomes, PostPredictionsBodyOutcomes{Title: "5"})
 	post.Outcomes = append(post.Outcomes, PostPredictionsBodyOutcomes{Title: "6"})
+	post.Outcomes = append(post.Outcomes, PostPredictionsBodyOutcomes{Title: "7"})
+	post.Outcomes = append(post.Outcomes, PostPredictionsBodyOutcomes{Title: "8"})
+	post.Outcomes = append(post.Outcomes, PostPredictionsBodyOutcomes{Title: "9"})
+	post.Outcomes = append(post.Outcomes, PostPredictionsBodyOutcomes{Title: "10"})
+	post.Outcomes = append(post.Outcomes, PostPredictionsBodyOutcomes{Title: "11"})
 	b, _ = json.Marshal(post)
 	req, _ = http.NewRequest(http.MethodPost, ts.URL+Predictions{}.Path(), bytes.NewBuffer(b))
 	req.URL.RawQuery = q.Encode()

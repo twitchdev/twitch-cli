@@ -54,7 +54,7 @@ func (e TopGames) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTopGames(w http.ResponseWriter, r *http.Request) {
-	dbr, err := db.NewQuery(r, 1000).GetTopGames()
+	dbr, err := db.NewQuery(r, 100).GetTopGames()
 	if err != nil {
 		mock_errors.WriteServerError(w, "error fetching entitlements")
 		return

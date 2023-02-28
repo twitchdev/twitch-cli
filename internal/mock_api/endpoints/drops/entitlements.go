@@ -5,11 +5,13 @@ package drops
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/authentication"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/mock_errors"
 	"github.com/twitchdev/twitch-cli/internal/models"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 var dropsEntitlementsMethodsSupported = map[string]bool{
@@ -140,7 +142,14 @@ func patchEntitlements(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		err = db.NewQuery(nil, 100).UpdateDropsEntitlement(database.DropsEntitlement{ID: e, UserID: entitlement[0].UserID, Status: body.FulfillmentStatus})
+		err = db.NewQuery(nil, 100).UpdateDropsEntitlement(
+			database.DropsEntitlement{
+				ID:          e,
+				UserID:      entitlement[0].UserID,
+				Status:      body.FulfillmentStatus,
+				LastUpdated: util.GetTimestamp().Format(time.RFC3339Nano),
+			},
+		)
 		if err != nil {
 			fail.IDs = append(fail.IDs, e)
 			continue

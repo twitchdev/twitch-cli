@@ -35,6 +35,7 @@ type TriggerParameters struct {
 	Description         string
 	ItemName            string
 	GameID              string
+	Tier                string
 	Timestamp           string
 	EventID             string // Also serves as subscription ID. See https://github.com/twitchdev/twitch-cli/issues/184
 	CharityCurrentValue int
@@ -64,6 +65,17 @@ func Fire(p TriggerParameters) (string, error) {
 
 	if p.GameID == "" {
 		p.GameID = fmt.Sprint(util.RandomInt(10 * 1000))
+	}
+
+	switch p.Tier {
+	case "":
+		p.Tier = "1000"
+	case "1000", "2000", "3000":
+		// do nothing, these are valid values
+	default:
+		return "", fmt.Errorf(
+			`Discarding event: Invalid tier provided.
+	Valid values are 1000, 2000 or 3000`)
 	}
 
 	if p.EventID == "" {
@@ -98,6 +110,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		Description:         p.Description,
 		ItemName:            p.ItemName,
 		GameID:              p.GameID,
+		Tier:                p.Tier,
 		SubscriptionStatus:  p.SubscriptionStatus,
 		Timestamp:           p.Timestamp,
 		CharityCurrentValue: p.CharityCurrentValue,

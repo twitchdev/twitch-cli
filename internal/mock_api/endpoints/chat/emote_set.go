@@ -61,6 +61,7 @@ func getEmoteSets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, v := range defaultEmoteTypes {
+		ownerID := util.RandomUserID()
 		emoteType := v
 		for i := 0; i < 5; i++ {
 			id := util.RandomInt(10 * 1000)
@@ -69,12 +70,26 @@ func getEmoteSets(w http.ResponseWriter, r *http.Request) {
 				ID:   fmt.Sprint(id),
 				Name: name,
 				Images: EmotesImages{
-					ImageURL1X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v1/%v/1.0", id),
-					ImageURL2X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v1/%v/2.0", id),
-					ImageURL4X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v1/%v/4.0", id),
+					ImageURL1X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v2/%v/static/light/1.0", id),
+					ImageURL2X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v2/%v/static/light/2.0", id),
+					ImageURL4X: fmt.Sprintf("https://static-cdn.jtvnw.net/emoticons/v2/%v/static/light/3.0", id),
 				},
 				EmoteType:  &emoteType,
 				EmoteSetID: &setID,
+				OwnerID:    &ownerID,
+				Format: []string{
+					"static",
+					"animated",
+				},
+				Scale: []string{
+					"1.0",
+					"2.0",
+					"3.0",
+				},
+				ThemeMode: []string{
+					"light",
+					"dark",
+				},
 			}
 			if emoteType == "subscription" {
 				thousand := "1000"
@@ -88,6 +103,11 @@ func getEmoteSets(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	bytes, _ := json.Marshal(models.APIResponse{Data: emotes})
+	bytes, _ := json.Marshal(
+		models.APIResponse{
+			Data:     emotes,
+			Template: templateEmoteURL,
+		},
+	)
 	w.Write(bytes)
 }
