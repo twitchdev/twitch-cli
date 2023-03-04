@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/twitchdev/twitch-cli/internal/events"
-	"github.com/twitchdev/twitch-cli/internal/events/mock_wss_server"
+	"github.com/twitchdev/twitch-cli/internal/events/mock_ws"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
 	"github.com/twitchdev/twitch-cli/internal/events/verify"
@@ -44,6 +44,7 @@ var (
 	debug               bool
 	wssReconnectTest    int
 	sslEnabled          bool
+	websocketClient     string
 )
 
 var eventCmd = &cobra.Command{
@@ -56,9 +57,9 @@ var triggerCmd = &cobra.Command{
 	Short: "Creates mock events that can be forwarded to a local webserver for event testing.",
 	Long: fmt.Sprintf(`Creates mock events that can be forwarded to a local webserver for event testing.
 	Supported:
-	%s`, types.AllEventTopics()),
+	%s`, types.AllWebhookTopics()),
 	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: types.AllEventTopics(),
+	ValidArgs: types.AllWebhookTopics(),
 	Run:       triggerCmdRun,
 	Example:   `twitch event trigger subscribe`,
 	Aliases: []string{
@@ -71,9 +72,9 @@ var verifyCmd = &cobra.Command{
 	Short: "Mocks the subscription verification event. Can be forwarded to a local webserver for testing.",
 	Long: fmt.Sprintf(`Mocks the subscription verification event that can be forwarded to a local webserver for testing.
 	Supported:
-	%s`, types.AllEventTopics()),
+	%s`, types.AllWebhookTopics()),
 	Args:      cobra.MaximumNArgs(1),
-	ValidArgs: types.AllEventTopics(),
+	ValidArgs: types.AllWebhookTopics(),
 	Run:       verifyCmdRun,
 	Example:   `twitch event verify-subscription subscribe`,
 	Aliases: []string{
@@ -105,8 +106,8 @@ func init() {
 
 	// trigger flags
 	//// flags for forwarding functionality/changing payloads
-	triggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
-	triggerCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to /EventSub.\nSupported values: %s", events.ValidTransports()))
+	triggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
+	triggerCmd.Flags().StringVarP(&transport, "transport", "T", "webhook", fmt.Sprintf("Preferred transport method for event. Defaults to /EventSub.\nSupported values: %s", events.ValidTransports()))
 	triggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 
 	// trigger flags
@@ -128,16 +129,17 @@ func init() {
 	triggerCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	triggerCmd.Flags().IntVar(&charityCurrentValue, "charity-current-value", 0, "Only used for \"charity-*\" events. Manually set the current dollar value for charity events.")
 	triggerCmd.Flags().IntVar(&charityTargetValue, "charity-target-value", 1500000, "Only used for \"charity-*\" events. Manually set the target dollar value for charity events.")
+	triggerCmd.Flags().StringVar(&websocketClient, "client", "", "Defines a specific websocket client to forward an event to. Used only with \"websocket\" transport.")
 
 	// retrigger flags
-	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
+	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
 	retriggerCmd.Flags().StringVarP(&eventID, "id", "i", "", "ID of the event to be refired.")
 	retriggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	retriggerCmd.MarkFlagRequired("id")
 
 	// verify-subscription flags
-	verifyCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event.")
-	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "eventsub", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
+	verifyCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
+	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "webhook", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	verifyCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
@@ -197,6 +199,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 			Timestamp:           timestamp,
 			CharityCurrentValue: charityCurrentValue,
 			CharityTargetValue:  charityTargetValue,
+			WebSocketClient:     websocketClient,
 		})
 
 		if err != nil {
@@ -287,12 +290,15 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 }
 
 func startWebsocketServerCmdRun(cmd *cobra.Command, args []string) {
-	wsStr := "ws"
+	/*wsStr := "ws"
 	if sslEnabled {
 		wsStr = "wss"
 	}
 
 	log.Printf("Starting mock EventSub WebSocket servers on %v://localhost:%v/eventsub (alternate on port %v)", wsStr, port, port+1)
 	log.Printf("`Ctrl + C` to exit mock servers.")
-	mock_wss_server.StartServer(port, debug, wssReconnectTest, sslEnabled)
+	mock_wss_server.StartServer(port, debug, wssReconnectTest, sslEnabled)*/
+
+	log.Printf("`Ctrl + C` to exit mock servers.")
+	mock_ws.StartWebsocketServers(debug, port)
 }

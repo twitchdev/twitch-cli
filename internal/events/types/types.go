@@ -5,6 +5,7 @@ package types
 import (
 	"errors"
 	"sort"
+	"strings"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types/authorization"
@@ -63,7 +64,7 @@ func AllEvents() []events.MockEvent {
 	}
 }
 
-func AllEventTopics() []string {
+func AllWebhookTopics() []string {
 	allEvents := []string{}
 
 	for _, e := range AllEvents() {
@@ -80,7 +81,7 @@ func AllEventTopics() []string {
 
 func GetByTriggerAndTransport(trigger string, transport string) (events.MockEvent, error) {
 	for _, e := range AllEvents() {
-		if transport == models.TransportEventSub {
+		if transport == models.TransportEventSub || transport == models.TransportWebSocket {
 			newTrigger := e.GetEventSubAlias(trigger)
 			if newTrigger != "" {
 				trigger = newTrigger
@@ -89,6 +90,10 @@ func GetByTriggerAndTransport(trigger string, transport string) (events.MockEven
 		if e.ValidTrigger(trigger) == true && e.ValidTransport(transport) == true {
 			return e, nil
 		}
+	}
+
+	if strings.EqualFold(transport, "websocket") {
+		return nil, errors.New("Invalid event, or this event is not available via WebSockets.")
 	}
 
 	return nil, errors.New("Invalid event")

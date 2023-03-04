@@ -3,14 +3,17 @@
 package trigger
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/rpc"
 	"strings"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/events"
+	"github.com/twitchdev/twitch-cli/internal/events/mock_ws"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
@@ -40,6 +43,7 @@ type TriggerParameters struct {
 	EventID             string // Also serves as subscription ID. See https://github.com/twitchdev/twitch-cli/issues/184
 	CharityCurrentValue int
 	CharityTargetValue  int
+	WebSocketClient     string
 }
 
 type TriggerResponse struct {
@@ -74,8 +78,8 @@ func Fire(p TriggerParameters) (string, error) {
 		// do nothing, these are valid values
 	default:
 		return "", fmt.Errorf(
-			`Discarding event: Invalid tier provided.
-	Valid values are 1000, 2000 or 3000`)
+			"Discarding event: Invalid tier provided.\n" +
+				"Valid values are 1000, 2000 or 3000")
 	}
 
 	if p.EventID == "" {
@@ -163,7 +167,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		messageType = EventSubMessageTypeRevocation
 	}
 
-	if p.ForwardAddress != "" {
+	if p.ForwardAddress != "" && strings.EqualFold(p.Transport, "webhook") {
 		resp, err := ForwardEvent(ForwardParamters{
 			ID:                  resp.ID,
 			Transport:           p.Transport,
@@ -192,6 +196,30 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		} else {
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid response. Received Status Code: %v`, resp.StatusCode))
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Server Said: %s`, respTrigger))
+		}
+	}
+
+	if strings.EqualFold(p.Transport, "websocket") {
+		client, err := rpc.DialHTTP("tcp", ":44747")
+		if err != nil {
+			return "", errors.New("Failed to dial RPC handler for WebSocket server. Is it online?\nError: " + err.Error())
+		}
+
+		args := &mock_ws.RPCArgs{
+			Body:     string(resp.JSON),
+			ClientID: p.WebSocketClient,
+		}
+		var reply bool
+
+		err = client.Call("WebSocketServerRPC.RemoteFireEventSub", args, &reply)
+		if err != nil {
+			return "", errors.New("Failed to send via RPC to WebSocket server: " + err.Error())
+		}
+
+		if reply {
+			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Forwarded for use in mock EventSub WebSocket server`))
+		} else {
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ EventSub WebSocket server failed to process event. See server for more details.`))
 		}
 	}
 

@@ -3,7 +3,7 @@
 package events
 
 var transportSupported = map[string]bool{
-	"websub":     false,
-	"eventsub":   true,
-	"websockets": false,
+	"websub":    false,
+	"webhook":   true,
+	"websocket": true,
 }
