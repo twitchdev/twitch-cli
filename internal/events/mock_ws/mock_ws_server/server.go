@@ -4,16 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
-	"os"
-	"os/signal"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/twitchdev/twitch-cli/internal/database"
-	"github.com/twitchdev/twitch-cli/internal/mock_api/generate"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
@@ -21,69 +17,28 @@ import (
 // Minimum time between messages before the server disconnects a client.
 const KEEPALIVE_TIMEOUT_SECONDS = 10
 
-var upgrader = websocket.Upgrader{}
-var debugEnabled = false
-
 type WebSocketServer struct {
-	ServerId string   // Int representing the ID of the server
-	Status   int      // 0 = shut down; 1 = shutting down; 2 = online
-	Clients  *Clients // All connected clients
+	ServerId     string // Int representing the ID of the server
+	ReconnectUrl string // Server's url for people to connect to. Used for messaging in reconnect testing
+	DebugEnabled bool   // Display debug messages; --debug
+	StrictMode   bool   // Force stricter production-like qualities; --strict
+	Upgrader     websocket.Upgrader
+
+	Clients   *Clients   // All connected clients
+	muClients sync.Mutex // Muted for WebSocketServer.Clients
+
+	Status   int        // 0 = shut down; 1 = shutting down; 2 = online
+	muStatus sync.Mutex // Mutex for WebSocketServer.Status
+
+	ReconnectClients   map[string]*[]string // Clients that were part of the last server
+	muReconnectClients sync.Mutex
 }
 
-func (ws *WebSocketServer) StartServer(port int, debug bool) {
-	debugEnabled = debug
-
-	log.Printf("Attempting to start WebSocket server [%v] on port %v", ws.ServerId, port)
-
-	m := http.NewServeMux()
-
-	// Connect to SQLite database
-	db, err := database.NewConnection()
-	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err.Error())
-		return
-	}
-
-	// Generate database if this is the first run.
-	firstTime := db.IsFirstRun()
-	if firstTime {
-		err := generate.Generate(25)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	// Register URL handler
-	m.HandleFunc("/ws", ws.wsPageHandler)
-
-	// Allow exit with Ctrl + C
-	stop := make(chan os.Signal)
-	signal.Notify(stop, os.Interrupt)
-
-	// Start HTTP server
-	go func() {
-		// Listen to port
-		listen, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
-		if err != nil {
-			log.Fatalf("Cannot start HTTP server: %v", err)
-			return
-		}
-
-		log.Printf("Started WebSocket server on 127.0.0.1:%v", port)
-
-		// Serve HTTP server
-		if err := http.Serve(listen, m); err != nil {
-			log.Fatalf("Cannot start HTTP server: %v", err)
-			return
-		}
-	}()
-}
-
-func (ws *WebSocketServer) wsPageHandler(w http.ResponseWriter, r *http.Request) {
+func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request) {
 	// This next line is required to disable CORS checking. No sense in caring in a test environment.
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	ws.Upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := ws.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("[[websocket upgrade err]] ", err)
 		return
@@ -97,20 +52,33 @@ func (ws *WebSocketServer) wsPageHandler(w http.ResponseWriter, r *http.Request)
 	conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
 
 	client := &Client{
-		clientId: util.RandomGUID()[:8],
-		conn:     conn,
+		clientId:                 util.RandomGUID()[:8],
+		conn:                     conn,
+		clientConnectedTimestamp: connectedAtTimestamp,
+
+		keepAliveChanOpen: false,
+		pingChanOpen:      false,
 	}
 
 	// Disconnect the user if the server is in reconnect phase
-	if ws.Status == 1 || ws.Status == 0 {
+	ws.muStatus.Lock()
+	if ws.Status != 2 {
+		// This is the closest we can get to the production environment, as there's no way to route people to a shutting down server
 		log.Printf("New client trying to connect while websocket server in reconnect phase. Disconnecting them.")
-		// TODO: Change this based on what was given in #eventsub
-		client.CloseWithReason(closeNetworkError)
+		client.CloseDirty()
 		// No handleClientConnectionClose because client is not in clients list, and chan loop was not set up yet.
 	}
 
+	// TODO: Check if user is connected to the old server, and if they are then disconnect them from old server with close frame 4004
+
+	ws.muClients.Lock()
 	// Add to the client connections list
 	ws.Clients.Put(client.clientId, client)
+	ws.muClients.Unlock()
+
+	// This is put after ws.Clients.Put to make sure the client gets included in the list before InitiateRestart() kicks everyone out
+	// Avoids any possible rare edge cases. This ain't production but I can still be safe :)
+	ws.muStatus.Unlock()
 
 	log.Printf("Client connected [%v]", client.clientId)
 	ws.printConnections()
@@ -125,7 +93,7 @@ func (ws *WebSocketServer) wsPageHandler(w http.ResponseWriter, r *http.Request)
 			},
 			Payload: WelcomeMessagePayload{
 				Session: WelcomeMessagePayloadSession{
-					ID:                      ws.ServerId,
+					ID:                      fmt.Sprintf("%v_%v", ws.ServerId, client.clientId),
 					Status:                  "connected",
 					KeepaliveTimeoutSeconds: KEEPALIVE_TIMEOUT_SECONDS,
 					ReconnectUrl:            nil,
@@ -137,19 +105,22 @@ func (ws *WebSocketServer) wsPageHandler(w http.ResponseWriter, r *http.Request)
 	client.SendMessage(websocket.TextMessage, welcomeMsg)
 
 	// Check if any subscriptions are sent after 10 seconds.
-	mustSubscribeTicker := time.NewTimer(10 * time.Second)
+	client.mustSubscribeTimer = time.NewTimer(10 * time.Second)
 	go func() {
 		select {
-		case <-mustSubscribeTicker.C:
-			mustSubscribeTicker.Stop()
-			log.Printf("No subscriptions whomp whomp")
+		case <-client.mustSubscribeTimer.C:
+			log.Printf("No subscriptions whomp whomp -- TODO")
 			// TODO: Check for subscriptions. If none, disconnect.
 		}
 	}()
 
 	// Set up ping/pong and keepalive handling
-	ticker := time.NewTicker(5 * time.Second)
-	client.pingKeepAliveLoopChan = make(chan struct{})
+	client.keepAliveTimer = time.NewTicker(10 * time.Second)
+	client.pingTimer = time.NewTicker(5 * time.Second)
+	client.keepAliveLoopChan = make(chan struct{})
+	client.pingLoopChan = make(chan struct{})
+	client.keepAliveChanOpen = true
+	client.pingChanOpen = true
 	go func() {
 		// Set pong handler. Resets the read deadline when pong is received.
 		conn.SetPongHandler(func(string) error {
@@ -157,45 +128,47 @@ func (ws *WebSocketServer) wsPageHandler(w http.ResponseWriter, r *http.Request)
 			return nil
 		})
 
-		keepAliveNext := false
-
 		for {
 			select {
-			case <-client.pingKeepAliveLoopChan:
-				ticker.Stop()
-				return
-			case <-ticker.C:
-				// Send keepalive every 10 seconds (two 5 second loops)
-				if !keepAliveNext {
-					keepAliveNext = true
-				} else {
-					keepAliveNext = false
-					keepAliveMsg, _ := json.Marshal(
-						KeepaliveMessage{
-							Metadata: MessageMetadata{
-								MessageID:        util.RandomGUID(),
-								MessageType:      "session_keepalive",
-								MessageTimestamp: time.Now().UTC().Format(time.RFC3339Nano),
-							},
-							Payload: KeepaliveMessagePayload{},
-						},
-					)
-					err := client.SendMessage(websocket.TextMessage, keepAliveMsg)
-					if err != nil {
-						client.CloseWithReason(closeNetworkError)
-					}
+			case <-client.keepAliveLoopChan:
+				client.keepAliveTimer.Stop()
 
-					if debugEnabled {
-						log.Printf("Sent session_keepalive to client [%s]", client.clientId)
-					}
+			case <-client.keepAliveTimer.C: // Send KeepAlive message
+				keepAliveMsg, _ := json.Marshal(
+					KeepaliveMessage{
+						Metadata: MessageMetadata{
+							MessageID:        util.RandomGUID(),
+							MessageType:      "session_keepalive",
+							MessageTimestamp: time.Now().UTC().Format(time.RFC3339Nano),
+						},
+						Payload: KeepaliveMessagePayload{},
+					},
+				)
+				err := client.SendMessage(websocket.TextMessage, keepAliveMsg)
+				if err != nil {
+					client.CloseWithReason(closeNetworkError)
 				}
 
-				// Send ping
+				if ws.DebugEnabled {
+					log.Printf("Sent session_keepalive to client [%s]", client.clientId)
+				}
+
+			case <-client.pingLoopChan:
+				client.pingTimer.Stop()
+
+			case <-client.pingTimer.C: // Send ping
 				err := client.SendMessage(websocket.PingMessage, []byte{})
 				if err != nil {
+					ws.muClients.Lock()
 					client.CloseWithReason(closeClientFailedPingPong)
-					ws.handleClientConnectionClose(client)
+					ws.handleClientConnectionClose(client, closeClientFailedPingPong)
+					ws.muClients.Unlock()
 				}
+
+				if ws.DebugEnabled {
+					log.Printf("Sent pong to client [%s]", client.clientId)
+				}
+
 			}
 		}
 	}()
@@ -206,28 +179,110 @@ func (ws *WebSocketServer) wsPageHandler(w http.ResponseWriter, r *http.Request)
 		client.conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
 
 		mt, message, err := conn.ReadMessage()
-		if err != nil {
+		if err != nil && ws.Status != 0 { // If server is shut down, clients should already be disconnectd.
 			log.Printf("read err [%v]: %v", client.clientId, err)
+
+			ws.muClients.Lock()
 			client.CloseWithReason(closeNetworkError)
-			ws.handleClientConnectionClose(client)
+			ws.handleClientConnectionClose(client, closeNetworkError)
+			ws.muClients.Unlock()
 			break
 		}
 
-		log.Printf("Disconnecting client [%v] due to received inbound traffic.\nMessage[%d]: %s", client.clientId, mt, message)
-		client.CloseWithReason(closeClientSentInboundTraffic)
-		ws.handleClientConnectionClose(client)
+		if ws.Status == 2 { // Only care about this when the server is running
+			log.Printf("Disconnecting client [%v] due to received inbound traffic.\nMessage[%d]: %s", client.clientId, mt, message)
+
+			ws.muClients.Lock()
+			client.CloseWithReason(closeClientSentInboundTraffic)
+			ws.handleClientConnectionClose(client, closeClientSentInboundTraffic)
+			ws.muClients.Unlock()
+		}
+
 		break
 	}
 }
 
-func (ws *WebSocketServer) HandleRPCForwarding(eventsubBody string, clientId string) bool {
+func (ws *WebSocketServer) InitiateRestart() {
+	// Set status to shutting down; Stop accepting new clients
+	ws.muStatus.Lock()
+	ws.Status = 1
+	ws.muStatus.Unlock()
+
+	ws.muClients.Lock()
+
+	if ws.DebugEnabled {
+		log.Printf("Sending reconnect notices to [%v] clients", ws.Clients.Length())
+	}
+
+	// Send reconnect messages and disable timers on all clients
+	for _, client := range ws.Clients.All() {
+		// Disable keepalive and subscription timers
+		close(client.keepAliveLoopChan)
+		client.keepAliveChanOpen = false
+		client.mustSubscribeTimer.Stop()
+
+		// Send reconnect notice
+		reconnectMsg, _ := json.Marshal(
+			ReconnectMessage{
+				Metadata: MessageMetadata{
+					MessageID:        util.RandomGUID(),
+					MessageType:      "session_reconnect",
+					MessageTimestamp: time.Now().UTC().Format(time.RFC3339Nano),
+				},
+				Payload: ReconnectMessagePayload{
+					Session: ReconnectMessagePayloadSession{
+						ID:                      fmt.Sprintf("%v_%v", ws.ServerId, client.clientId),
+						Status:                  "reconnecting",
+						KeepaliveTimeoutSeconds: nil,
+						ReconnectUrl:            ws.ReconnectUrl,
+						ConnectedAt:             client.clientConnectedTimestamp,
+					},
+				},
+			},
+		)
+
+		err := client.SendMessage(websocket.TextMessage, reconnectMsg)
+		if err != nil {
+			log.Printf("Error building session_reconnect JSON for client [%v]: %v", client.clientId, err.Error())
+		}
+	}
+
+	log.Printf("Reconnect notices sent for server [%v]", ws.ServerId)
+	log.Printf("Will disconnect all existing clients in 30 seconds...")
+
+	ws.muClients.Unlock()
+
+	// Wait 30 seconds
+	time.Sleep(30 * time.Second)
+
+	// Change server status to 0
+	// This is done before disconnects because the read loop will err out due to the close message, which gets printed unless this is zero.
+	ws.Status = 0
+
+	// Disconnect everyone with reconnect close message
+	for _, client := range ws.Clients.All() {
+		ws.muClients.Lock()
+		client.CloseWithReason(closeReconnectGraceTimeExpired)
+		ws.handleClientConnectionClose(client, closeReconnectGraceTimeExpired)
+		ws.muClients.Unlock()
+	}
+
+	log.Printf("All users disconnected from server [%v]", ws.ServerId)
+}
+
+func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clientId string) bool {
 	// If --client is used, make sure the client exists
 	if clientId != "" {
 		_, ok := ws.Clients.Get(strings.ToLower(clientId))
 		if !ok {
-			log.Printf("Error executing remote triggered EventSub: Client [%v] does not exist", clientId)
+			log.Printf("Error executing remote triggered EventSub: Client [%v] does not exist on server [%v]", clientId, ws.ServerId)
 			return false
 		}
+	}
+
+	if ws.Clients.Length() == 0 {
+		log.Printf("Warning for remote triggered EventSub: No clients in server [%v]", ws.ServerId)
+		return false
 	}
 
 	for _, client := range ws.Clients.All() {
@@ -244,9 +299,8 @@ func (ws *WebSocketServer) HandleRPCForwarding(eventsubBody string, clientId str
 			return false
 		}
 
-		// Change transport around
-		eventObj.Subscription.Transport.Callback = ""
-		eventObj.Subscription.Transport.SessionID = client.clientId
+		// Change payload's subscription.transport.session_id to contain the correct Session ID
+		eventObj.Subscription.Transport.SessionID = fmt.Sprintf("%v_%v", ws.ServerId, client.clientId)
 
 		// Build notification message
 		notificationMsg, err := json.Marshal(
@@ -273,14 +327,22 @@ func (ws *WebSocketServer) HandleRPCForwarding(eventsubBody string, clientId str
 	return true
 }
 
-func (ws *WebSocketServer) handleClientConnectionClose(client *Client) {
+func (ws *WebSocketServer) handleClientConnectionClose(client *Client, closeReason *CloseMessage) {
 	// Prevent further looping
-	close(client.pingKeepAliveLoopChan)
+	client.mustSubscribeTimer.Stop()
+	if client.keepAliveChanOpen {
+		close(client.keepAliveLoopChan)
+		client.keepAliveChanOpen = false
+	}
+	if client.pingChanOpen {
+		close(client.pingLoopChan)
+		client.pingChanOpen = false
+	}
 
 	// Remove from clients list
 	ws.Clients.Delete(client.clientId)
 
-	log.Printf("Disconnected client [%v]", client.clientId)
+	log.Printf("Disconnected client [%v] with code [%v]", client.clientId, closeReason.code)
 
 	// Print new clients connections list
 	ws.printConnections()

@@ -57,7 +57,10 @@ var triggerCmd = &cobra.Command{
 	Short: "Creates mock events that can be forwarded to a local webserver for event testing.",
 	Long: fmt.Sprintf(`Creates mock events that can be forwarded to a local webserver for event testing.
 	Supported:
-	%s`, types.AllWebhookTopics()),
+	%s
+	WebSocket Mock Server feature emulation events:
+	(Not available in Webhooks. See 'twitch event start-websocket-server' for more info)
+	%s`, types.AllWebhookTopics(), types.WebSocketCommandTopics()),
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: types.AllWebhookTopics(),
 	Run:       triggerCmdRun,
@@ -290,15 +293,6 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 }
 
 func startWebsocketServerCmdRun(cmd *cobra.Command, args []string) {
-	/*wsStr := "ws"
-	if sslEnabled {
-		wsStr = "wss"
-	}
-
-	log.Printf("Starting mock EventSub WebSocket servers on %v://localhost:%v/eventsub (alternate on port %v)", wsStr, port, port+1)
-	log.Printf("`Ctrl + C` to exit mock servers.")
-	mock_wss_server.StartServer(port, debug, wssReconnectTest, sslEnabled)*/
-
 	log.Printf("`Ctrl + C` to exit mock servers.")
 	mock_ws.StartWebsocketServers(debug, port)
 }

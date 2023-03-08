@@ -3,6 +3,7 @@
 package trigger
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -126,11 +127,9 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		return "", err
 	}
 
-	if eventParamaters.Transport == models.TransportEventSub {
-		newTrigger := e.GetEventSubAlias(p.Event)
-		if newTrigger != "" {
-			eventParamaters.Trigger = newTrigger // overwrite the existing trigger with the "correct" one
-		}
+	newTrigger := e.GetEventSubAlias(p.Event)
+	if newTrigger != "" {
+		eventParamaters.Trigger = newTrigger // overwrite the existing trigger with the "correct" one
 	}
 
 	resp, err = e.GenerateEvent(eventParamaters)
@@ -167,7 +166,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		messageType = EventSubMessageTypeRevocation
 	}
 
-	if p.ForwardAddress != "" && strings.EqualFold(p.Transport, "webhook") {
+	if p.ForwardAddress != "" && strings.EqualFold(p.Transport, "webhook") { // Forwarding to an address requires Webhook, as its done via HTTP
 		resp, err := ForwardEvent(ForwardParamters{
 			ID:                  resp.ID,
 			Transport:           p.Transport,
@@ -199,19 +198,45 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		}
 	}
 
+	// Forward to WebSocket server via RPC
 	if strings.EqualFold(p.Transport, "websocket") {
 		client, err := rpc.DialHTTP("tcp", ":44747")
 		if err != nil {
 			return "", errors.New("Failed to dial RPC handler for WebSocket server. Is it online?\nError: " + err.Error())
 		}
 
-		args := &mock_ws.RPCArgs{
-			Body:     string(resp.JSON),
-			ClientID: p.WebSocketClient,
-		}
 		var reply bool
 
-		err = client.Call("WebSocketServerRPC.RemoteFireEventSub", args, &reply)
+		// Modify transport
+		modifiedTransportJSON := models.EventsubResponse{}
+		err = json.Unmarshal([]byte(resp.JSON), &modifiedTransportJSON)
+		if err != nil {
+			return "", errors.New("Unexpected error unmarshling JSON before forwarding to WebSocket server: " + err.Error())
+		}
+		modifiedTransportJSON.Subscription.Transport.Method = "websocket"
+		modifiedTransportJSON.Subscription.Transport.Callback = ""
+		modifiedTransportJSON.Subscription.Transport.SessionID = "TBD-by-WebSocket-Server"
+		rawModifiedTransportJSON, _ := json.Marshal(modifiedTransportJSON)
+		resp.JSON = rawModifiedTransportJSON
+
+		if strings.HasPrefix(p.Event, "mock.websocket") {
+			// Trigger server command to emulate a specific feature, such as websocket reconnect emulation
+			args := &mock_ws.RPCArgs{
+				Body: string(resp.JSON),
+			}
+
+			err = client.Call("WebSocketServerRPC.ServerCommand", args, &reply)
+		} else {
+			// Trigger any EventSub subscription that's available over 1st party WebSocket connections
+			args := &mock_ws.RPCArgs{
+				Body:     string(resp.JSON),
+				ClientID: p.WebSocketClient,
+			}
+
+			err = client.Call("WebSocketServerRPC.RemoteFireEventSub", args, &reply)
+		}
+
+		// Error checking for all possible RPC executions
 		if err != nil {
 			return "", errors.New("Failed to send via RPC to WebSocket server: " + err.Error())
 		}

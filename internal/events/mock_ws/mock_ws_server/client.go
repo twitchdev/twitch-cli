@@ -8,10 +8,18 @@ import (
 )
 
 type Client struct {
-	clientId              string
-	conn                  *websocket.Conn
-	mutex                 sync.Mutex
-	pingKeepAliveLoopChan chan struct{}
+	clientId                 string
+	conn                     *websocket.Conn
+	mutex                    sync.Mutex
+	clientConnectedTimestamp string
+
+	mustSubscribeTimer *time.Timer
+	keepAliveChanOpen  bool
+	keepAliveLoopChan  chan struct{}
+	keepAliveTimer     *time.Ticker
+	pingChanOpen       bool
+	pingLoopChan       chan struct{}
+	pingTimer          *time.Ticker
 }
 
 func (c *Client) SendMessage(messageType int, data []byte) error {
@@ -26,4 +34,8 @@ func (c *Client) CloseWithReason(reason *CloseMessage) {
 		websocket.FormatCloseMessage(reason.code, reason.message),
 		time.Now().Add(2*time.Second),
 	)
+}
+
+func (c *Client) CloseDirty() {
+	c.conn.Close()
 }
