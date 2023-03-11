@@ -229,8 +229,8 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		} else {
 			// Trigger any EventSub subscription that's available over 1st party WebSocket connections
 			args := &mock_ws.RPCArgs{
-				Body:     string(resp.JSON),
-				ClientID: p.WebSocketClient,
+				Body:       string(resp.JSON),
+				ClientName: p.WebSocketClient,
 			}
 
 			err = client.Call("WebSocketServerRPC.RemoteFireEventSub", args, &reply)

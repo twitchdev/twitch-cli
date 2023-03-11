@@ -43,7 +43,7 @@ var (
 	charityTargetValue  int
 	debug               bool
 	wssReconnectTest    int
-	sslEnabled          bool
+	strict              bool
 	websocketClient     string
 )
 
@@ -94,7 +94,7 @@ var retriggerCmd = &cobra.Command{
 
 var startWebsocketServerCmd = &cobra.Command{
 	Use:     "start-websocket-server",
-	Short:   `Starts a local websocket server at "ws://localhost:8080/eventsub" or at another preferred port.`,
+	Short:   `Starts a local websocket server at "ws://localhost:8080/ws" or at another preferred port.`,
 	Run:     startWebsocketServerCmdRun,
 	Example: `twitch event start-websocket-server`,
 	Aliases: []string{
@@ -151,8 +151,7 @@ func init() {
 	// start-websocket-server flags
 	startWebsocketServerCmd.Flags().IntVarP(&port, "port", "p", 8080, "Defines the port that the mock EventSub websocket server will run on.")
 	startWebsocketServerCmd.Flags().BoolVar(&debug, "debug", false, "Set on/off for debug messages for the EventSub WebSocket server.")
-	startWebsocketServerCmd.Flags().BoolVar(&sslEnabled, "ssl", false, "Sets on/off for SSL. Recommended to keep 'false', as most testing does not require this.")
-	startWebsocketServerCmd.Flags().IntVarP(&wssReconnectTest, "reconnect", "r", -1, "Used to test WebSocket Reconnect message. Sets delay (in seconds) from first client connection until the reconnect occurs.")
+	startWebsocketServerCmd.Flags().BoolVarP(&strict, "require-subscription", "s", false, "Requires subscriptions for all events, and activates 10 second subscription requirement.")
 }
 
 func triggerCmdRun(cmd *cobra.Command, args []string) {
@@ -294,5 +293,5 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 
 func startWebsocketServerCmdRun(cmd *cobra.Command, args []string) {
 	log.Printf("`Ctrl + C` to exit mock servers.")
-	mock_ws.StartWebsocketServers(debug, port)
+	mock_ws.StartWebsocketServers(debug, port, strict)
 }

@@ -8,10 +8,11 @@ import (
 )
 
 type Client struct {
-	clientId                 string
-	conn                     *websocket.Conn
-	mutex                    sync.Mutex
-	clientConnectedTimestamp string
+	clientName           string // Unique name for the client. Not the Client ID.
+	conn                 *websocket.Conn
+	mutex                sync.Mutex
+	ConnectedAtTimestamp string
+	connectionUrl        string
 
 	mustSubscribeTimer *time.Timer
 	keepAliveChanOpen  bool

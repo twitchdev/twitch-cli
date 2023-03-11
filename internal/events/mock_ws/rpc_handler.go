@@ -11,8 +11,8 @@ import (
 var sessionRegex = regexp.MustCompile(`(?P<server_name>.+)_(?P<client_name>.+)`)
 
 type RPCArgs struct {
-	Body     string
-	ClientID string
+	Body       string
+	ClientName string
 }
 
 type WebSocketServerRPC struct{}
@@ -27,13 +27,13 @@ func (wsrpc *WebSocketServerRPC) RemoteFireEventSub(args *RPCArgs, reply *bool) 
 		return nil
 	}
 
-	clientId := args.ClientID
-	if sessionRegex.MatchString(clientId) {
+	clientName := args.ClientName
+	if sessionRegex.MatchString(clientName) {
 		// Users can include the full session_id given in the response. If they do, subtract it to just the client name
-		clientId = sessionRegex.FindAllStringSubmatch(clientId, -1)[0][2]
+		clientName = sessionRegex.FindAllStringSubmatch(clientName, -1)[0][2]
 	}
 
-	success := server.HandleRPCEventSubForwarding(args.Body, clientId)
+	success := server.HandleRPCEventSubForwarding(args.Body, clientName)
 
 	*reply = success
 	return nil

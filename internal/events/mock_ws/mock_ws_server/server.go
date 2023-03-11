@@ -1,6 +1,7 @@
 package mock_ws_server
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -18,20 +19,23 @@ import (
 const KEEPALIVE_TIMEOUT_SECONDS = 10
 
 type WebSocketServer struct {
-	ServerId     string // Int representing the ID of the server
-	ReconnectUrl string // Server's url for people to connect to. Used for messaging in reconnect testing
-	DebugEnabled bool   // Display debug messages; --debug
-	StrictMode   bool   // Force stricter production-like qualities; --strict
+	ServerId string // Int representing the ID of the server
+	//ConnectionUrl string // Server's url for people to connect to. Used for messaging in reconnect testing
+	DebugEnabled bool // Display debug messages; --debug
+	StrictMode   bool // Force stricter production-like qualities; --strict
 	Upgrader     websocket.Upgrader
 
-	Clients   *Clients   // All connected clients
-	muClients sync.Mutex // Muted for WebSocketServer.Clients
+	Clients   *util.List[Client] // All connected clients
+	muClients sync.Mutex         // Mutex for WebSocketServer.Clients
 
 	Status   int        // 0 = shut down; 1 = shutting down; 2 = online
 	muStatus sync.Mutex // Mutex for WebSocketServer.Status
 
-	ReconnectClients   map[string]*[]string // Clients that were part of the last server
-	muReconnectClients sync.Mutex
+	Subscriptions   map[string][]Subscription // Active subscriptions on this server
+	MuSubscriptions sync.Mutex                // Mutex for WebSocketServer.Subscriptions
+
+	ReconnectClients   *util.List[[]Subscription] // Clients that were part of the last server
+	muReconnectClients sync.Mutex                 // Mutex for WebSocketServer.ReconnectClients
 }
 
 func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,12 +56,39 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 	conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
 
 	client := &Client{
-		clientId:                 util.RandomGUID()[:8],
-		conn:                     conn,
-		clientConnectedTimestamp: connectedAtTimestamp,
+		clientName:           util.RandomGUID()[:8],
+		conn:                 conn,
+		ConnectedAtTimestamp: connectedAtTimestamp,
+		connectionUrl:        fmt.Sprintf("http://%v/ws", r.Host),
+		keepAliveChanOpen:    false,
+		pingChanOpen:         false,
+	}
 
-		keepAliveChanOpen: false,
-		pingChanOpen:      false,
+	// TODO: Use reconnect clients
+	if r.URL.Query().Get("reconnect_id") != "" {
+		reconnectIdBytes, err := base64.StdEncoding.DecodeString(r.URL.Query().Get("reconnect_id") + "=")
+		if err != nil {
+			if ws.DebugEnabled {
+				log.Printf("Could not decode base64 reconnect_id query parameter: '%v'", r.URL.Query().Get("reconnect_id"))
+			}
+		} else {
+			reconnectId := string(reconnectIdBytes)
+
+			ws.muReconnectClients.Lock()
+
+			subscriptions, ok := ws.ReconnectClients.Get(reconnectId)
+			if ok { // User had subscriptions carry over
+				ws.Subscriptions[client.clientName] = *subscriptions
+			}
+
+			ws.ReconnectClients.Delete(reconnectId)
+
+			if ws.DebugEnabled {
+				log.Printf("Reconnected client [%v] was assigned %v subscriptions", client.clientName, len(ws.Subscriptions[client.clientName]))
+			}
+
+			ws.muReconnectClients.Unlock()
+		}
 	}
 
 	// Disconnect the user if the server is in reconnect phase
@@ -67,20 +98,23 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 		log.Printf("New client trying to connect while websocket server in reconnect phase. Disconnecting them.")
 		client.CloseDirty()
 		// No handleClientConnectionClose because client is not in clients list, and chan loop was not set up yet.
+
+		ws.muStatus.Unlock()
+		return
 	}
 
 	// TODO: Check if user is connected to the old server, and if they are then disconnect them from old server with close frame 4004
 
 	ws.muClients.Lock()
 	// Add to the client connections list
-	ws.Clients.Put(client.clientId, client)
+	ws.Clients.Put(client.clientName, client)
 	ws.muClients.Unlock()
 
 	// This is put after ws.Clients.Put to make sure the client gets included in the list before InitiateRestart() kicks everyone out
 	// Avoids any possible rare edge cases. This ain't production but I can still be safe :)
 	ws.muStatus.Unlock()
 
-	log.Printf("Client connected [%v]", client.clientId)
+	log.Printf("Client connected [%v]", client.clientName)
 	ws.printConnections()
 
 	// Send welcome message
@@ -93,7 +127,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 			},
 			Payload: WelcomeMessagePayload{
 				Session: WelcomeMessagePayloadSession{
-					ID:                      fmt.Sprintf("%v_%v", ws.ServerId, client.clientId),
+					ID:                      fmt.Sprintf("%v_%v", ws.ServerId, client.clientName),
 					Status:                  "connected",
 					KeepaliveTimeoutSeconds: KEEPALIVE_TIMEOUT_SECONDS,
 					ReconnectUrl:            nil,
@@ -105,14 +139,21 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 	client.SendMessage(websocket.TextMessage, welcomeMsg)
 
 	// Check if any subscriptions are sent after 10 seconds.
+	// Strict mode only
 	client.mustSubscribeTimer = time.NewTimer(10 * time.Second)
-	go func() {
-		select {
-		case <-client.mustSubscribeTimer.C:
-			log.Printf("No subscriptions whomp whomp -- TODO")
-			// TODO: Check for subscriptions. If none, disconnect.
-		}
-	}()
+	if ws.StrictMode {
+		go func() {
+			select {
+			case <-client.mustSubscribeTimer.C:
+				if len(ws.Subscriptions[client.clientName]) == 0 {
+					client.CloseWithReason(closeConnectionUnused)
+					ws.handleClientConnectionClose(client, closeConnectionUnused)
+
+					return
+				}
+			}
+		}()
+	}
 
 	// Set up ping/pong and keepalive handling
 	client.keepAliveTimer = time.NewTicker(10 * time.Second)
@@ -150,7 +191,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 				}
 
 				if ws.DebugEnabled {
-					log.Printf("Sent session_keepalive to client [%s]", client.clientId)
+					log.Printf("Sent session_keepalive to client [%s]", client.clientName)
 				}
 
 			case <-client.pingLoopChan:
@@ -166,7 +207,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 				}
 
 				if ws.DebugEnabled {
-					log.Printf("Sent pong to client [%s]", client.clientId)
+					log.Printf("Sent pong to client [%s]", client.clientName)
 				}
 
 			}
@@ -180,7 +221,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 
 		mt, message, err := conn.ReadMessage()
 		if err != nil && ws.Status != 0 { // If server is shut down, clients should already be disconnectd.
-			log.Printf("read err [%v]: %v", client.clientId, err)
+			log.Printf("read err [%v]: %v", client.clientName, err)
 
 			ws.muClients.Lock()
 			client.CloseWithReason(closeNetworkError)
@@ -190,7 +231,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 		}
 
 		if ws.Status == 2 { // Only care about this when the server is running
-			log.Printf("Disconnecting client [%v] due to received inbound traffic.\nMessage[%d]: %s", client.clientId, mt, message)
+			log.Printf("Disconnecting client [%v] due to received inbound traffic.\nMessage[%d]: %s", client.clientName, mt, message)
 
 			ws.muClients.Lock()
 			client.CloseWithReason(closeClientSentInboundTraffic)
@@ -200,6 +241,36 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 
 		break
 	}
+}
+
+// Gets client subscriptions to be transfered to another server. Used during reconnect testing.
+func (ws *WebSocketServer) GetCurrentSubscriptionsForReconnect() *util.List[[]Subscription] {
+	reconnectClients := &util.List[[]Subscription]{
+		Elements: make(map[string]*[]Subscription),
+	}
+
+	ws.MuSubscriptions.Lock()
+
+	for clientName, clientSubscriptions := range ws.Subscriptions {
+		for _, subscription := range clientSubscriptions {
+			reconnectReference := fmt.Sprintf("%v_%v", ws.ServerId, clientName)
+
+			oldReconnectSubs, ok := reconnectClients.Get(reconnectReference)
+			if !ok {
+				oldReconnectSubs = &[]Subscription{}
+			}
+
+			// Add to oldReconnectSubs
+			*oldReconnectSubs = append(*oldReconnectSubs, subscription)
+
+			// Return to list
+			reconnectClients.Put(reconnectReference, oldReconnectSubs)
+		}
+	}
+
+	ws.MuSubscriptions.Unlock()
+
+	return reconnectClients
 }
 
 func (ws *WebSocketServer) InitiateRestart() {
@@ -222,6 +293,9 @@ func (ws *WebSocketServer) InitiateRestart() {
 		client.mustSubscribeTimer.Stop()
 
 		// Send reconnect notice
+		sessionId := fmt.Sprintf("%v_%v", ws.ServerId, client.clientName)
+		reconnectId := base64.StdEncoding.EncodeToString([]byte(sessionId))
+		reconnectId = reconnectId[:len(reconnectId)-1]
 		reconnectMsg, _ := json.Marshal(
 			ReconnectMessage{
 				Metadata: MessageMetadata{
@@ -231,11 +305,11 @@ func (ws *WebSocketServer) InitiateRestart() {
 				},
 				Payload: ReconnectMessagePayload{
 					Session: ReconnectMessagePayloadSession{
-						ID:                      fmt.Sprintf("%v_%v", ws.ServerId, client.clientId),
+						ID:                      sessionId,
 						Status:                  "reconnecting",
 						KeepaliveTimeoutSeconds: nil,
-						ReconnectUrl:            ws.ReconnectUrl,
-						ConnectedAt:             client.clientConnectedTimestamp,
+						ReconnectUrl:            fmt.Sprintf("%v?reconnect_id=%v", client.connectionUrl, reconnectId),
+						ConnectedAt:             client.ConnectedAtTimestamp,
 					},
 				},
 			},
@@ -243,7 +317,7 @@ func (ws *WebSocketServer) InitiateRestart() {
 
 		err := client.SendMessage(websocket.TextMessage, reconnectMsg)
 		if err != nil {
-			log.Printf("Error building session_reconnect JSON for client [%v]: %v", client.clientId, err.Error())
+			log.Printf("Error building session_reconnect JSON for client [%v]: %v", client.clientName, err.Error())
 		}
 	}
 
@@ -270,12 +344,12 @@ func (ws *WebSocketServer) InitiateRestart() {
 	log.Printf("All users disconnected from server [%v]", ws.ServerId)
 }
 
-func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clientId string) bool {
+func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clientName string) bool {
 	// If --client is used, make sure the client exists
-	if clientId != "" {
-		_, ok := ws.Clients.Get(strings.ToLower(clientId))
+	if clientName != "" {
+		_, ok := ws.Clients.Get(strings.ToLower(clientName))
 		if !ok {
-			log.Printf("Error executing remote triggered EventSub: Client [%v] does not exist on server [%v]", clientId, ws.ServerId)
+			log.Printf("Error executing remote triggered EventSub: Client [%v] does not exist on server [%v]", clientName, ws.ServerId)
 			return false
 		}
 	}
@@ -286,7 +360,7 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 	}
 
 	for _, client := range ws.Clients.All() {
-		if clientId != "" && !strings.EqualFold(strings.ToLower(clientId), clientId) {
+		if clientName != "" && !strings.EqualFold(strings.ToLower(clientName), clientName) {
 			// When --client is used, only send to that client
 			continue
 		}
@@ -295,12 +369,12 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 		eventObj := models.EventsubResponse{}
 		err := json.Unmarshal([]byte(eventsubBody), &eventObj)
 		if err != nil {
-			log.Printf("Error reading JSON forwarded from EventSub. Currently on client [%v]: %v\nRaw: %v", client.clientId, err.Error(), eventsubBody)
+			log.Printf("Error reading JSON forwarded from EventSub. Currently on client [%v]: %v\nRaw: %v", client.clientName, err.Error(), eventsubBody)
 			return false
 		}
 
 		// Change payload's subscription.transport.session_id to contain the correct Session ID
-		eventObj.Subscription.Transport.SessionID = fmt.Sprintf("%v_%v", ws.ServerId, client.clientId)
+		eventObj.Subscription.Transport.SessionID = fmt.Sprintf("%v_%v", ws.ServerId, client.clientName)
 
 		// Build notification message
 		notificationMsg, err := json.Marshal(
@@ -316,12 +390,12 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 			},
 		)
 		if err != nil {
-			log.Printf("Error building JSON for client [%v]: %v", client.clientId, err.Error())
+			log.Printf("Error building JSON for client [%v]: %v", client.clientName, err.Error())
 			return false
 		}
 
 		client.SendMessage(websocket.TextMessage, notificationMsg)
-		log.Printf("Sent [%v / %v] to client [%v]", eventObj.Subscription.Type, eventObj.Subscription.Version, client.clientId)
+		log.Printf("Sent [%v / %v] to client [%v]", eventObj.Subscription.Type, eventObj.Subscription.Version, client.clientName)
 	}
 
 	return true
@@ -340,9 +414,9 @@ func (ws *WebSocketServer) handleClientConnectionClose(client *Client, closeReas
 	}
 
 	// Remove from clients list
-	ws.Clients.Delete(client.clientId)
+	ws.Clients.Delete(client.clientName)
 
-	log.Printf("Disconnected client [%v] with code [%v]", client.clientId, closeReason.code)
+	log.Printf("Disconnected client [%v] with code [%v]", client.clientName, closeReason.code)
 
 	// Print new clients connections list
 	ws.printConnections()
@@ -352,7 +426,7 @@ func (ws *WebSocketServer) printConnections() {
 	currentConnections := ""
 
 	for _, client := range ws.Clients.All() {
-		currentConnections += client.clientId + ", "
+		currentConnections += client.clientName + ", "
 	}
 
 	if currentConnections != "" {
