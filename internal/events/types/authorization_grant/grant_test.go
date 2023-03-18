@@ -1,12 +1,11 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package authorization
+package authorization_grant
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/test_setup"
@@ -18,13 +17,13 @@ var toUser = "4567"
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	viper.Set("ClientID", "1234")
 	params := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          models.TransportWebhook,
 		Trigger:            "subscribe",
 		SubscriptionStatus: "enabled",
+		ClientID:           "1234",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -56,10 +55,10 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("revoke")
+	r := Event{}.ValidTrigger("grant")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("fake_revoke")
+	r = Event{}.ValidTrigger("fake_grant")
 	a.Equal(false, r)
 }
 
@@ -75,6 +74,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportWebhook, "revoke")
+	r := Event{}.GetTopic(models.TransportWebhook, "grant")
 	a.NotNil(r)
 }

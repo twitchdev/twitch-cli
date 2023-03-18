@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
@@ -44,6 +45,7 @@ type TriggerParameters struct {
 	EventID             string // Also serves as subscription ID. See https://github.com/twitchdev/twitch-cli/issues/184
 	CharityCurrentValue int
 	CharityTargetValue  int
+	ClientID            string
 	WebSocketClient     string
 }
 
@@ -59,6 +61,16 @@ type TriggerResponse struct {
 func Fire(p TriggerParameters) (string, error) {
 	var resp events.MockEventResponse
 	var err error
+
+	if p.ClientID == "" {
+		p.ClientID = viper.GetString("ClientID") // Get from config
+
+		if p.ClientID == "" {
+			// --client-id wasn't used, and config file doesn't have a Client ID set.
+			// Generate a randomized one
+			p.ClientID = util.RandomClientID()
+		}
+	}
 
 	if p.ToUser == "" {
 		p.ToUser = util.RandomUserID()
@@ -120,6 +132,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		Timestamp:           p.Timestamp,
 		CharityCurrentValue: p.CharityCurrentValue,
 		CharityTargetValue:  p.CharityTargetValue,
+		ClientID:            p.ClientID,
 	}
 
 	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)

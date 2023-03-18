@@ -372,8 +372,38 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 			return false
 		}
 
-		// If this is a Revocation message (mock.websocket.revoke), set it as revoked
-		// TODO
+		// If this is a Revocation message (user.authorization.revoke), set it as revoked
+		if eventObj.Subscription.Type == "user.authorization.revoke" {
+			if serverManager.debugEnabled {
+				log.Printf("Attempting to revoke subscription [%v]", eventObj.Subscription.ID)
+			}
+
+			// TODO: Call revoke function
+			ws.muSubscriptions.Lock()
+			foundClientId := ""
+			for client, clientSubscriptions := range ws.Subscriptions {
+				if foundClientId != "" {
+					break
+				}
+
+				for i, sub := range clientSubscriptions {
+					if sub.SubscriptionID == eventObj.Subscription.ID {
+						foundClientId = sub.ClientID
+
+						ws.Subscriptions[client][i].Status = STATUS_AUTHORIZATION_REVOKED
+						break
+					}
+				}
+			}
+			ws.muSubscriptions.Unlock()
+
+			if foundClientId != "" {
+				log.Printf("Subscription ID [%v], belonging to Client ID [%v], has been revoked.", eventObj.Subscription.ID, foundClientId)
+			} else {
+				log.Printf("Failed to revoke Subscription ID [%v]: Subscription by that ID does not exist.", eventObj.Subscription.ID)
+				return false
+			}
+		}
 
 		// Change payload's subscription.transport.session_id to contain the correct Session ID
 		eventObj.Subscription.Transport.SessionID = fmt.Sprintf("%v_%v", ws.ServerId, client.clientName)

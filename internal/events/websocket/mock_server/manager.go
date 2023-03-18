@@ -76,9 +76,30 @@ func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
 			return
 		}
 
-		yellow := color.New(color.FgHiYellow).SprintFunc()
-		log.Printf("Started WebSocket server on 127.0.0.1:%v", port)
-		log.Printf(yellow("Connect to WebSocket server at: ws://127.0.0.1:%v/ws"), port)
+		lightBlue := color.New(color.FgHiBlue).SprintFunc()
+		lightGreen := color.New(color.FgHiGreen).SprintFunc()
+		lightYellow := color.New(color.FgHiYellow).SprintFunc()
+		yellow := color.New(color.FgYellow).SprintFunc()
+
+		log.Printf(lightBlue("Started WebSocket server on 127.0.0.1:%v"), port)
+
+		fmt.Println()
+
+		log.Printf(yellow("Simulate subscribing to events at: http://127.0.0.1:%v/eventsub/subscriptions"), port)
+		log.Printf(yellow("POST, GET, and DELETE are supported"))
+		log.Printf(yellow("For more info: https://dev.twitch.tv/docs/api/reference/#create-eventsub-subscription"))
+
+		fmt.Println()
+
+		log.Printf(lightYellow("Events can be forwarded to this server with --transport=websocket\nExample: \"twitch event trigger channel.ban --transport=websocket\""))
+		fmt.Println()
+		log.Printf(lightYellow("You can send to a specific client after its connected.\nExample: \"twitch event trigger channel.ban --transport=websocket --client=e09efae0_8775fbe4\""))
+
+		fmt.Println()
+		log.Printf(lightGreen("For further usage information, please see our official documentation:\nhttps://dev.twitch.tv/docs/cli/websocket-event-command/"))
+		fmt.Println()
+
+		log.Printf(lightBlue("Connect to the WebSocket server at: ")+"ws://127.0.0.1:%v/ws", port)
 
 		// Serve HTTP server
 		if err := http.Serve(listen, m); err != nil {

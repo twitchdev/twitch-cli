@@ -42,6 +42,7 @@ var (
 	timestamp           string
 	charityCurrentValue int
 	charityTargetValue  int
+	clientId            string
 	websocketClient     string
 )
 
@@ -153,6 +154,7 @@ func init() {
 	triggerCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	triggerCmd.Flags().IntVar(&charityCurrentValue, "charity-current-value", 0, "Only used for \"charity-*\" events. Manually set the current dollar value for charity events.")
 	triggerCmd.Flags().IntVar(&charityTargetValue, "charity-target-value", 1500000, "Only used for \"charity-*\" events. Manually set the target dollar value for charity events.")
+	triggerCmd.Flags().StringVar(&clientId, "client-id", "", "Manually set the Client ID used in revoke, grant, and bits transaction events.")
 	triggerCmd.Flags().StringVar(&websocketClient, "client", "", "Defines a specific websocket client to forward an event to. Used only with \"websocket\" transport.")
 
 	// retrigger flags
@@ -230,6 +232,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 			Timestamp:           timestamp,
 			CharityCurrentValue: charityCurrentValue,
 			CharityTargetValue:  charityTargetValue,
+			ClientID:            clientId,
 			WebSocketClient:     websocketClient,
 		})
 

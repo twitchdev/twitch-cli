@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package extension_transaction
+package authorization_grant
 
 import (
 	"encoding/json"
@@ -11,14 +11,15 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportWebhook: true,
+	models.TransportWebhook:   true,
+	models.TransportWebSocket: false,
 }
 
-var triggerSupported = []string{"transaction"}
+var triggerSupported = []string{"grant"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportWebhook: {
-		"transaction": "extension.bits_transaction.create",
+		"grant": "user.authorization.grant",
 	},
 }
 
@@ -28,28 +29,16 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var event []byte
 	var err error
 
-	if params.Cost == 0 {
-		params.Cost = 100
-	}
-
-	if params.ItemID == "" {
-		params.ItemID = "testItemSku"
-	}
-
-	if params.ItemName == "" {
-		params.ItemName = "Test Trigger Item from CLI"
-	}
-
 	switch params.Transport {
 	case models.TransportWebhook:
-		body := &models.TransactionEventSubResponse{
+		body := &models.AuthorizationRevokeEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  params.SubscriptionStatus,
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
-					ExtensionClientID: params.ClientID,
+					ClientID: params.ClientID,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
@@ -58,21 +47,11 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Cost:      1,
 				CreatedAt: params.Timestamp,
 			},
-			Event: models.TransactionEventSubEvent{
-				ID:                   params.ID,
-				ExtensionClientID:    params.ClientID,
-				BroadcasterUserID:    params.ToUserID,
-				BroadcasterUserLogin: "testBroadcaster",
-				BroadcasterUserName:  "testBroadcaster",
-				UserName:             "testUser",
-				UserLogin:            "testUser",
-				UserID:               params.FromUserID,
-				Product: models.TransactionEventSubProduct{
-					Name:          params.ItemName,
-					Sku:           params.ItemID,
-					Bits:          params.Cost,
-					InDevelopment: true,
-				},
+			Event: &models.AuthorizationRevokeEvent{
+				ClientID:  params.ClientID,
+				UserID:    params.FromUserID,
+				UserLogin: params.FromUserName,
+				UserName:  params.FromUserName,
 			},
 		}
 		event, err = json.Marshal(body)

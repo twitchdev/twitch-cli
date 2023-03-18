@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package extension_transaction
+package authorization_revoke
 
 import (
 	"encoding/json"
@@ -13,40 +13,38 @@ import (
 
 var fromUser = "1234"
 var toUser = "4567"
-var clientId = "7890"
 
-func TestEventsubTransaction(t *testing.T) {
+func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	params := events.MockEventParameters{
+	params := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          models.TransportWebhook,
-		Trigger:            "transaction",
+		Trigger:            "subscribe",
 		SubscriptionStatus: "enabled",
-		ClientID:           clientId,
+		ClientID:           "1234",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
 
-	var body models.TransactionEventSubResponse
+	var body models.AuthorizationRevokeEventSubResponse
 	err = json.Unmarshal(r.JSON, &body)
 	a.Nil(err)
 
-	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
-	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", fromUser, body.Event.UserID)
-	a.Equal(clientId, body.Event.ExtensionClientID, "Expected client id %v, got %v", clientId, body.Event.ExtensionClientID)
+	a.NotEmpty(body.Event.ClientID)
+	a.Equal(body.Event.ClientID, body.Subscription.Condition.ClientID)
+	a.Equal("1234", body.Event.ClientID)
 }
-
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	params := events.MockEventParameters{
+	params := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          "fake_transport",
-		Trigger:            "transaction",
+		Trigger:            "unsubscribe",
 		SubscriptionStatus: "enabled",
 	}
 
@@ -54,14 +52,13 @@ func TestFakeTransport(t *testing.T) {
 	a.Nil(err)
 	a.Empty(r)
 }
-
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("transaction")
+	r := Event{}.ValidTrigger("revoke")
 	a.Equal(true, r)
 
-	r = Event{}.ValidTrigger("not_trigger_keyword")
+	r = Event{}.ValidTrigger("fake_revoke")
 	a.Equal(false, r)
 }
 
@@ -77,6 +74,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportWebhook, "transaction")
+	r := Event{}.GetTopic(models.TransportWebhook, "revoke")
 	a.NotNil(r)
 }

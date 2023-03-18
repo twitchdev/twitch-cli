@@ -26,6 +26,7 @@ type MockEventParameters struct {
 	Timestamp           string
 	CharityCurrentValue int
 	CharityTargetValue  int
+	ClientID            string
 }
 
 type MockEventResponse struct {

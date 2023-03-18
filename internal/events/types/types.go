@@ -8,7 +8,8 @@ import (
 	"strings"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
-	"github.com/twitchdev/twitch-cli/internal/events/types/authorization"
+	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_grant"
+	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_revoke"
 	"github.com/twitchdev/twitch-cli/internal/events/types/ban"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_redemption"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_reward"
@@ -37,7 +38,8 @@ import (
 
 func AllEvents() []events.MockEvent {
 	return []events.MockEvent{
-		authorization.Event{},
+		authorization_grant.Event{},
+		authorization_revoke.Event{},
 		ban.Event{},
 		channel_points_redemption.Event{},
 		channel_points_reward.Event{},
