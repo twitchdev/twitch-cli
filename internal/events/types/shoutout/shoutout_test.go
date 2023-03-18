@@ -20,7 +20,7 @@ func TestEventSub(t *testing.T) {
 	beginParams := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "shoutout-create",
 		SubscriptionStatus: "enabled",
 		Cost:               0,
@@ -28,7 +28,7 @@ func TestEventSub(t *testing.T) {
 	endParams := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "shoutout-received",
 		SubscriptionStatus: "enabled",
 		Cost:               0,
@@ -90,7 +90,7 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportWebhook)
 	a.Equal(true, r)
 
 	r = Event{}.ValidTransport("noteventsub")
@@ -99,9 +99,9 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "shoutout-create")
+	r := Event{}.GetTopic(models.TransportWebhook, "shoutout-create")
 	a.NotNil(r)
 
-	r = Event{}.GetTopic(models.TransportEventSub, "shoutout-receieve")
+	r = Event{}.GetTopic(models.TransportWebhook, "shoutout-receieve")
 	a.NotNil(r)
 }

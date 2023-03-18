@@ -20,7 +20,7 @@ func TestEventSub(t *testing.T) {
 	params := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "poll-begin",
 		SubscriptionStatus: "enabled",
 	}
@@ -37,7 +37,7 @@ func TestEventSub(t *testing.T) {
 	params = *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "poll-progress",
 		SubscriptionStatus: "enabled",
 	}
@@ -54,7 +54,7 @@ func TestEventSub(t *testing.T) {
 	params = *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "poll-end",
 		SubscriptionStatus: "enabled",
 	}
@@ -96,7 +96,7 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportWebhook)
 	a.Equal(true, r)
 
 	r = Event{}.ValidTransport("noteventsub")
@@ -105,6 +105,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "poll-begin")
+	r := Event{}.GetTopic(models.TransportWebhook, "poll-begin")
 	a.NotNil(r)
 }

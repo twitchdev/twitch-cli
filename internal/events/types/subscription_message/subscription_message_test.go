@@ -22,7 +22,7 @@ func TestEventSub(t *testing.T) {
 	params := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "subscribe-message",
 		SubscriptionStatus: "enabled",
 		Cost:               int64(ten),
@@ -40,7 +40,7 @@ func TestEventSub(t *testing.T) {
 	params = *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "subscribe-message",
 		SubscriptionStatus: "enabled",
 		Cost:               int64(ten),
@@ -85,7 +85,7 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportWebhook)
 	a.Equal(true, r)
 
 	r = Event{}.ValidTransport("noteventsub")
@@ -94,6 +94,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "subscribe-message")
+	r := Event{}.GetTopic(models.TransportWebhook, "subscribe-message")
 	a.NotNil(r)
 }

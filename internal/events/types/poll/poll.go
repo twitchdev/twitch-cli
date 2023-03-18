@@ -14,14 +14,14 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub:  true,
+	models.TransportWebhook:   true,
 	models.TransportWebSocket: true,
 }
 
 var triggerSupported = []string{"poll-begin", "poll-progress", "poll-end"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportEventSub: {
+	models.TransportWebhook: {
 		"poll-begin":    "channel.poll.begin",
 		"poll-progress": "channel.poll.progress",
 		"poll-end":      "channel.poll.end",
@@ -44,7 +44,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	switch params.Transport {
-	case models.TransportEventSub, models.TransportWebSocket:
+	case models.TransportWebhook, models.TransportWebSocket:
 		choices := []models.PollEventSubEventChoice{}
 		for i := 1; i < 5; i++ {
 			c := models.PollEventSubEventChoice{
@@ -163,7 +163,7 @@ func intPointer(i int) *int {
 }
 func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases
-	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+	for trigger, topic := range triggerMapping[models.TransportWebhook] {
 		if topic == t {
 			return trigger
 		}

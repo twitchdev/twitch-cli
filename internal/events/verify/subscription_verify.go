@@ -43,7 +43,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		return VerifyResponse{}, err
 	}
 
-	if p.Transport == models.TransportEventSub {
+	if p.Transport == models.TransportWebhook {
 		newTrigger := event.GetEventSubAlias(p.Event)
 		if newTrigger != "" {
 			p.Event = newTrigger
@@ -137,7 +137,7 @@ func generateWebhookSubscriptionBody(transport string, eventID string, event str
 	var err error
 	ts := util.GetTimestamp().Format(time.RFC3339Nano)
 	switch transport {
-	case models.TransportEventSub:
+	case models.TransportWebhook:
 		body := models.EventsubSubscriptionVerification{
 			Challenge: challenge,
 			Subscription: models.EventsubSubscription{

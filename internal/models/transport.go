@@ -2,5 +2,5 @@
 // SPDX-License-Identifier: Apache-2.0
 package models
 
-const TransportEventSub = "webhook"
+const TransportWebhook = "webhook"
 const TransportWebSocket = "websocket"

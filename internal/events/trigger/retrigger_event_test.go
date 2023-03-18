@@ -26,7 +26,7 @@ func TestRefireEvent(t *testing.T) {
 
 	params := *&TriggerParameters{
 		Event:          "gift",
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",

@@ -18,7 +18,7 @@ func TestEventSub(t *testing.T) {
 
 	params := *&events.MockEventParameters{
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "hype-train-begin",
 		SubscriptionStatus: "enabled",
 	}
@@ -35,7 +35,7 @@ func TestEventSub(t *testing.T) {
 
 	params = *&events.MockEventParameters{
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "hype-train-progress",
 		SubscriptionStatus: "enabled",
 	}
@@ -52,7 +52,7 @@ func TestEventSub(t *testing.T) {
 
 	params = *&events.MockEventParameters{
 		ToUserID:  toUser,
-		Transport: models.TransportEventSub,
+		Transport: models.TransportWebhook,
 		Trigger:   "hype-train-end",
 	}
 
@@ -98,13 +98,13 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportWebhook)
 	a.Equal(true, r)
 }
 
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "hype-train-progress")
+	r := Event{}.GetTopic(models.TransportWebhook, "hype-train-progress")
 	a.Equal("channel.hype_train.progress", r, "Expected %v, got %v", "channel.hype_train.progress", r)
 }

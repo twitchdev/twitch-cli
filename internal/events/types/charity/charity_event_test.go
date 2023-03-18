@@ -26,7 +26,7 @@ func testEventSubCharity(t *testing.T, trigger string) {
 	params := events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            trigger,
 		SubscriptionStatus: "enabled",
 	}
@@ -83,7 +83,7 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportWebhook)
 	a.Equal(true, r)
 
 	r = Event{}.ValidTransport("noteventsub")
@@ -93,15 +93,15 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "charity-donate")
+	r := Event{}.GetTopic(models.TransportWebhook, "charity-donate")
 	a.NotNil(r)
 
-	r = Event{}.GetTopic(models.TransportEventSub, "charity-start")
+	r = Event{}.GetTopic(models.TransportWebhook, "charity-start")
 	a.NotNil(r)
 
-	r = Event{}.GetTopic(models.TransportEventSub, "charity-progress")
+	r = Event{}.GetTopic(models.TransportWebhook, "charity-progress")
 	a.NotNil(r)
 
-	r = Event{}.GetTopic(models.TransportEventSub, "charity-stop")
+	r = Event{}.GetTopic(models.TransportWebhook, "charity-stop")
 	a.NotNil(r)
 }

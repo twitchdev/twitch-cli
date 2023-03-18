@@ -20,7 +20,7 @@ func TestEventSub(t *testing.T) {
 	params := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "prediction-begin",
 		SubscriptionStatus: "enabled",
 	}
@@ -35,7 +35,7 @@ func TestEventSub(t *testing.T) {
 	params = *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "prediction-progress",
 		SubscriptionStatus: "enabled",
 	}
@@ -50,7 +50,7 @@ func TestEventSub(t *testing.T) {
 	params = *&events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
+		Transport:  models.TransportWebhook,
 		Trigger:    "prediction-lock",
 	}
 
@@ -64,7 +64,7 @@ func TestEventSub(t *testing.T) {
 	params = *&events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
-		Transport:  models.TransportEventSub,
+		Transport:  models.TransportWebhook,
 		Trigger:    "prediction-end",
 	}
 
@@ -103,7 +103,7 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportWebhook)
 	a.Equal(true, r)
 
 	r = Event{}.ValidTransport("noteventsub")
@@ -112,6 +112,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "prediction-begin")
+	r := Event{}.GetTopic(models.TransportWebhook, "prediction-begin")
 	a.NotNil(r)
 }

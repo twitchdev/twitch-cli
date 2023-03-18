@@ -20,7 +20,7 @@ func TestEventSub(t *testing.T) {
 	params := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "add-moderator",
 		SubscriptionStatus: "enabled",
 	}
@@ -68,13 +68,13 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportWebhook)
 	a.Equal(true, r)
 }
 
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "remove-moderator")
+	r := Event{}.GetTopic(models.TransportWebhook, "remove-moderator")
 	a.Equal("channel.moderator.remove", r, "Expected %v, got %v", "channel.moderator.remove", r)
 }

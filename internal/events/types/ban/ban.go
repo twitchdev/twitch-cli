@@ -13,14 +13,14 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub:  true,
+	models.TransportWebhook:   true,
 	models.TransportWebSocket: true,
 }
 
 var triggerSupported = []string{"ban", "unban"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportEventSub: {
+	models.TransportWebhook: {
 		"ban":   "channel.ban",
 		"unban": "channel.unban",
 	},
@@ -37,7 +37,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var err error
 
 	switch params.Transport {
-	case models.TransportEventSub, models.TransportWebSocket:
+	case models.TransportWebhook, models.TransportWebSocket:
 		ban := models.BanEventSubEvent{
 			UserID:               params.FromUserID,
 			UserLogin:            params.FromUserName,
@@ -145,7 +145,7 @@ func (e Event) GetAllTopicsByTransport(transport string) []string {
 }
 func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases
-	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+	for trigger, topic := range triggerMapping[models.TransportWebhook] {
 		if topic == t {
 			return trigger
 		}

@@ -68,7 +68,7 @@ func AllWebhookTopics() []string {
 	allEvents := []string{}
 
 	for _, e := range AllEvents() {
-		for _, topic := range e.GetAllTopicsByTransport(models.TransportEventSub) {
+		for _, topic := range e.GetAllTopicsByTransport(models.TransportWebhook) {
 			allEvents = append(allEvents, topic)
 		}
 	}
@@ -98,7 +98,7 @@ func WebSocketCommandTopics() []string {
 
 func GetByTriggerAndTransport(trigger string, transport string) (events.MockEvent, error) {
 	for _, e := range AllEvents() {
-		if transport == models.TransportEventSub || transport == models.TransportWebSocket {
+		if transport == models.TransportWebhook || transport == models.TransportWebSocket {
 			newTrigger := e.GetEventSubAlias(trigger)
 			if newTrigger != "" {
 				trigger = newTrigger

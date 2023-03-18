@@ -13,13 +13,13 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportWebhook: true,
 }
 
 var triggerSupported = []string{"transaction"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportEventSub: {
+	models.TransportWebhook: {
 		"transaction": "extension.bits_transaction.create",
 	},
 }
@@ -50,7 +50,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportWebhook:
 		body := &models.TransactionEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
@@ -140,7 +140,7 @@ func (e Event) GetAllTopicsByTransport(transport string) []string {
 }
 func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases
-	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+	for trigger, topic := range triggerMapping[models.TransportWebhook] {
 		if topic == t {
 			return trigger
 		}
