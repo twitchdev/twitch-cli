@@ -13,11 +13,17 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportEventSub:  true,
+	models.TransportWebSocket: true,
 }
 var triggerSupported = []string{"hype-train-begin", "hype-train-progress", "hype-train-end"}
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
+		"hype-train-progress": "channel.hype_train.progress",
+		"hype-train-begin":    "channel.hype_train.begin",
+		"hype-train-end":      "channel.hype_train.end",
+	},
+	models.TransportWebSocket: {
 		"hype-train-progress": "channel.hype_train.progress",
 		"hype-train-begin":    "channel.hype_train.begin",
 		"hype-train-end":      "channel.hype_train.end",
@@ -42,7 +48,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	tNow, _ := time.Parse(time.RFC3339Nano, params.Timestamp)
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportEventSub, models.TransportWebSocket:
 		body := models.HypeTrainEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,

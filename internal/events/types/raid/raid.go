@@ -12,13 +12,17 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportEventSub:  true,
+	models.TransportWebSocket: true,
 }
 
 var triggerSupported = []string{"raid"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
+		"raid": "channel.raid",
+	},
+	models.TransportWebSocket: {
 		"raid": "channel.raid",
 	},
 }
@@ -30,7 +34,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var err error
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportEventSub, models.TransportWebSocket:
 		body := &models.RaidEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,

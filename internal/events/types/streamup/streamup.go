@@ -12,13 +12,17 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportEventSub:  true,
+	models.TransportWebSocket: true,
 }
 
 var triggerSupported = []string{"streamup"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
+		"streamup": "stream.online",
+	},
+	models.TransportWebSocket: {
 		"streamup": "stream.online",
 	},
 }
@@ -38,7 +42,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportEventSub, models.TransportWebSocket:
 		body := &models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,

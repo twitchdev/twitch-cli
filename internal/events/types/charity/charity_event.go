@@ -12,12 +12,19 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportEventSub:  true,
+	models.TransportWebSocket: true,
 }
 var triggers = []string{"charity-donate", "charity-start", "charity-progress", "charity-stop"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
+		"charity-donate":   "channel.charity_campaign.donate",
+		"charity-start":    "channel.charity_campaign.start",
+		"charity-progress": "channel.charity_campaign.progress",
+		"charity-stop":     "channel.charity_campaign.stop",
+	},
+	models.TransportWebSocket: {
 		"charity-donate":   "channel.charity_campaign.donate",
 		"charity-start":    "channel.charity_campaign.start",
 		"charity-progress": "channel.charity_campaign.progress",
@@ -135,7 +142,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportEventSub, models.TransportWebSocket:
 		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,

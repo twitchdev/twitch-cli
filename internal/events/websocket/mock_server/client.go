@@ -1,4 +1,4 @@
-package mock_ws_server
+package mock_server
 
 import (
 	"sync"

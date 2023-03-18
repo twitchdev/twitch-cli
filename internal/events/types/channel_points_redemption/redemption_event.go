@@ -12,13 +12,18 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportEventSub:  true,
+	models.TransportWebSocket: true,
 }
 
 var triggerSupported = []string{"add-redemption", "update-redemption"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
+		"add-redemption":    "channel.channel_points_custom_reward_redemption.add",
+		"update-redemption": "channel.channel_points_custom_reward_redemption.update",
+	},
+	models.TransportWebSocket: {
 		"add-redemption":    "channel.channel_points_custom_reward_redemption.add",
 		"update-redemption": "channel.channel_points_custom_reward_redemption.update",
 	},
@@ -47,7 +52,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportEventSub, models.TransportWebSocket:
 		body := *&models.RedemptionEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,

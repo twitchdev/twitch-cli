@@ -14,8 +14,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/events"
-	"github.com/twitchdev/twitch-cli/internal/events/mock_ws"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
+	"github.com/twitchdev/twitch-cli/internal/events/websocket/mock_server"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
@@ -215,26 +215,17 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		}
 		modifiedTransportJSON.Subscription.Transport.Method = "websocket"
 		modifiedTransportJSON.Subscription.Transport.Callback = ""
-		modifiedTransportJSON.Subscription.Transport.SessionID = "TBD-by-WebSocket-Server"
+		modifiedTransportJSON.Subscription.Transport.SessionID = "WebSocket-Server-Will-Set"
 		rawModifiedTransportJSON, _ := json.Marshal(modifiedTransportJSON)
 		resp.JSON = rawModifiedTransportJSON
 
-		if strings.HasPrefix(p.Event, "mock.websocket") {
-			// Trigger server command to emulate a specific feature, such as websocket reconnect emulation
-			args := &mock_ws.RPCArgs{
-				Body: string(resp.JSON),
-			}
-
-			err = client.Call("WebSocketServerRPC.ServerCommand", args, &reply)
-		} else {
-			// Trigger any EventSub subscription that's available over 1st party WebSocket connections
-			args := &mock_ws.RPCArgs{
-				Body:       string(resp.JSON),
-				ClientName: p.WebSocketClient,
-			}
-
-			err = client.Call("WebSocketServerRPC.RemoteFireEventSub", args, &reply)
+		// Trigger any EventSub subscription that's available over 1st party WebSocket connections
+		args := &mock_server.RPCArgs{
+			Body:       string(resp.JSON),
+			ClientName: p.WebSocketClient,
 		}
+
+		err = client.Call("WebSocketServerRPC.RemoteFireEventSub", args, &reply)
 
 		// Error checking for all possible RPC executions
 		if err != nil {

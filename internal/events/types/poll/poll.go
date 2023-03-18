@@ -14,13 +14,19 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportEventSub:  true,
+	models.TransportWebSocket: true,
 }
 
 var triggerSupported = []string{"poll-begin", "poll-progress", "poll-end"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
+		"poll-begin":    "channel.poll.begin",
+		"poll-progress": "channel.poll.progress",
+		"poll-end":      "channel.poll.end",
+	},
+	models.TransportWebSocket: {
 		"poll-begin":    "channel.poll.begin",
 		"poll-progress": "channel.poll.progress",
 		"poll-end":      "channel.poll.end",
@@ -38,7 +44,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportEventSub, models.TransportWebSocket:
 		choices := []models.PollEventSubEventChoice{}
 		for i := 1; i < 5; i++ {
 			c := models.PollEventSubEventChoice{

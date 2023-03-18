@@ -32,7 +32,6 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscribe"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscription_message"
 	user_update "github.com/twitchdev/twitch-cli/internal/events/types/user"
-	"github.com/twitchdev/twitch-cli/internal/events/types/websockets_cmd"
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
@@ -62,10 +61,6 @@ func AllEvents() []events.MockEvent {
 		subscribe.Event{},
 		subscription_message.Event{},
 		user_update.Event{},
-
-		// Mock WebSocket server command events
-		// Can only be accessed by "websocket" transport
-		websockets_cmd.ReconnectEvent{},
 	}
 }
 
@@ -89,7 +84,7 @@ func WebSocketCommandTopics() []string {
 
 	for _, e := range AllEvents() {
 		for _, topic := range e.GetAllTopicsByTransport(models.TransportWebSocket) {
-			if strings.HasPrefix(topic, "mock.websocket") {
+			if strings.HasPrefix(topic, "websocket") {
 				allEvents = append(allEvents, topic)
 			}
 		}
@@ -117,11 +112,6 @@ func GetByTriggerAndTransport(trigger string, transport string) (events.MockEven
 	// Different error for websocket transport
 	if strings.EqualFold(transport, "websocket") {
 		return nil, errors.New("Invalid event, or this event is not available via WebSockets.")
-	}
-
-	// Different error for mock.websocket.* topics
-	if strings.HasPrefix(trigger, "mock.websocket") {
-		return nil, errors.New("Invalid event. Use \"--transport=websocket\" for mock.websocket.* events")
 	}
 
 	// Default error

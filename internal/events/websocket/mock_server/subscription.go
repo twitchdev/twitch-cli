@@ -1,4 +1,4 @@
-package mock_ws_server
+package mock_server
 
 type Subscription struct {
 	SubscriptionID string // Random GUID for the subscription
@@ -6,6 +6,7 @@ type Subscription struct {
 	Type           string // EventSub topic
 	Version        string // EventSub topic version
 	CreatedAt      string // Timestamp of when the subscription was created
+	Status         string // Status of the subscription
 }
 
 // Request - POST /eventsub/subscriptions
@@ -72,4 +73,59 @@ type SubscriptionTransport struct {
 
 // Cross-usage
 type EmptyStruct struct {
+}
+
+// Subscription Statuses
+// Only includes status values that apply to WebSocket connections
+// https://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions
+const (
+	STATUS_ENABLED                            = "enabled"
+	STATUS_AUTHORIZATION_REVOKED              = "revoked"
+	STATUS_MODERATOR_REMOVED                  = "moderator_removed"
+	STATUS_USER_REMOVED                       = "user_removed"
+	STATUS_VERSION_REMOVED                    = "version_removed"
+	STATUS_WEBSOCKET_DISCONNECTED             = "websocket_disconnected"
+	STATUS_WEBSOCKET_FAILED_PING_PONG         = "websocket_failed_ping_pong"
+	STATUS_WEBSOCKET_RECEIVED_INBOUND_TRAFFIC = "websocket_received_inbound_traffic"
+	STATUS_WEBSOCKET_CONNECTION_UNUSED        = "websocket_connection_unused"
+	STATUS_INTERNAL_ERROR                     = "websocket_internal_error"
+	STATUS_NETWORK_TIMEOUT                    = "network_timeout"
+	STATUS_NETWORK_ERROR                      = "websocket_network_error"
+)
+
+func IsValidSubscriptionStatus(status string) bool {
+	switch status {
+	case STATUS_ENABLED, STATUS_AUTHORIZATION_REVOKED,
+		STATUS_MODERATOR_REMOVED, STATUS_USER_REMOVED,
+		STATUS_VERSION_REMOVED, STATUS_WEBSOCKET_DISCONNECTED,
+		STATUS_WEBSOCKET_FAILED_PING_PONG, STATUS_WEBSOCKET_RECEIVED_INBOUND_TRAFFIC,
+		STATUS_WEBSOCKET_CONNECTION_UNUSED, STATUS_INTERNAL_ERROR,
+		STATUS_NETWORK_TIMEOUT, STATUS_NETWORK_ERROR:
+		return true
+	default:
+		return false
+	}
+}
+
+func getStatusFromCloseMessage(reason *CloseMessage) string {
+	code := reason.code
+
+	switch code {
+	case 4000:
+		return STATUS_INTERNAL_ERROR
+	case 4001:
+		return STATUS_WEBSOCKET_RECEIVED_INBOUND_TRAFFIC
+	case 4002:
+		return STATUS_WEBSOCKET_FAILED_PING_PONG
+	case 4003:
+		return STATUS_WEBSOCKET_CONNECTION_UNUSED
+	case 4004: // grace time expired. Subscriptions stay open
+		return STATUS_ENABLED
+	case 4005:
+		return STATUS_NETWORK_TIMEOUT
+	case 4006:
+		return STATUS_NETWORK_ERROR
+	default:
+		return STATUS_WEBSOCKET_DISCONNECTED
+	}
 }

@@ -34,7 +34,7 @@ type EventsubCondition struct {
 
 type EventsubResponse struct {
 	Subscription EventsubSubscription `json:"subscription"`
-	Event        interface{}          `json:"event"`
+	Event        interface{}          `json:"event,omitempty"`
 }
 
 type EventsubSubscriptionVerification struct {

@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package mock_ws
+package mock_server
 
 import (
 	"encoding/json"
@@ -13,15 +13,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/gorilla/websocket"
-	"github.com/twitchdev/twitch-cli/internal/events/mock_ws/mock_ws_server"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
-	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 type ServerManager struct {
-	serverList       *util.List[mock_ws_server.WebSocketServer]
+	serverList       *util.List[WebSocketServer]
 	reconnectTesting bool
 	primaryServer    string
 	port             int
@@ -31,10 +30,10 @@ type ServerManager struct {
 
 var serverManager *ServerManager
 
-func StartWebsocketServers(enableDebug bool, port int, strictMode bool) {
+func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
 	serverManager = &ServerManager{
-		serverList: &util.List[mock_ws_server.WebSocketServer]{
-			Elements: make(map[string]*mock_ws_server.WebSocketServer),
+		serverList: &util.List[WebSocketServer]{
+			Elements: make(map[string]*WebSocketServer),
 		},
 		port:             port,
 		reconnectTesting: false,
@@ -44,15 +43,15 @@ func StartWebsocketServers(enableDebug bool, port int, strictMode bool) {
 	serverManager.debugEnabled = enableDebug
 
 	// Start initial websocket server
-	initialServer := &mock_ws_server.WebSocketServer{
+	initialServer := &WebSocketServer{
 		ServerId: util.RandomGUID()[:8],
 		Status:   2,
-		Clients: &util.List[mock_ws_server.Client]{
-			Elements: make(map[string]*mock_ws_server.Client),
+		Clients: &util.List[Client]{
+			Elements: make(map[string]*Client),
 		},
 		Upgrader:      websocket.Upgrader{},
 		DebugEnabled:  serverManager.debugEnabled,
-		Subscriptions: make(map[string][]mock_ws_server.Subscription),
+		Subscriptions: make(map[string][]Subscription),
 		StrictMode:    serverManager.strictMode,
 	}
 	serverManager.serverList.Put(initialServer.ServerId, initialServer)
@@ -77,7 +76,9 @@ func StartWebsocketServers(enableDebug bool, port int, strictMode bool) {
 			return
 		}
 
+		yellow := color.New(color.FgHiYellow).SprintFunc()
 		log.Printf("Started WebSocket server on 127.0.0.1:%v", port)
+		log.Printf(yellow("Connect to WebSocket server at: ws://127.0.0.1:%v/ws"), port)
 
 		// Serve HTTP server
 		if err := http.Serve(listen, m); err != nil {
@@ -94,82 +95,153 @@ func StartWebsocketServers(enableDebug bool, port int, strictMode bool) {
 	<-stop // Wait for Ctrl + C
 }
 
-func (sm *ServerManager) HandleRPCServerCommand(messageBody string) bool {
-	// Convert to struct for reading
-	eventObj := models.EventsubResponse{}
-	err := json.Unmarshal([]byte(messageBody), &eventObj)
-	if err != nil {
-		log.Printf("Error on RPC call (ServerCommand): Failed to parse command JSON: %v\nRaw: %v", err.Error(), messageBody)
+// Handler for RPC command "reconnect"
+// $ twitch event websocket reconnect
+func (sm *ServerManager) HandleRPCCommandReconnect(messageBody string) bool {
+	// Initiate reconnect testing
+	log.Printf("Initiating reconnect testing...")
+
+	if sm.reconnectTesting {
+		log.Printf("Error on RPC call (HandleRPCCommandReconnect): Cannot execute reconnect testing while its already in progress. Aborting.")
 		return false
 	}
 
-	if strings.EqualFold(eventObj.Subscription.Type, "mock.websocket.reconnect") {
-		// Initiate reconnect testing
-		log.Printf("Initiating reconnect testing...")
+	// Find current primary server
+	originalPrimaryServer, ok := sm.serverList.Get(sm.primaryServer)
+	if !ok {
+		log.Printf("Error on RPC call (HandleRPCCommandReconnect): Primary server not in server list.")
+		return false
+	}
 
-		if sm.reconnectTesting {
-			log.Printf("Error on RPC call (ServerCommand): Cannot execute reconnect testing while its already in progress. Aborting.")
-			return false
+	sm.reconnectTesting = true
+
+	// Get the list of reconnect clients ready
+	reconnectClients := originalPrimaryServer.GetCurrentSubscriptionsForReconnect()
+
+	// Spin up new server
+	newServer := &WebSocketServer{
+		ServerId: util.RandomGUID()[:8],
+		Status:   2,
+		Clients: &util.List[Client]{
+			Elements: make(map[string]*Client),
+		},
+		Upgrader:         websocket.Upgrader{},
+		DebugEnabled:     serverManager.debugEnabled,
+		Subscriptions:    make(map[string][]Subscription),
+		StrictMode:       serverManager.strictMode,
+		ReconnectClients: reconnectClients,
+	}
+	serverManager.serverList.Put(newServer.ServerId, newServer)
+
+	// Switch manager's primary server to new one
+	// Doing this before sending the reconnect messages emulates the Twitch's production load balancer, which will never send to servers shutting down.
+	serverManager.primaryServer = newServer.ServerId
+
+	// Notify primary server to restart (includes not accepting new clients)
+	// This is in a goroutine so it doesn't hang the reconnect command
+	go func() {
+		originalPrimaryServer.InitiateRestart()
+
+		// Remove server from server list
+		serverManager.serverList.Delete(originalPrimaryServer.ServerId)
+
+		if serverManager.debugEnabled {
+			log.Printf(
+				"Removed server [%v] from server list. New server list count: %v",
+				originalPrimaryServer.ServerId,
+				serverManager.serverList.Length(),
+			)
 		}
 
-		// Find current primary server
-		originalPrimaryServer, ok := sm.serverList.Get(sm.primaryServer)
-		if !ok {
-			log.Printf("Error on RPC call (ServerCommand): Primary server not in server list.")
-			return false
+		serverManager.reconnectTesting = false
+
+		log.Printf("Reconnect testing successful. Primary server is now [%v]\nYou may now execute reconnect testing again.", sm.primaryServer)
+	}()
+
+	return true
+}
+
+// Handler for RPC command "close"
+// $ twitch event websocket close
+func (sm *ServerManager) HandleRPCCommandClose(clientName string, closeCode int) (bool, string) {
+	if sm.reconnectTesting {
+		log.Printf("Error on RPC call (HandleRPCCommandClose): Could not activate while reconnect testing is active.")
+		return false, "Cannot activate this command while reconnect testing is active."
+	}
+
+	server, ok := sm.serverList.Get(sm.primaryServer)
+	if !ok {
+		log.Printf("Error on RPC call (HandleRPCCommandClose): Primary server not in server list.")
+		return false, "See server console for more details."
+	}
+
+	cn := clientName
+	if sessionRegex.MatchString(clientName) {
+		// Client name given was formatted as <server_id>_<client_name>. We must extract it
+		sessionRegexExec := sessionRegex.FindAllStringSubmatch(clientName, -1)
+		cn = sessionRegexExec[0][2]
+	}
+
+	server.muClients.Lock()
+
+	client, ok := server.Clients.Get(cn)
+	if !ok {
+		server.muClients.Unlock()
+		return false, "Client [" + cn + "] does not exist on WebSocket server."
+	}
+
+	closeMessage := GetCloseMessageFromCode(closeCode)
+	if closeMessage == nil {
+		server.muClients.Unlock()
+		return false, fmt.Sprintf("Close code [%v] not supported.", closeCode)
+	}
+
+	server.muClients.Unlock()
+
+	client.CloseWithReason(closeMessage)
+	server.handleClientConnectionClose(client, closeMessage)
+
+	log.Printf("RPC instructed to close client [%v] with code [%v]", clientName, closeCode)
+
+	return true, ""
+}
+
+// Handler for RPC command "subscription"
+// $ twitch event websocket subscription
+func (sm *ServerManager) HandleRPCCommandSubscription(subscriptionStatus string, subscriptionId string) (bool, string) {
+	if sm.reconnectTesting {
+		return false, "Cannot activate this command while reconnect testing is active."
+	}
+
+	server, ok := sm.serverList.Get(sm.primaryServer)
+	if !ok {
+		log.Printf("Error on RPC call (HandleRPCCommandSubscription): Primary server not in server list.")
+		return false, "See server console for more details."
+	}
+
+	server.muSubscriptions.Lock()
+	found := false
+	for client, clientSubscriptions := range server.Subscriptions {
+		if found {
+			break
 		}
 
-		sm.reconnectTesting = true
+		for i, sub := range clientSubscriptions {
+			if sub.SubscriptionID == subscriptionId {
+				found = true
 
-		// Get the list of reconnect clients ready
-		reconnectClients := originalPrimaryServer.GetCurrentSubscriptionsForReconnect()
-
-		// Spin up new server
-		newServer := &mock_ws_server.WebSocketServer{
-			ServerId: util.RandomGUID()[:8],
-			Status:   2,
-			Clients: &util.List[mock_ws_server.Client]{
-				Elements: make(map[string]*mock_ws_server.Client),
-			},
-			Upgrader:         websocket.Upgrader{},
-			DebugEnabled:     serverManager.debugEnabled,
-			Subscriptions:    make(map[string][]mock_ws_server.Subscription),
-			StrictMode:       serverManager.strictMode,
-			ReconnectClients: reconnectClients,
-		}
-		serverManager.serverList.Put(newServer.ServerId, newServer)
-
-		// Switch manager's primary server to new one
-		// Doing this before sending the reconnect messages emulates the Twitch's production load balancer, which will never send to servers shutting down.
-		serverManager.primaryServer = newServer.ServerId
-
-		// Notify primary server to restart (includes not accepting new clients)
-		// This is in a goroutine so it doesn't hang the `twitch event trigger mock.websocket.reconnect` command
-		go func() {
-			originalPrimaryServer.InitiateRestart()
-
-			// Remove server from server list
-			serverManager.serverList.Delete(originalPrimaryServer.ServerId)
-
-			if serverManager.debugEnabled {
-				log.Printf(
-					"Removed server [%v] from server list. New server list count: %v",
-					originalPrimaryServer.ServerId,
-					serverManager.serverList.Length(),
-				)
+				server.Subscriptions[client][i].Status = subscriptionStatus
+				break
 			}
-
-			serverManager.reconnectTesting = false
-
-			log.Printf("Reconnect testing successful. Primary server is now [%v]\nYou may now execute reconnect testing again.", sm.primaryServer)
-		}()
-
-		return true
-	} else {
-		// Unknown command. Should technically never happen
-		log.Printf("Error on RPC call (ServerCommand):  -- Unexpected server command: %v", eventObj.Subscription.Type)
-		return false
+		}
 	}
+	server.muSubscriptions.Unlock()
+
+	if !found {
+		return false, fmt.Sprintf("Subscription ID [%v] does not exist", subscriptionId)
+	}
+
+	return true, ""
 }
 
 func (sm *ServerManager) wsPageHandler(w http.ResponseWriter, r *http.Request) {
@@ -203,7 +275,7 @@ func (sm ServerManager) subscriptionPageHandler(w http.ResponseWriter, r *http.R
 		w.Header().Set("ratelimit-remaining", "799")
 		w.Header().Set("ratelimit-reset", fmt.Sprintf("%d", time.Now().Unix()+1)) // 1 second from now
 
-		var body mock_ws_server.SubscriptionPostRequest
+		var body SubscriptionPostRequest
 
 		err := json.NewDecoder(r.Body).Decode(&body)
 		if err != nil {
@@ -255,57 +327,58 @@ func (sm ServerManager) subscriptionPageHandler(w http.ResponseWriter, r *http.R
 			return
 		}
 
-		server.MuSubscriptions.Lock()
+		server.muSubscriptions.Lock()
 
 		// Check for duplicate subscription
 		for _, s := range server.Subscriptions[clientName] {
 			if s.ClientID == r.Header.Get("client-id") && s.Type == body.Type && s.Version == body.Version {
 				handlerResponseErrorConflict(w, "Subscription by the specified type and version combination for the specified Client ID already exists")
-				server.MuSubscriptions.Unlock()
+				server.muSubscriptions.Unlock()
 				return
 			}
 		}
 
 		if len(server.Subscriptions[clientName]) >= 100 {
 			handlerResponseErrorBadRequest(w, "You may only create 100 subscriptions within a single WebSocket connection")
-			server.MuSubscriptions.Unlock()
+			server.muSubscriptions.Unlock()
 			return
 		}
 
 		// Add subscription
-		subscription := mock_ws_server.Subscription{
+		subscription := Subscription{
 			SubscriptionID: util.RandomGUID(),
 			ClientID:       r.Header.Get("client-id"),
 			Type:           body.Type,
 			Version:        body.Version,
 			CreatedAt:      time.Now().UTC().Format(time.RFC3339Nano),
+			Status:         STATUS_ENABLED, // https://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions
 		}
 
-		var subs []mock_ws_server.Subscription
+		var subs []Subscription
 		existingList, ok := server.Subscriptions[clientName]
 		if ok {
 			subs = existingList
 		} else {
-			subs = []mock_ws_server.Subscription{}
+			subs = []Subscription{}
 		}
 
 		subs = append(subs, subscription)
 		server.Subscriptions[clientName] = subs
 
-		server.MuSubscriptions.Unlock()
+		server.muSubscriptions.Unlock()
 
 		// Return 202 status code and response body
 		w.WriteHeader(http.StatusAccepted)
 
-		json.NewEncoder(w).Encode(&mock_ws_server.SubscriptionPostSuccessResponse{
-			Body: mock_ws_server.SubscriptionPostSuccessResponseBody{
+		json.NewEncoder(w).Encode(&SubscriptionPostSuccessResponse{
+			Body: SubscriptionPostSuccessResponseBody{
 				ID:        subscription.SubscriptionID,
-				Status:    "enabled",
+				Status:    subscription.Status,
 				Type:      subscription.Type,
 				Version:   subscription.Version,
-				Condition: mock_ws_server.EmptyStruct{},
+				Condition: EmptyStruct{},
 				CreatedAt: subscription.CreatedAt,
-				Transport: mock_ws_server.SubscriptionTransport{
+				Transport: SubscriptionTransport{
 					Method:      "websocket",
 					SessionID:   fmt.Sprintf("%v_%v", server.ServerId, clientName),
 					ConnectedAt: client.ConnectedAtTimestamp,
@@ -358,13 +431,13 @@ func (sm ServerManager) subscriptionPageHandler(w http.ResponseWriter, r *http.R
 
 		subFound := false
 
-		server.MuSubscriptions.Lock()
+		server.muSubscriptions.Lock()
 
 		for client, clientSubscriptions := range server.Subscriptions {
 			for i, subscription := range clientSubscriptions {
 				if subscription.SubscriptionID == subscriptionId {
 					subFound = true
-					subsPart := make([]mock_ws_server.Subscription, 0)
+					subsPart := make([]Subscription, 0)
 					subsPart = append(subsPart, server.Subscriptions[client][:i]...)
 
 					newSubs := append(subsPart, server.Subscriptions[client][i+1:]...)
@@ -383,7 +456,7 @@ func (sm ServerManager) subscriptionPageHandler(w http.ResponseWriter, r *http.R
 			}
 		}
 
-		server.MuSubscriptions.Unlock()
+		server.muSubscriptions.Unlock()
 
 		if subFound {
 			// Return 204 status code
@@ -421,21 +494,21 @@ func (sm ServerManager) subscriptionPageHandler(w http.ResponseWriter, r *http.R
 			return
 		}
 
-		allSubscriptions := []mock_ws_server.SubscriptionPostSuccessResponseBody{}
+		allSubscriptions := []SubscriptionPostSuccessResponseBody{}
 
-		server.MuSubscriptions.Lock()
+		server.muSubscriptions.Lock()
 
 		for clientName, clientSubscriptions := range server.Subscriptions {
 			for _, subscription := range clientSubscriptions {
 				if subscription.ClientID == clientID {
-					allSubscriptions = append(allSubscriptions, mock_ws_server.SubscriptionPostSuccessResponseBody{
+					allSubscriptions = append(allSubscriptions, SubscriptionPostSuccessResponseBody{
 						ID:        subscription.ClientID,
-						Status:    "enabled",
+						Status:    subscription.Status,
 						Type:      subscription.Type,
 						Version:   subscription.Version,
-						Condition: mock_ws_server.EmptyStruct{},
+						Condition: EmptyStruct{},
 						CreatedAt: subscription.CreatedAt,
-						Transport: mock_ws_server.SubscriptionTransport{
+						Transport: SubscriptionTransport{
 							Method:    "websocket",
 							SessionID: fmt.Sprintf("%v_%v", server.ServerId, clientName),
 						},
@@ -445,15 +518,15 @@ func (sm ServerManager) subscriptionPageHandler(w http.ResponseWriter, r *http.R
 			}
 		}
 
-		server.MuSubscriptions.Unlock()
+		server.muSubscriptions.Unlock()
 
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(&mock_ws_server.SubscriptionGetSuccessResponse{
+		json.NewEncoder(w).Encode(&SubscriptionGetSuccessResponse{
 			Total:        len(allSubscriptions),
 			Data:         allSubscriptions,
 			TotalCost:    0,
 			MaxTotalCost: 10,
-			Pagination:   mock_ws_server.EmptyStruct{},
+			Pagination:   EmptyStruct{},
 		})
 
 		return
@@ -465,7 +538,7 @@ func (sm ServerManager) subscriptionPageHandler(w http.ResponseWriter, r *http.R
 
 func handlerResponseErrorBadRequest(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusBadRequest)
-	bytes, _ := json.Marshal(&mock_ws_server.SubscriptionPostErrorResponse{
+	bytes, _ := json.Marshal(&SubscriptionPostErrorResponse{
 		Error:   "Bad Request",
 		Message: message,
 		Status:  400,
@@ -475,7 +548,7 @@ func handlerResponseErrorBadRequest(w http.ResponseWriter, message string) {
 
 func handlerResponseErrorUnauthorized(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusBadRequest)
-	bytes, _ := json.Marshal(&mock_ws_server.SubscriptionPostErrorResponse{
+	bytes, _ := json.Marshal(&SubscriptionPostErrorResponse{
 		Error:   "Unauthorized",
 		Message: message,
 		Status:  401,
@@ -485,7 +558,7 @@ func handlerResponseErrorUnauthorized(w http.ResponseWriter, message string) {
 
 func handlerResponseErrorConflict(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusConflict)
-	bytes, _ := json.Marshal(&mock_ws_server.SubscriptionPostErrorResponse{
+	bytes, _ := json.Marshal(&SubscriptionPostErrorResponse{
 		Error:   "Unauthorized",
 		Message: message,
 		Status:  409,
@@ -495,7 +568,7 @@ func handlerResponseErrorConflict(w http.ResponseWriter, message string) {
 
 func handlerResponseErrorInternalServerError(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusInternalServerError)
-	bytes, _ := json.Marshal(&mock_ws_server.SubscriptionPostErrorResponse{
+	bytes, _ := json.Marshal(&SubscriptionPostErrorResponse{
 		Error:   "Internal Server Error",
 		Message: message,
 		Status:  500,

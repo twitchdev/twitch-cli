@@ -1,4 +1,4 @@
-package mock_ws_server
+package mock_server
 
 import (
 	"encoding/base64"
@@ -31,8 +31,8 @@ type WebSocketServer struct {
 	Status   int        // 0 = shut down; 1 = shutting down; 2 = online
 	muStatus sync.Mutex // Mutex for WebSocketServer.Status
 
-	Subscriptions   map[string][]Subscription // Active subscriptions on this server
-	MuSubscriptions sync.Mutex                // Mutex for WebSocketServer.Subscriptions
+	Subscriptions   map[string][]Subscription // Active subscriptions on this server -- Accessed via Subscriptions[clientName]
+	muSubscriptions sync.Mutex                // Mutex for WebSocketServer.Subscriptions
 
 	ReconnectClients   *util.List[[]Subscription] // Clients that were part of the last server
 	muReconnectClients sync.Mutex                 // Mutex for WebSocketServer.ReconnectClients
@@ -64,7 +64,6 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 		pingChanOpen:         false,
 	}
 
-	// TODO: Use reconnect clients
 	if r.URL.Query().Get("reconnect_id") != "" {
 		reconnectIdBytes, err := base64.StdEncoding.DecodeString(r.URL.Query().Get("reconnect_id") + "=")
 		if err != nil {
@@ -249,7 +248,7 @@ func (ws *WebSocketServer) GetCurrentSubscriptionsForReconnect() *util.List[[]Su
 		Elements: make(map[string]*[]Subscription),
 	}
 
-	ws.MuSubscriptions.Lock()
+	ws.muSubscriptions.Lock()
 
 	for clientName, clientSubscriptions := range ws.Subscriptions {
 		for _, subscription := range clientSubscriptions {
@@ -268,7 +267,7 @@ func (ws *WebSocketServer) GetCurrentSubscriptionsForReconnect() *util.List[[]Su
 		}
 	}
 
-	ws.MuSubscriptions.Unlock()
+	ws.muSubscriptions.Unlock()
 
 	return reconnectClients
 }
@@ -373,6 +372,9 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 			return false
 		}
 
+		// If this is a Revocation message (mock.websocket.revoke), set it as revoked
+		// TODO
+
 		// Change payload's subscription.transport.session_id to contain the correct Session ID
 		eventObj.Subscription.Transport.SessionID = fmt.Sprintf("%v_%v", ws.ServerId, client.clientName)
 
@@ -415,6 +417,19 @@ func (ws *WebSocketServer) handleClientConnectionClose(client *Client, closeReas
 
 	// Remove from clients list
 	ws.Clients.Delete(client.clientName)
+
+	// Update subscriptions, unless close reason is for reconnect testing.
+	if ws.Status == 2 {
+		ws.muSubscriptions.Lock()
+		subscriptions := ws.Subscriptions[client.clientName]
+		for _, subscription := range subscriptions {
+			if subscription.Status == STATUS_ENABLED {
+				subscription.Status = getStatusFromCloseMessage(closeReason)
+			}
+		}
+		ws.Subscriptions[client.clientName] = subscriptions
+		ws.muSubscriptions.Unlock()
+	}
 
 	log.Printf("Disconnected client [%v] with code [%v]", client.clientName, closeReason.code)
 

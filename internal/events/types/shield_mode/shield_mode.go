@@ -13,12 +13,17 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportEventSub:  true,
+	models.TransportWebSocket: true,
 }
 var triggers = []string{"shield-mode-begin", "shield-mode-end"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
+		"shield-mode-begin": "channel.shield_mode.begin",
+		"shield-mode-end":   "channel.shield_mode.end",
+	},
+	models.TransportWebSocket: {
 		"shield-mode-begin": "channel.shield_mode.begin",
 		"shield-mode-end":   "channel.shield_mode.end",
 	},
@@ -31,7 +36,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var err error
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportEventSub, models.TransportWebSocket:
 		eventBody := models.ShieldModeEventSubEvent{
 			BroadcasterUserID:    params.ToUserID,
 			BroadcasterUserName:  params.ToUserName,

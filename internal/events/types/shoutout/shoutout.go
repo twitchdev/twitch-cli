@@ -13,12 +13,17 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportEventSub:  true,
+	models.TransportWebSocket: true,
 }
 var triggers = []string{"shoutout-create", "shoutout-received"}
 
 var triggerMapping = map[string]map[string]string{
 	models.TransportEventSub: {
+		"shoutout-create":   "channel.shoutout.create",
+		"shoutout-received": "channel.shoutout.receive",
+	},
+	models.TransportWebSocket: {
 		"shoutout-create":   "channel.shoutout.create",
 		"shoutout-received": "channel.shoutout.receive",
 	},
@@ -31,7 +36,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var err error
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportEventSub, models.TransportWebSocket:
 		viewerCount := util.RandomInt(2000)
 		startedAt := util.GetTimestamp()
 
