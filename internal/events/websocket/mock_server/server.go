@@ -344,7 +344,7 @@ func (ws *WebSocketServer) InitiateRestart() {
 }
 
 func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clientName string) bool {
-	// If --client is used, make sure the client exists
+	// If --session is used, make sure the client exists
 	if clientName != "" {
 		_, ok := ws.Clients.Get(strings.ToLower(clientName))
 		if !ok {
@@ -358,18 +358,20 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 		return false
 	}
 
+	// Convert to struct for editing
+	eventObj := models.EventsubResponse{}
+	err := json.Unmarshal([]byte(eventsubBody), &eventObj)
+	if err != nil {
+		log.Printf("Error reading JSON forwarded from EventSub: %v\nRaw: %v", err.Error(), eventsubBody)
+		return false
+	}
+
+	didSend := false
+
 	for _, client := range ws.Clients.All() {
 		if clientName != "" && !strings.EqualFold(strings.ToLower(clientName), clientName) {
-			// When --client is used, only send to that client
+			// When --session is used, only send to that client
 			continue
-		}
-
-		// Convert to struct for editing
-		eventObj := models.EventsubResponse{}
-		err := json.Unmarshal([]byte(eventsubBody), &eventObj)
-		if err != nil {
-			log.Printf("Error reading JSON forwarded from EventSub. Currently on client [%v]: %v\nRaw: %v", client.clientName, err.Error(), eventsubBody)
-			return false
 		}
 
 		// If this is a Revocation message (user.authorization.revoke), set it as revoked
@@ -378,7 +380,6 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 				log.Printf("Attempting to revoke subscription [%v]", eventObj.Subscription.ID)
 			}
 
-			// TODO: Call revoke function
 			ws.muSubscriptions.Lock()
 			foundClientId := ""
 			for client, clientSubscriptions := range ws.Subscriptions {
@@ -405,6 +406,26 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 			}
 		}
 
+		// Check for subscriptions when running with --require-subscription
+		if ws.StrictMode {
+			found := false
+			for _, clientSubscriptions := range ws.Subscriptions {
+				if found {
+					break
+				}
+
+				for _, sub := range clientSubscriptions {
+					if sub.SessionClientName == client.clientName && sub.Type == eventObj.Subscription.Type && sub.Version == eventObj.Subscription.Version {
+						found = true
+					}
+				}
+			}
+
+			if !found {
+				continue
+			}
+		}
+
 		// Change payload's subscription.transport.session_id to contain the correct Session ID
 		eventObj.Subscription.Transport.SessionID = fmt.Sprintf("%v_%v", ws.ServerId, client.clientName)
 
@@ -428,6 +449,13 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 
 		client.SendMessage(websocket.TextMessage, notificationMsg)
 		log.Printf("Sent [%v / %v] to client [%v]", eventObj.Subscription.Type, eventObj.Subscription.Version, client.clientName)
+
+		didSend = true
+	}
+
+	if !didSend {
+		log.Printf("Error executing remote triggered EventSub: No clients with the subscribed to [%v / %v]", eventObj.Subscription.Type, eventObj.Subscription.Version)
+		return false
 	}
 
 	return true

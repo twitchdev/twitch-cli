@@ -80,10 +80,10 @@ func (wsrpc *WebSocketServerRPC) ServerCommand(args *RPCArgs, reply *CommandResp
 		if err != nil || args.ClientName == "" || args.CloseReason == "" {
 			*reply = CommandResponse{
 				ResponseCode: COMMAND_RESPONSE_MISSING_FLAG,
-				AdditionalInfo: "Command \"close\" requires flags --client and --reason" +
+				AdditionalInfo: "Command \"close\" requires flags --session and --reason" +
 					"\nThe flag --reason must be one of the number codes defined here:" +
 					"\nhttps://dev.twitch.tv/docs/eventsub/websocket-reference/#close-message" +
-					"\n\nExample: twitch event websocket close --client=4a1ab390 --reason=4006",
+					"\n\nExample: twitch event websocket close --session=e411cc1e_a2613d4e --reason=4006",
 			}
 
 			return nil
@@ -105,11 +105,11 @@ func (wsrpc *WebSocketServerRPC) ServerCommand(args *RPCArgs, reply *CommandResp
 		if args.SubscriptionID == "" || !IsValidSubscriptionStatus(args.SubscriptionStatus) {
 			*reply = CommandResponse{
 				ResponseCode: COMMAND_RESPONSE_MISSING_FLAG,
-				AdditionalInfo: "Command \"subscription\" requires flags --status, --subscription, and --client" +
+				AdditionalInfo: "Command \"subscription\" requires flags --status, --subscription, and --session" +
 					fmt.Sprintf("\nThe flag --subscription must be the ID of the subscription made at http://localhost:%v/eventsub/subscriptions", serverManager.port) +
 					"\nThe flag --status must be one of the non-webhook status options defined here:" +
 					"\nhttps://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions" +
-					"\n\nExample: twitch event websocket subscription --client=4a1ab390 --status=user_removed --subscription=48d3-b9a-f84c",
+					"\n\nExample: twitch event websocket subscription --status=user_removed --subscription=82a855-fae8-93bff0",
 			}
 
 			return nil

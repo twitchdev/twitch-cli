@@ -102,8 +102,8 @@ var websocketCmd = &cobra.Command{
 	Run:   websocketCmdRun,
 	Example: fmt.Sprintf(`  twitch event websocket start-server
   twitch event websocket reconnect
-  twitch event websocket close --client=4a1ab390 --reason=4006
-  twitch event websocket subscription --client=4a1ab390 --status=user_removed --subscription=48d3-b9a-f84c`,
+  twitch event websocket close --session=e411cc1e_a2613d4e --reason=4006
+  twitch event websocket subscription --status=user_removed --subscription=82a855-fae8-93bff0`,
 	),
 	Aliases: []string{
 		"websockets",
@@ -155,7 +155,7 @@ func init() {
 	triggerCmd.Flags().IntVar(&charityCurrentValue, "charity-current-value", 0, "Only used for \"charity-*\" events. Manually set the current dollar value for charity events.")
 	triggerCmd.Flags().IntVar(&charityTargetValue, "charity-target-value", 1500000, "Only used for \"charity-*\" events. Manually set the target dollar value for charity events.")
 	triggerCmd.Flags().StringVar(&clientId, "client-id", "", "Manually set the Client ID used in revoke, grant, and bits transaction events.")
-	triggerCmd.Flags().StringVar(&websocketClient, "client", "", "Defines a specific websocket client to forward an event to. Used only with \"websocket\" transport.")
+	triggerCmd.Flags().StringVar(&websocketClient, "session", "", "Defines a specific websocket client/session to forward an event to. Used only with \"websocket\" transport.")
 
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
@@ -175,11 +175,11 @@ func init() {
 	/// flags for start-server
 	websocketCmd.Flags().IntVarP(&port, "port", "p", 8080, "Defines the port that the mock EventSub websocket server will run on.")
 	websocketCmd.Flags().BoolVar(&wsDebug, "debug", false, "Set on/off for debug messages for the EventSub WebSocket server.")
-	websocketCmd.Flags().BoolVarP(&wsStrict, "require-subscription", "s", false, "Requires subscriptions for all events, and activates 10 second subscription requirement.")
+	websocketCmd.Flags().BoolVarP(&wsStrict, "require-subscription", "S", false, "Requires subscriptions for all events, and activates 10 second subscription requirement.")
 
 	// websocket flags
 	/// flags for everything else
-	websocketCmd.Flags().StringVarP(&wsClient, "client", "c", "", "WebSocket client to target with your server command. Used in multiple commands.")
+	websocketCmd.Flags().StringVarP(&wsClient, "session", "s", "", "WebSocket client/session to target with your server command. Used in multiple commands.")
 	websocketCmd.Flags().StringVar(&wsSubscription, "subscription", "", `Subscription to target with your server command. Used with "websocket subscription".`)
 	websocketCmd.Flags().StringVar(&wsStatus, "status", "", `Changes the status of an existing subscription. Used with "websocket subscription".`)
 	websocketCmd.Flags().StringVar(&wsReason, "reason", "", `Sets the close reason when sending a Close message to the client. Used with "websocket close".`)

@@ -82,6 +82,9 @@ func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
 		yellow := color.New(color.FgYellow).SprintFunc()
 
 		log.Printf(lightBlue("Started WebSocket server on 127.0.0.1:%v"), port)
+		if serverManager.strictMode {
+			log.Printf(lightBlue("--require-subscription enabled. Clients will have 10 seconds to subscribe before being disconnected."))
+		}
 
 		fmt.Println()
 
@@ -93,7 +96,7 @@ func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
 
 		log.Printf(lightYellow("Events can be forwarded to this server with --transport=websocket\nExample: \"twitch event trigger channel.ban --transport=websocket\""))
 		fmt.Println()
-		log.Printf(lightYellow("You can send to a specific client after its connected.\nExample: \"twitch event trigger channel.ban --transport=websocket --client=e09efae0_8775fbe4\""))
+		log.Printf(lightYellow("You can send to a specific client after its connected.\nExample: \"twitch event trigger channel.ban --transport=websocket --session=e411cc1e_a2613d4e\""))
 
 		fmt.Println()
 		log.Printf(lightGreen("For further usage information, please see our official documentation:\nhttps://dev.twitch.tv/docs/cli/websocket-event-command/"))
@@ -367,12 +370,13 @@ func (sm ServerManager) subscriptionPageHandler(w http.ResponseWriter, r *http.R
 
 		// Add subscription
 		subscription := Subscription{
-			SubscriptionID: util.RandomGUID(),
-			ClientID:       r.Header.Get("client-id"),
-			Type:           body.Type,
-			Version:        body.Version,
-			CreatedAt:      time.Now().UTC().Format(time.RFC3339Nano),
-			Status:         STATUS_ENABLED, // https://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions
+			SubscriptionID:    util.RandomGUID(),
+			ClientID:          r.Header.Get("client-id"),
+			Type:              body.Type,
+			Version:           body.Version,
+			CreatedAt:         time.Now().UTC().Format(time.RFC3339Nano),
+			Status:            STATUS_ENABLED, // https://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions
+			SessionClientName: clientName,
 		}
 
 		var subs []Subscription

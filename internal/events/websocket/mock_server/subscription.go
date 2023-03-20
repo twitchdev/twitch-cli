@@ -1,12 +1,13 @@
 package mock_server
 
 type Subscription struct {
-	SubscriptionID string // Random GUID for the subscription
-	ClientID       string // Client ID included in headers
-	Type           string // EventSub topic
-	Version        string // EventSub topic version
-	CreatedAt      string // Timestamp of when the subscription was created
-	Status         string // Status of the subscription
+	SubscriptionID    string // Random GUID for the subscription
+	ClientID          string // Client ID included in headers
+	Type              string // EventSub topic
+	Version           string // EventSub topic version
+	CreatedAt         string // Timestamp of when the subscription was created
+	Status            string // Status of the subscription
+	SessionClientName string // Client name of the session this is associated with.
 }
 
 // Request - POST /eventsub/subscriptions
