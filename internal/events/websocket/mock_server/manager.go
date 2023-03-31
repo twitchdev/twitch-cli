@@ -90,13 +90,13 @@ func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
 
 		log.Printf(yellow("Simulate subscribing to events at: http://127.0.0.1:%v/eventsub/subscriptions"), port)
 		log.Printf(yellow("POST, GET, and DELETE are supported"))
-		log.Printf(yellow("For more info: https://dev.twitch.tv/docs/api/reference/#create-eventsub-subscription"))
+		log.Printf(yellow("For more info: https://dev.twitch.tv/docs/cli/websocket-event-command/#simulate-subscribing-to-mock-eventsub"))
 
 		fmt.Println()
 
-		log.Printf(lightYellow("Events can be forwarded to this server with --transport=websocket\nExample: \"twitch event trigger channel.ban --transport=websocket\""))
+		log.Printf(lightYellow("Events can be forwarded to this server from another terminal with --transport=websocket\nExample: \"twitch event trigger channel.ban --transport=websocket\""))
 		fmt.Println()
-		log.Printf(lightYellow("You can send to a specific client after its connected.\nExample: \"twitch event trigger channel.ban --transport=websocket --session=e411cc1e_a2613d4e\""))
+		log.Printf(lightYellow("You can send to a specific client after its connected with --session\nExample: \"twitch event trigger channel.ban --transport=websocket --session=e411cc1e_a2613d4e\""))
 
 		fmt.Println()
 		log.Printf(lightGreen("For further usage information, please see our official documentation:\nhttps://dev.twitch.tv/docs/cli/websocket-event-command/"))
