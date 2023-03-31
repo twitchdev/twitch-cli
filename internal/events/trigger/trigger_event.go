@@ -16,8 +16,8 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
-	"github.com/twitchdev/twitch-cli/internal/events/websocket/mock_server"
 	"github.com/twitchdev/twitch-cli/internal/models"
+	rpc_handler "github.com/twitchdev/twitch-cli/internal/rpc"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
@@ -218,7 +218,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 			return "", errors.New("Failed to dial RPC handler for WebSocket server. Is it online?\nError: " + err.Error())
 		}
 
-		var reply bool
+		var reply rpc_handler.RPCResponse
 
 		// Modify transport
 		modifiedTransportJSON := models.EventsubResponse{}
@@ -233,22 +233,27 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		resp.JSON = rawModifiedTransportJSON
 
 		// Trigger any EventSub subscription that's available over 1st party WebSocket connections
-		args := &mock_server.RPCArgs{
-			Body:       string(resp.JSON),
-			ClientName: p.WebSocketClient,
+		variables := make(map[string]string)
+		variables["ClientName"] = p.WebSocketClient
+
+		args := &rpc_handler.RPCArgs{
+			RPCName:   "EventSubWebSocketForwardEvent",
+			Body:      string(resp.JSON),
+			Variables: variables,
 		}
 
-		err = client.Call("WebSocketServerRPC.RemoteFireEventSub", args, &reply)
+		err = client.Call("RPCHandler.ExecuteGenericRPC", args, &reply)
 
-		// Error checking for all possible RPC executions
+		// Error checking for RPC internals
 		if err != nil {
 			return "", errors.New("Failed to send via RPC to WebSocket server: " + err.Error())
 		}
 
-		if reply {
+		// Error checking for everything else
+		if reply.ResponseCode == 0 { // Zero will always be success
 			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Forwarded for use in mock EventSub WebSocket server`))
 		} else {
-			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ EventSub WebSocket server failed to process event. See server for more details.`))
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ EventSub WebSocket server failed to process event: [%v] %v`, reply.DetailedInfo, reply.DetailedInfo))
 		}
 	}
 

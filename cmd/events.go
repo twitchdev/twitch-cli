@@ -333,7 +333,7 @@ func websocketCmdRun(cmd *cobra.Command, args []string) {
 		log.Printf("`Ctrl + C` to exit mock WebSocket servers.")
 		mock_server.StartWebsocketServer(wsDebug, port, wsStrict)
 	} else {
-		// Forward all other commands
+		// Forward all other commands via RPC
 		websocket.ForwardWebsocketCommand(args[0], websocket.WebsocketCommandParameters{
 			Client:             wsClient,
 			Subscription:       wsSubscription,

@@ -295,6 +295,8 @@ func (ws *WebSocketServer) InitiateRestart() {
 		sessionId := fmt.Sprintf("%v_%v", ws.ServerId, client.clientName)
 		reconnectId := base64.StdEncoding.EncodeToString([]byte(sessionId))
 		reconnectId = reconnectId[:len(reconnectId)-1]
+		clientConnectionUrl := strings.Replace(client.connectionUrl, "http://", "ws://", -1)
+		clientConnectionUrl = strings.Replace(clientConnectionUrl, "https://", "wss://", -1)
 		reconnectMsg, _ := json.Marshal(
 			ReconnectMessage{
 				Metadata: MessageMetadata{
@@ -307,7 +309,7 @@ func (ws *WebSocketServer) InitiateRestart() {
 						ID:                      sessionId,
 						Status:                  "reconnecting",
 						KeepaliveTimeoutSeconds: nil,
-						ReconnectUrl:            fmt.Sprintf("%v?reconnect_id=%v", client.connectionUrl, reconnectId),
+						ReconnectUrl:            fmt.Sprintf("%v?reconnect_id=%v", clientConnectionUrl, reconnectId),
 						ConnectedAt:             client.ConnectedAtTimestamp,
 					},
 				},
@@ -343,27 +345,30 @@ func (ws *WebSocketServer) InitiateRestart() {
 	log.Printf("All users disconnected from server [%v]", ws.ServerId)
 }
 
-func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clientName string) bool {
+func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clientName string) (bool, string) {
 	// If --session is used, make sure the client exists
 	if clientName != "" {
 		_, ok := ws.Clients.Get(strings.ToLower(clientName))
 		if !ok {
-			log.Printf("Error executing remote triggered EventSub: Client [%v] does not exist on server [%v]", clientName, ws.ServerId)
-			return false
+			msg := fmt.Sprintf("Error executing remote triggered EventSub: Client [%v] does not exist on server [%v]", clientName, ws.ServerId)
+			log.Println(msg)
+			return false, msg
 		}
 	}
 
 	if ws.Clients.Length() == 0 {
-		log.Printf("Warning for remote triggered EventSub: No clients in server [%v]", ws.ServerId)
-		return false
+		msg := fmt.Sprintf("Warning for remote triggered EventSub: No clients in server [%v]", ws.ServerId)
+		log.Println(msg)
+		return false, msg
 	}
 
 	// Convert to struct for editing
 	eventObj := models.EventsubResponse{}
 	err := json.Unmarshal([]byte(eventsubBody), &eventObj)
 	if err != nil {
-		log.Printf("Error reading JSON forwarded from EventSub: %v\nRaw: %v", err.Error(), eventsubBody)
-		return false
+		msg := fmt.Sprintf("Error reading JSON forwarded from EventSub: %v\nRaw: %v", err.Error(), eventsubBody)
+		log.Println(msg)
+		return false, msg
 	}
 
 	didSend := false
@@ -401,8 +406,9 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 			if foundClientId != "" {
 				log.Printf("Subscription ID [%v], belonging to Client ID [%v], has been revoked.", eventObj.Subscription.ID, foundClientId)
 			} else {
-				log.Printf("Failed to revoke Subscription ID [%v]: Subscription by that ID does not exist.", eventObj.Subscription.ID)
-				return false
+				msg := fmt.Sprintf("Failed to revoke Subscription ID [%v]: Subscription by that ID does not exist.", eventObj.Subscription.ID)
+				log.Println(msg)
+				return false, msg
 			}
 		}
 
@@ -443,8 +449,9 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 			},
 		)
 		if err != nil {
-			log.Printf("Error building JSON for client [%v]: %v", client.clientName, err.Error())
-			return false
+			msg := fmt.Sprintf("Error building JSON for client [%v]: %v", client.clientName, err.Error())
+			log.Println(msg)
+			return false, msg
 		}
 
 		client.SendMessage(websocket.TextMessage, notificationMsg)
@@ -454,11 +461,12 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 	}
 
 	if !didSend {
-		log.Printf("Error executing remote triggered EventSub: No clients with the subscribed to [%v / %v]", eventObj.Subscription.Type, eventObj.Subscription.Version)
-		return false
+		msg := fmt.Sprintf("Error executing remote triggered EventSub: No clients with the subscribed to [%v / %v]", eventObj.Subscription.Type, eventObj.Subscription.Version)
+		log.Println(msg)
+		return false, msg
 	}
 
-	return true
+	return true, ""
 }
 
 func (ws *WebSocketServer) handleClientConnectionClose(client *Client, closeReason *CloseMessage) {
