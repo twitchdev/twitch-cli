@@ -66,10 +66,7 @@ var triggerCmd = &cobra.Command{
 	Short: "Creates mock events that can be forwarded to a local webserver for event testing.",
 	Long: fmt.Sprintf(`Creates mock events that can be forwarded to a local webserver for event testing.
 	Supported:
-	%s
-	WebSocket Mock Server feature emulation events:
-	(Not available in Webhooks. See 'twitch event start-websocket-server' for more info)
-	%s`, types.AllWebhookTopics(), types.WebSocketCommandTopics()),
+	%s`, types.AllWebhookTopics()),
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: types.AllWebhookTopics(),
 	Run:       triggerCmdRun,

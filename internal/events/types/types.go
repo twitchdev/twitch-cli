@@ -68,10 +68,15 @@ func AllEvents() []events.MockEvent {
 
 func AllWebhookTopics() []string {
 	allEvents := []string{}
+	allEventsMap := make(map[string]int)
 
 	for _, e := range AllEvents() {
 		for _, topic := range e.GetAllTopicsByTransport(models.TransportWebhook) {
-			allEvents = append(allEvents, topic)
+			_, duplicate := allEventsMap[topic]
+			if !duplicate {
+				allEvents = append(allEvents, topic)
+				allEventsMap[topic] = 1
+			}
 		}
 	}
 
