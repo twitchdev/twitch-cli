@@ -39,7 +39,7 @@ const (
 )
 
 var notificationHeaders = map[string][]header{
-	models.TransportEventSub: {
+	models.TransportWebhook: {
 		{
 			HeaderName:  `Twitch-Eventsub-Message-Retry`,
 			HeaderValue: `0`,
@@ -64,7 +64,7 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 	}
 
 	switch p.Transport {
-	case models.TransportEventSub:
+	case models.TransportWebhook:
 		req.Header.Set("Twitch-Eventsub-Message-Id", p.ID)
 		req.Header.Set("Twitch-Eventsub-Subscription-Type", p.Event)
 		req.Header.Set("Twitch-Eventsub-Subscription-Version", p.SubscriptionVersion)
@@ -101,7 +101,7 @@ func getSignatureHeader(req *http.Request, id string, secret string, transport s
 	ts, _ := time.Parse(time.RFC3339Nano, timestamp)
 
 	switch transport {
-	case models.TransportEventSub:
+	case models.TransportWebhook:
 		req.Header.Set("Twitch-Eventsub-Message-Timestamp", timestamp)
 		prefix := ts.AppendFormat([]byte(id), time.RFC3339Nano)
 		mac.Write(prefix)

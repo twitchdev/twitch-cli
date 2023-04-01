@@ -10,6 +10,6 @@ type AuthorizationRevokeEvent struct {
 }
 
 type AuthorizationRevokeEventSubResponse struct {
-	Subscription EventsubSubscription     `json:"subscription"`
-	Event        AuthorizationRevokeEvent `json:"event"`
+	Subscription EventsubSubscription      `json:"subscription"`
+	Event        *AuthorizationRevokeEvent `json:"event,omitempty"`
 }

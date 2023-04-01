@@ -1,27 +1,28 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package authorization
+package authorization_revoke
 
 import (
 	"encoding/json"
 	"strings"
 
-	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportWebhook:   true,
+	models.TransportWebSocket: true,
 }
 
-var triggerSupported = []string{"revoke", "grant"}
+var triggerSupported = []string{"revoke"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportEventSub: {
+	models.TransportWebhook: {
 		"revoke": "user.authorization.revoke",
-		"grant":  "user.authorization.grant",
+	},
+	models.TransportWebSocket: {
+		"revoke": "user.authorization.revoke",
 	},
 }
 
@@ -30,14 +31,9 @@ type Event struct{}
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
-	clientID := viper.GetString("ClientID")
 
-	// if not configured, generate a random one
-	if clientID == "" {
-		clientID = util.RandomClientID()
-	}
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportWebhook, models.TransportWebSocket:
 		body := &models.AuthorizationRevokeEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
@@ -45,7 +41,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
-					ClientID: clientID,
+					ClientID: params.ClientID,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
@@ -54,13 +50,18 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Cost:      1,
 				CreatedAt: params.Timestamp,
 			},
-			Event: models.AuthorizationRevokeEvent{
-				ClientID:  clientID,
+			Event: &models.AuthorizationRevokeEvent{
+				ClientID:  params.ClientID,
 				UserID:    params.FromUserID,
 				UserLogin: params.FromUserName,
 				UserName:  params.FromUserName,
 			},
 		}
+
+		if params.Transport == models.TransportWebSocket {
+			body.Event = nil
+		}
+
 		event, err = json.Marshal(body)
 		if err != nil {
 			return events.MockEventResponse{}, err
@@ -117,7 +118,7 @@ func (e Event) GetAllTopicsByTransport(transport string) []string {
 }
 func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases
-	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+	for trigger, topic := range triggerMapping[models.TransportWebhook] {
 		if topic == t {
 			return trigger
 		}

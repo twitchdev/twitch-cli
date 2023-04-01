@@ -44,7 +44,7 @@ func TestSubscriptionVerify(t *testing.T) {
 	defer ts.Close()
 
 	p := VerifyParameters{
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		Event:          "subscribe",
 		ForwardAddress: ts.URL,
 		Secret:         "potatoes",
@@ -59,7 +59,7 @@ func TestSubscriptionVerify(t *testing.T) {
 
 	p = VerifyParameters{
 		ForwardAddress: ts.URL + "/badendpoint",
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		Event:          "subscribe",
 		Secret:         "potatoes",
 	}

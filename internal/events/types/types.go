@@ -5,9 +5,11 @@ package types
 import (
 	"errors"
 	"sort"
+	"strings"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
-	"github.com/twitchdev/twitch-cli/internal/events/types/authorization"
+	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_grant"
+	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_revoke"
 	"github.com/twitchdev/twitch-cli/internal/events/types/ban"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_redemption"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_reward"
@@ -36,7 +38,8 @@ import (
 
 func AllEvents() []events.MockEvent {
 	return []events.MockEvent{
-		authorization.Event{},
+		authorization_grant.Event{},
+		authorization_revoke.Event{},
 		ban.Event{},
 		channel_points_redemption.Event{},
 		channel_points_reward.Event{},
@@ -63,12 +66,34 @@ func AllEvents() []events.MockEvent {
 	}
 }
 
-func AllEventTopics() []string {
+func AllWebhookTopics() []string {
+	allEvents := []string{}
+	allEventsMap := make(map[string]int)
+
+	for _, e := range AllEvents() {
+		for _, topic := range e.GetAllTopicsByTransport(models.TransportWebhook) {
+			_, duplicate := allEventsMap[topic]
+			if !duplicate {
+				allEvents = append(allEvents, topic)
+				allEventsMap[topic] = 1
+			}
+		}
+	}
+
+	// Sort the topics alphabetically
+	sort.Strings(allEvents)
+
+	return allEvents
+}
+
+func WebSocketCommandTopics() []string {
 	allEvents := []string{}
 
 	for _, e := range AllEvents() {
-		for _, topic := range e.GetAllTopicsByTransport(models.TransportEventSub) {
-			allEvents = append(allEvents, topic)
+		for _, topic := range e.GetAllTopicsByTransport(models.TransportWebSocket) {
+			if strings.HasPrefix(topic, "websocket") {
+				allEvents = append(allEvents, topic)
+			}
 		}
 	}
 
@@ -80,7 +105,7 @@ func AllEventTopics() []string {
 
 func GetByTriggerAndTransport(trigger string, transport string) (events.MockEvent, error) {
 	for _, e := range AllEvents() {
-		if transport == models.TransportEventSub {
+		if transport == models.TransportWebhook || transport == models.TransportWebSocket {
 			newTrigger := e.GetEventSubAlias(trigger)
 			if newTrigger != "" {
 				trigger = newTrigger
@@ -91,5 +116,11 @@ func GetByTriggerAndTransport(trigger string, transport string) (events.MockEven
 		}
 	}
 
+	// Different error for websocket transport
+	if strings.EqualFold(transport, "websocket") {
+		return nil, errors.New("Invalid event, or this event is not available via WebSockets.")
+	}
+
+	// Default error
 	return nil, errors.New("Invalid event")
 }

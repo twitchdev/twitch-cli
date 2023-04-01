@@ -13,13 +13,20 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportWebhook:   true,
+	models.TransportWebSocket: true,
 }
 
 var triggerSupported = []string{"prediction-begin", "prediction-progress", "prediction-end", "prediction-lock"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportEventSub: {
+	models.TransportWebhook: {
+		"prediction-begin":    "channel.prediction.begin",
+		"prediction-progress": "channel.prediction.progress",
+		"prediction-lock":     "channel.prediction.lock",
+		"prediction-end":      "channel.prediction.end",
+	},
+	models.TransportWebSocket: {
 		"prediction-begin":    "channel.prediction.begin",
 		"prediction-progress": "channel.prediction.progress",
 		"prediction-lock":     "channel.prediction.lock",
@@ -37,7 +44,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportWebhook, models.TransportWebSocket:
 		var outcomes []models.PredictionEventSubEventOutcomes
 		for i := 0; i < 2; i++ {
 			color := "blue"
@@ -182,7 +189,7 @@ func intPointer(i int) *int {
 }
 func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases
-	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+	for trigger, topic := range triggerMapping[models.TransportWebhook] {
 		if topic == t {
 			return trigger
 		}

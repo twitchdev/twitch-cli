@@ -24,7 +24,7 @@ func TestFire(t *testing.T) {
 
 	params := *&TriggerParameters{
 		Event:          "gift",
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -44,7 +44,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "cheer",
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -63,7 +63,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "follow",
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -82,7 +82,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "cheer",
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -101,7 +101,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "add-redemption",
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -120,7 +120,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "add-reward",
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",
@@ -139,7 +139,7 @@ func TestFire(t *testing.T) {
 
 	params = *&TriggerParameters{
 		Event:          "transaction",
-		Transport:      models.TransportEventSub,
+		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
 		ToUser:         "",

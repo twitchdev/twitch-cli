@@ -3,16 +3,21 @@
 package trigger
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/rpc"
 	"strings"
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
 	"github.com/twitchdev/twitch-cli/internal/models"
+	rpc_handler "github.com/twitchdev/twitch-cli/internal/rpc"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
@@ -40,6 +45,8 @@ type TriggerParameters struct {
 	EventID             string // Also serves as subscription ID. See https://github.com/twitchdev/twitch-cli/issues/184
 	CharityCurrentValue int
 	CharityTargetValue  int
+	ClientID            string
+	WebSocketClient     string
 }
 
 type TriggerResponse struct {
@@ -54,6 +61,16 @@ type TriggerResponse struct {
 func Fire(p TriggerParameters) (string, error) {
 	var resp events.MockEventResponse
 	var err error
+
+	if p.ClientID == "" {
+		p.ClientID = viper.GetString("ClientID") // Get from config
+
+		if p.ClientID == "" {
+			// --client-id wasn't used, and config file doesn't have a Client ID set.
+			// Generate a randomized one
+			p.ClientID = util.RandomClientID()
+		}
+	}
 
 	if p.ToUser == "" {
 		p.ToUser = util.RandomUserID()
@@ -74,8 +91,8 @@ func Fire(p TriggerParameters) (string, error) {
 		// do nothing, these are valid values
 	default:
 		return "", fmt.Errorf(
-			`Discarding event: Invalid tier provided.
-	Valid values are 1000, 2000 or 3000`)
+			"Discarding event: Invalid tier provided.\n" +
+				"Valid values are 1000, 2000 or 3000")
 	}
 
 	if p.EventID == "" {
@@ -115,6 +132,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		Timestamp:           p.Timestamp,
 		CharityCurrentValue: p.CharityCurrentValue,
 		CharityTargetValue:  p.CharityTargetValue,
+		ClientID:            p.ClientID,
 	}
 
 	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
@@ -122,11 +140,9 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		return "", err
 	}
 
-	if eventParamaters.Transport == models.TransportEventSub {
-		newTrigger := e.GetEventSubAlias(p.Event)
-		if newTrigger != "" {
-			eventParamaters.Trigger = newTrigger // overwrite the existing trigger with the "correct" one
-		}
+	newTrigger := e.GetEventSubAlias(p.Event)
+	if newTrigger != "" {
+		eventParamaters.Trigger = newTrigger // overwrite the existing trigger with the "correct" one
 	}
 
 	resp, err = e.GenerateEvent(eventParamaters)
@@ -163,7 +179,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		messageType = EventSubMessageTypeRevocation
 	}
 
-	if p.ForwardAddress != "" {
+	if p.ForwardAddress != "" && strings.EqualFold(p.Transport, "webhook") { // Forwarding to an address requires Webhook, as its done via HTTP
 		resp, err := ForwardEvent(ForwardParamters{
 			ID:                  resp.ID,
 			Transport:           p.Transport,
@@ -192,6 +208,52 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		} else {
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Invalid response. Received Status Code: %v`, resp.StatusCode))
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ Server Said: %s`, respTrigger))
+		}
+	}
+
+	// Forward to WebSocket server via RPC
+	if strings.EqualFold(p.Transport, "websocket") {
+		client, err := rpc.DialHTTP("tcp", ":44747")
+		if err != nil {
+			return "", errors.New("Failed to dial RPC handler for WebSocket server. Is it online?\nError: " + err.Error())
+		}
+
+		var reply rpc_handler.RPCResponse
+
+		// Modify transport
+		modifiedTransportJSON := models.EventsubResponse{}
+		err = json.Unmarshal([]byte(resp.JSON), &modifiedTransportJSON)
+		if err != nil {
+			return "", errors.New("Unexpected error unmarshling JSON before forwarding to WebSocket server: " + err.Error())
+		}
+		modifiedTransportJSON.Subscription.Transport.Method = "websocket"
+		modifiedTransportJSON.Subscription.Transport.Callback = ""
+		modifiedTransportJSON.Subscription.Transport.SessionID = "WebSocket-Server-Will-Set"
+		rawModifiedTransportJSON, _ := json.Marshal(modifiedTransportJSON)
+		resp.JSON = rawModifiedTransportJSON
+
+		// Trigger any EventSub subscription that's available over 1st party WebSocket connections
+		variables := make(map[string]string)
+		variables["ClientName"] = p.WebSocketClient
+
+		args := &rpc_handler.RPCArgs{
+			RPCName:   "EventSubWebSocketForwardEvent",
+			Body:      string(resp.JSON),
+			Variables: variables,
+		}
+
+		err = client.Call("RPCHandler.ExecuteGenericRPC", args, &reply)
+
+		// Error checking for RPC internals
+		if err != nil {
+			return "", errors.New("Failed to send via RPC to WebSocket server: " + err.Error())
+		}
+
+		// Error checking for everything else
+		if reply.ResponseCode == 0 { // Zero will always be success
+			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Forwarded for use in mock EventSub WebSocket server`))
+		} else {
+			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ EventSub WebSocket server failed to process event: [%v] %v`, reply.DetailedInfo, reply.DetailedInfo))
 		}
 	}
 

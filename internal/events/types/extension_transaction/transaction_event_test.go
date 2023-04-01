@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/test_setup"
@@ -22,12 +21,11 @@ func TestEventsubTransaction(t *testing.T) {
 	params := events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "transaction",
 		SubscriptionStatus: "enabled",
+		ClientID:           clientId,
 	}
-
-	viper.Set("clientId", clientId)
 
 	r, err := Event{}.GenerateEvent(params)
 	a.Nil(err)
@@ -70,7 +68,7 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportWebhook)
 	a.Equal(true, r)
 
 	r = Event{}.ValidTransport("noteventsub")
@@ -79,6 +77,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "transaction")
+	r := Event{}.GetTopic(models.TransportWebhook, "transaction")
 	a.NotNil(r)
 }

@@ -11,13 +11,19 @@ import (
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportWebhook:   true,
+	models.TransportWebSocket: true,
 }
 
 var triggerSupported = []string{"add-reward", "update-reward", "remove-reward"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportEventSub: {
+	models.TransportWebhook: {
+		"add-reward":    "channel.channel_points_custom_reward.add",
+		"update-reward": "channel.channel_points_custom_reward.update",
+		"remove-reward": "channel.channel_points_custom_reward.remove",
+	},
+	models.TransportWebSocket: {
 		"add-reward":    "channel.channel_points_custom_reward.add",
 		"update-reward": "channel.channel_points_custom_reward.update",
 		"remove-reward": "channel.channel_points_custom_reward.remove",
@@ -39,7 +45,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportWebhook, models.TransportWebSocket:
 		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
@@ -153,7 +159,7 @@ func (e Event) GetAllTopicsByTransport(transport string) []string {
 }
 func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases
-	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+	for trigger, topic := range triggerMapping[models.TransportWebhook] {
 		if topic == t {
 			return trigger
 		}

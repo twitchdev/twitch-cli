@@ -20,7 +20,7 @@ func TestEventSub(t *testing.T) {
 	beginParams := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "shield-mode-begin",
 		SubscriptionStatus: "enabled",
 		Cost:               0,
@@ -28,7 +28,7 @@ func TestEventSub(t *testing.T) {
 	endParams := *&events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
-		Transport:          models.TransportEventSub,
+		Transport:          models.TransportWebhook,
 		Trigger:            "shield-mode-end",
 		SubscriptionStatus: "enabled",
 		Cost:               0,
@@ -89,7 +89,7 @@ func TestValidTrigger(t *testing.T) {
 func TestValidTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTransport(models.TransportEventSub)
+	r := Event{}.ValidTransport(models.TransportWebhook)
 	a.Equal(true, r)
 
 	r = Event{}.ValidTransport("noteventsub")
@@ -98,9 +98,9 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportEventSub, "shield-mode-begin")
+	r := Event{}.GetTopic(models.TransportWebhook, "shield-mode-begin")
 	a.NotNil(r)
 
-	r = Event{}.GetTopic(models.TransportEventSub, "shield-mode-end")
+	r = Event{}.GetTopic(models.TransportWebhook, "shield-mode-end")
 	a.NotNil(r)
 }

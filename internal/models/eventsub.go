@@ -14,8 +14,9 @@ type EventsubSubscription struct {
 }
 
 type EventsubTransport struct {
-	Method   string `json:"method"`
-	Callback string `json:"callback"`
+	Method    string `json:"method"`
+	Callback  string `json:"callback,omitempty"`
+	SessionID string `json:"session_id,omitempty"`
 }
 
 type EventsubCondition struct {
@@ -33,7 +34,7 @@ type EventsubCondition struct {
 
 type EventsubResponse struct {
 	Subscription EventsubSubscription `json:"subscription"`
-	Event        interface{}          `json:"event"`
+	Event        interface{}          `json:"event,omitempty"`
 }
 
 type EventsubSubscriptionVerification struct {

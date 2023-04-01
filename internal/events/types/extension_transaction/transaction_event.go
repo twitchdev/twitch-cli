@@ -6,20 +6,18 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
-	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 var transportsSupported = map[string]bool{
-	models.TransportEventSub: true,
+	models.TransportWebhook: true,
 }
 
 var triggerSupported = []string{"transaction"}
 
 var triggerMapping = map[string]map[string]string{
-	models.TransportEventSub: {
+	models.TransportWebhook: {
 		"transaction": "extension.bits_transaction.create",
 	},
 }
@@ -29,13 +27,6 @@ type Event struct{}
 func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEventResponse, error) {
 	var event []byte
 	var err error
-
-	clientID := viper.GetString("clientId")
-
-	// if not configured, generate a random one
-	if clientID == "" {
-		clientID = util.RandomClientID()
-	}
 
 	if params.Cost == 0 {
 		params.Cost = 100
@@ -50,7 +41,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	switch params.Transport {
-	case models.TransportEventSub:
+	case models.TransportWebhook:
 		body := &models.TransactionEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
@@ -58,7 +49,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
-					ExtensionClientID: clientID,
+					ExtensionClientID: params.ClientID,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
@@ -69,7 +60,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			},
 			Event: models.TransactionEventSubEvent{
 				ID:                   params.ID,
-				ExtensionClientID:    clientID,
+				ExtensionClientID:    params.ClientID,
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: "testBroadcaster",
 				BroadcasterUserName:  "testBroadcaster",
@@ -140,7 +131,7 @@ func (e Event) GetAllTopicsByTransport(transport string) []string {
 }
 func (e Event) GetEventSubAlias(t string) string {
 	// check for aliases
-	for trigger, topic := range triggerMapping[models.TransportEventSub] {
+	for trigger, topic := range triggerMapping[models.TransportWebhook] {
 		if topic == t {
 			return trigger
 		}
