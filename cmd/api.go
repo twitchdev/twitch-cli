@@ -21,6 +21,8 @@ var prettyPrint bool
 var autoPaginate int = 0
 var port int
 
+var generateCount int
+
 var apiCmd = &cobra.Command{
 	Use:   "api",
 	Short: "Used to interface with the Twitch API",
@@ -100,7 +102,7 @@ func init() {
 
 	startCmd.Flags().IntVarP(&port, "port", "p", 8080, "Defines the port that the mock API will run on.")
 
-	generateCmd.Flags().IntVarP(&count, "count", "c", 10, "Defines the number of fake users to generate.")
+	generateCmd.Flags().IntVarP(&generateCount, "count", "c", 25, "Defines the number of fake users to generate.")
 }
 
 func cmdRun(cmd *cobra.Command, args []string) {
@@ -142,5 +144,5 @@ func mockStartRun(cmd *cobra.Command, args []string) {
 }
 
 func generateMockRun(cmd *cobra.Command, args []string) {
-	generate.Generate(count)
+	generate.Generate(generateCount)
 }
