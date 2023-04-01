@@ -35,7 +35,7 @@ func TestChannelBadges(t *testing.T) {
 	req.URL.RawQuery = q.Encode()
 	resp, err := http.DefaultClient.Do(req)
 	a.Nil(err)
-	a.Equal(401, resp.StatusCode)
+	a.Equal(400, resp.StatusCode)
 
 	q.Set("broadcaster_id", "1")
 	req.URL.RawQuery = q.Encode()
