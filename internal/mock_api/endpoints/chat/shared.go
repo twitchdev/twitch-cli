@@ -15,10 +15,14 @@ type BadgesResponse struct {
 }
 
 type BadgesVersion struct {
-	ID         string `json:"id"`
-	ImageURL1X string `json:"image_url_1x"`
-	ImageURL2X string `json:"image_url_2x"`
-	ImageURL4X string `json:"image_url_4x"`
+	ID          string  `json:"id"`
+	ImageURL1X  string  `json:"image_url_1x"`
+	ImageURL2X  string  `json:"image_url_2x"`
+	ImageURL4X  string  `json:"image_url_4x"`
+	Title       string  `json:"title"`
+	Description string  `json:"description"`
+	ClickAction *string `json:"click_action"`
+	ClickURL    *string `json:"click_url"`
 }
 
 type EmotesResponse struct {
@@ -38,4 +42,8 @@ type EmotesImages struct {
 	ImageURL1X string `json:"url_1x"`
 	ImageURL2X string `json:"url_2x"`
 	ImageURL4X string `json:"url_4x"`
+}
+
+func ptr(str string) *string {
+	return &str
 }
