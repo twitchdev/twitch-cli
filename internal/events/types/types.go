@@ -4,6 +4,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -17,7 +18,8 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/cheer"
 	"github.com/twitchdev/twitch-cli/internal/events/types/drop"
 	"github.com/twitchdev/twitch-cli/internal/events/types/extension_transaction"
-	"github.com/twitchdev/twitch-cli/internal/events/types/follow"
+	"github.com/twitchdev/twitch-cli/internal/events/types/follow_v1"
+	"github.com/twitchdev/twitch-cli/internal/events/types/follow_v2"
 	"github.com/twitchdev/twitch-cli/internal/events/types/gift"
 	"github.com/twitchdev/twitch-cli/internal/events/types/goal"
 	"github.com/twitchdev/twitch-cli/internal/events/types/hype_train"
@@ -47,7 +49,8 @@ func AllEvents() []events.MockEvent {
 		cheer.Event{},
 		drop.Event{},
 		extension_transaction.Event{},
-		follow.Event{},
+		follow_v1.Event{},
+		follow_v2.Event{},
 		gift.Event{},
 		goal.Event{},
 		hype_train.Event{},
@@ -103,7 +106,10 @@ func WebSocketCommandTopics() []string {
 	return allEvents
 }
 
-func GetByTriggerAndTransport(trigger string, transport string) (events.MockEvent, error) {
+func GetByTriggerAndTransportAndVersion(trigger string, transport string, version string) (events.MockEvent, error) {
+	validEventBadVersions := []string{}
+	var latestEventSeen events.MockEvent
+
 	for _, e := range AllEvents() {
 		if transport == models.TransportWebhook || transport == models.TransportWebSocket {
 			newTrigger := e.GetEventSubAlias(trigger)
@@ -112,11 +118,30 @@ func GetByTriggerAndTransport(trigger string, transport string) (events.MockEven
 			}
 		}
 		if e.ValidTrigger(trigger) == true && e.ValidTransport(transport) == true {
-			return e, nil
+			if e.SubscriptionVersion() == version {
+				return e, nil
+			} else {
+				validEventBadVersions = append(validEventBadVersions, e.SubscriptionVersion())
+				latestEventSeen = e
+			}
 		}
 	}
 
-	// Different error for websocket transport
+	// When no version is given, and there's only one version available, use the default version.
+	if version == "" && len(validEventBadVersions) == 1 {
+		return latestEventSeen, nil
+	}
+
+	// Error for events with non-existent verison used
+	if len(validEventBadVersions) != 0 {
+		errStr := fmt.Sprintf("Invalid version given. Valid version(s): %v", strings.Join(validEventBadVersions, ", "))
+		if version == "" {
+			errStr += "\nUse --verison to specify"
+		}
+		return nil, errors.New(errStr)
+	}
+
+	// Error for websocket transport
 	if strings.EqualFold(transport, "websocket") {
 		return nil, errors.New("Invalid event, or this event is not available via WebSockets.")
 	}

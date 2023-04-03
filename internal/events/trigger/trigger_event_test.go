@@ -75,6 +75,7 @@ func TestFire(t *testing.T) {
 		Secret:         "potato",
 		Verbose:        false,
 		Count:          0,
+		Version:        "2",
 	}
 	res, err = Fire(params)
 	a.Nil(err)

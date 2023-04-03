@@ -43,6 +43,7 @@ var (
 	charityCurrentValue int
 	charityTargetValue  int
 	clientId            string
+	version             string
 	websocketClient     string
 )
 
@@ -152,6 +153,7 @@ func init() {
 	triggerCmd.Flags().IntVar(&charityCurrentValue, "charity-current-value", 0, "Only used for \"charity-*\" events. Manually set the current dollar value for charity events.")
 	triggerCmd.Flags().IntVar(&charityTargetValue, "charity-target-value", 1500000, "Only used for \"charity-*\" events. Manually set the target dollar value for charity events.")
 	triggerCmd.Flags().StringVar(&clientId, "client-id", "", "Manually set the Client ID used in revoke, grant, and bits transaction events.")
+	triggerCmd.Flags().StringVarP(&version, "version", "v", "", "Chooses the EventSub version used for a specific event. Not required for most events.")
 	triggerCmd.Flags().StringVar(&websocketClient, "session", "", "Defines a specific websocket client/session to forward an event to. Used only with \"websocket\" transport.")
 
 	// retrigger flags
@@ -166,6 +168,7 @@ func init() {
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	verifyCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
+	verifyCmd.Flags().StringVarP(&version, "version", "v", "", "Chooses the EventSub version used for a specific event. Not required for most events.")
 	verifyCmd.MarkFlagRequired("forward-address")
 
 	// websocket flags
@@ -230,6 +233,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 			CharityCurrentValue: charityCurrentValue,
 			CharityTargetValue:  charityTargetValue,
 			ClientID:            clientId,
+			Version:             version,
 			WebSocketClient:     websocketClient,
 		})
 
