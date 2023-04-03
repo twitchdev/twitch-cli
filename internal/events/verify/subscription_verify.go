@@ -25,6 +25,7 @@ type VerifyParameters struct {
 	ForwardAddress string
 	Secret         string
 	EventID        string
+	Version        string
 }
 
 type VerifyResponse struct {
@@ -38,7 +39,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 
 	challenge := util.RandomGUID()
 
-	event, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
+	event, err := types.GetByTriggerAndTransportAndVersion(p.Event, p.Transport, p.Version)
 	if err != nil {
 		return VerifyResponse{}, err
 	}

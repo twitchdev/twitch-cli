@@ -272,7 +272,7 @@ func subscriptionPageHandlerPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if the topic exists
-	_, err = types.GetByTriggerAndTransport(body.Type, body.Transport.Method)
+	_, err = types.GetByTriggerAndTransportAndVersion(body.Type, body.Transport.Method, body.Version)
 	if err != nil {
 		handlerResponseErrorBadRequest(w, "The combination of values in the type and version fields is not valid")
 		return

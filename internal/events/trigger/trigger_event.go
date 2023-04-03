@@ -46,6 +46,7 @@ type TriggerParameters struct {
 	CharityCurrentValue int
 	CharityTargetValue  int
 	ClientID            string
+	Version             string
 	WebSocketClient     string
 }
 
@@ -135,7 +136,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		ClientID:            p.ClientID,
 	}
 
-	e, err := types.GetByTriggerAndTransport(p.Event, p.Transport)
+	e, err := types.GetByTriggerAndTransportAndVersion(p.Event, p.Transport, p.Version)
 	if err != nil {
 		return "", err
 	}
