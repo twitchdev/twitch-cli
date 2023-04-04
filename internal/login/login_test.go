@@ -146,9 +146,9 @@ func TestUserAuthServer(t *testing.T) {
 	userResponse := make(chan UserAuthorizationQueryResponse)
 
 	go func() {
-		res, err := userAuthServer()
+		res, err := userAuthServer("", "3000", nil)
 		a.Nil(err)
-		userResponse <- res
+		userResponse <- *res
 	}()
 
 	time.Sleep(25)

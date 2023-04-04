@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os/exec"
@@ -95,7 +96,7 @@ func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	return r, nil
 }
 
-func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
+func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort string) (LoginResponse, error) {
 	u, err := url.Parse(p.AuthorizeURL)
 	if err != nil {
 		log.Fatal(err)
@@ -115,17 +116,20 @@ func UserCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	q.Set("state", state)
 	u.RawQuery = q.Encode()
 
-	fmt.Println("Opening browser. Press Ctrl+C to cancel...")
-	err = openBrowser(u.String())
-	if err != nil {
-		fmt.Printf("Unable to open default browser. You can manually navigate to this URL to complete the login: %s\n", u.String())
+	execOpenBrowser := func() {
+		fmt.Println("Opening browser. Press Ctrl+C to cancel...")
+		err = openBrowser(u.String())
+		if err != nil {
+			fmt.Printf("Unable to open default browser. You can manually navigate to this URL to complete the login: %s\n", u.String())
+		}
 	}
 
-	ur, err := userAuthServer()
+	urp, err := userAuthServer(webserverIP, webserverPort, execOpenBrowser)
 	if err != nil {
 		fmt.Printf("Error processing request; %v\n", err.Error())
 		return LoginResponse{}, err
 	}
+	ur := *urp
 
 	if ur.State != state {
 		log.Fatal("state mismatch")
@@ -175,7 +179,7 @@ func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("API responded with an error while revoking token: %v", string(resp.Body))
+		log.Printf("API responded with an error while revoking token: [%v] %v", resp.StatusCode, string(resp.Body))
 		return LoginResponse{}, errors.New("API responded with an error while revoking token")
 	}
 
@@ -256,9 +260,9 @@ func openBrowser(url string) error {
 	return err
 }
 
-func userAuthServer() (UserAuthorizationQueryResponse, error) {
+func userAuthServer(ip string, port string, onSuccessfulListenCallback func()) (*UserAuthorizationQueryResponse, error) {
 	m := http.NewServeMux()
-	s := http.Server{Addr: ":3000", Handler: m}
+	s := http.Server{Addr: fmt.Sprintf("%v:%v", ip, port), Handler: m}
 	userAuth := make(chan UserAuthorizationQueryResponse)
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/favicon.ico" {
@@ -282,8 +286,19 @@ func userAuthServer() (UserAuthorizationQueryResponse, error) {
 			userAuth <- u
 		}
 	})
+
+	ln, err := net.Listen("tcp", s.Addr)
+	defer s.Shutdown(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	if onSuccessfulListenCallback != nil {
+		onSuccessfulListenCallback()
+	}
+
 	go func() {
-		if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := s.Serve(ln); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 			return
 		}
@@ -292,8 +307,7 @@ func userAuthServer() (UserAuthorizationQueryResponse, error) {
 	log.Printf("Waiting for authorization response ...")
 	userAuthResponse := <-userAuth
 	log.Printf("Closing local server ...")
-	s.Shutdown(context.Background())
-	return userAuthResponse, userAuthResponse.Error
+	return &userAuthResponse, userAuthResponse.Error
 }
 
 func storeInConfig(token string, refresh string, scopes []string, expiresAt time.Time) {
