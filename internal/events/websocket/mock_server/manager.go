@@ -24,6 +24,7 @@ type ServerManager struct {
 	serverList       *util.List[WebSocketServer]
 	reconnectTesting bool
 	primaryServer    string
+	ip               string
 	port             int
 	debugEnabled     bool
 	strictMode       bool
@@ -31,11 +32,12 @@ type ServerManager struct {
 
 var serverManager *ServerManager
 
-func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
+func StartWebsocketServer(enableDebug bool, ip string, port int, strictMode bool) {
 	serverManager = &ServerManager{
 		serverList: &util.List[WebSocketServer]{
 			Elements: make(map[string]*WebSocketServer),
 		},
+		ip:               ip,
 		port:             port,
 		reconnectTesting: false,
 		strictMode:       strictMode,
@@ -75,7 +77,7 @@ func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
 	// Start HTTP server
 	go func() {
 		// Listen to port
-		listen, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
+		listen, err := net.Listen("tcp", fmt.Sprintf("%v:%v", ip, port))
 		if err != nil {
 			log.Fatalf("Cannot start HTTP server: %v", err)
 			return
@@ -86,14 +88,14 @@ func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
 		lightYellow := color.New(color.FgHiYellow).SprintFunc()
 		yellow := color.New(color.FgYellow).SprintFunc()
 
-		log.Printf(lightBlue("Started WebSocket server on 127.0.0.1:%v"), port)
+		log.Printf(lightBlue("Started WebSocket server on %v:%v"), ip, port)
 		if serverManager.strictMode {
 			log.Printf(lightBlue("--require-subscription enabled. Clients will have 10 seconds to subscribe before being disconnected."))
 		}
 
 		fmt.Println()
 
-		log.Printf(yellow("Simulate subscribing to events at: http://127.0.0.1:%v/eventsub/subscriptions"), port)
+		log.Printf(yellow("Simulate subscribing to events at: http://%v:%v/eventsub/subscriptions"), ip, port)
 		log.Printf(yellow("POST, GET, and DELETE are supported"))
 		log.Printf(yellow("For more info: https://dev.twitch.tv/docs/cli/websocket-event-command/#simulate-subscribing-to-mock-eventsub"))
 
@@ -107,7 +109,7 @@ func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
 		log.Printf(lightGreen("For further usage information, please see our official documentation:\nhttps://dev.twitch.tv/docs/cli/websocket-event-command/"))
 		fmt.Println()
 
-		log.Printf(lightBlue("Connect to the WebSocket server at: ")+"ws://127.0.0.1:%v/ws", port)
+		log.Printf(lightBlue("Connect to the WebSocket server at: ")+"ws://%v:%v/ws", ip, port)
 
 		// Serve HTTP server
 		if err := http.Serve(listen, m); err != nil {
@@ -136,7 +138,7 @@ func StartWebsocketServer(enableDebug bool, port int, strictMode bool) {
 func wsPageHandler(w http.ResponseWriter, r *http.Request) {
 	server, ok := serverManager.serverList.Get(serverManager.primaryServer)
 	if !ok {
-		log.Printf("Failed to find primary server [%v] when new client was accessing ws://127.0.0.1:%v/ws -- Aborting...", serverManager.primaryServer, serverManager.port)
+		log.Printf("Failed to find primary server [%v] when new client was accessing ws://%v:%v/ws -- Aborting...", serverManager.primaryServer, serverManager.ip, serverManager.port)
 		return
 	}
 
