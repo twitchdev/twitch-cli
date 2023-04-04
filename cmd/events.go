@@ -45,8 +45,6 @@ var (
 	clientId            string
 	version             string
 	websocketClient     string
-	websocketServerIP   string
-	websocketServerPort int
 )
 
 // websocketCmd-specific flags
@@ -57,6 +55,9 @@ var (
 	wsSubscription string
 	wsStatus       string
 	wsReason       string
+	wsServerIP     string
+	wsServerPort   int
+	wsSSL          bool
 )
 
 var eventCmd = &cobra.Command{
@@ -175,8 +176,9 @@ func init() {
 
 	// websocket flags
 	/// flags for start-server
-	websocketCmd.Flags().StringVar(&websocketServerIP, "ip", "127.0.0.1", "Defines the ip that the mock EventSub websocket server will bind to.")
-	websocketCmd.Flags().IntVarP(&websocketServerPort, "port", "p", 8080, "Defines the port that the mock EventSub websocket server will run on.")
+	websocketCmd.Flags().StringVar(&wsServerIP, "ip", "127.0.0.1", "Defines the ip that the mock EventSub websocket server will bind to.")
+	websocketCmd.Flags().IntVarP(&wsServerPort, "port", "p", 8080, "Defines the port that the mock EventSub websocket server will run on.")
+	websocketCmd.Flags().BoolVar(&wsSSL, "ssl", false, "Enables SSL for EventSub websocket server (wss) and EventSub mock subscription server (https).")
 	websocketCmd.Flags().BoolVar(&wsDebug, "debug", false, "Set on/off for debug messages for the EventSub WebSocket server.")
 	websocketCmd.Flags().BoolVarP(&wsStrict, "require-subscription", "S", false, "Requires subscriptions for all events, and activates 10 second subscription requirement.")
 
@@ -334,8 +336,9 @@ func websocketCmdRun(cmd *cobra.Command, args []string) {
 	}
 
 	if args[0] == "start-server" || args[0] == "start" {
+		log.Printf("Attempting to start WebSocket server on %v:%v", wsServerIP, wsServerPort)
 		log.Printf("`Ctrl + C` to exit mock WebSocket servers.")
-		mock_server.StartWebsocketServer(wsDebug, websocketServerIP, websocketServerPort, wsStrict)
+		mock_server.StartWebsocketServer(wsDebug, wsServerIP, wsServerPort, wsSSL, wsStrict)
 	} else {
 		// Forward all other commands via RPC
 		websocket.ForwardWebsocketCommand(args[0], websocket.WebsocketCommandParameters{

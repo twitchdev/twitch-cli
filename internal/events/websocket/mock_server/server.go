@@ -59,7 +59,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 		clientName:           util.RandomGUID()[:8],
 		conn:                 conn,
 		ConnectedAtTimestamp: connectedAtTimestamp,
-		connectionUrl:        fmt.Sprintf("http://%v/ws", r.Host),
+		connectionUrl:        fmt.Sprintf("%v://%v/ws", serverManager.protocolHttp, r.Host),
 		keepAliveChanOpen:    false,
 		pingChanOpen:         false,
 	}

@@ -4,12 +4,14 @@ package mock_server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -28,11 +30,14 @@ type ServerManager struct {
 	port             int
 	debugEnabled     bool
 	strictMode       bool
+	sslEnabled       bool
+	protocolHttp     string
+	protocolWs       string
 }
 
 var serverManager *ServerManager
 
-func StartWebsocketServer(enableDebug bool, ip string, port int, strictMode bool) {
+func StartWebsocketServer(enableDebug bool, ip string, port int, enableSSL bool, strictMode bool) {
 	serverManager = &ServerManager{
 		serverList: &util.List[WebSocketServer]{
 			Elements: make(map[string]*WebSocketServer),
@@ -41,6 +46,7 @@ func StartWebsocketServer(enableDebug bool, ip string, port int, strictMode bool
 		port:             port,
 		reconnectTesting: false,
 		strictMode:       strictMode,
+		sslEnabled:       enableSSL,
 	}
 
 	serverManager.debugEnabled = enableDebug
@@ -83,39 +89,59 @@ func StartWebsocketServer(enableDebug bool, ip string, port int, strictMode bool
 			return
 		}
 
-		lightBlue := color.New(color.FgHiBlue).SprintFunc()
-		lightGreen := color.New(color.FgHiGreen).SprintFunc()
 		lightYellow := color.New(color.FgHiYellow).SprintFunc()
-		yellow := color.New(color.FgYellow).SprintFunc()
-
-		log.Printf(lightBlue("Started WebSocket server on %v:%v"), ip, port)
-		if serverManager.strictMode {
-			log.Printf(lightBlue("--require-subscription enabled. Clients will have 10 seconds to subscribe before being disconnected."))
-		}
-
-		fmt.Println()
-
-		log.Printf(yellow("Simulate subscribing to events at: http://%v:%v/eventsub/subscriptions"), ip, port)
-		log.Printf(yellow("POST, GET, and DELETE are supported"))
-		log.Printf(yellow("For more info: https://dev.twitch.tv/docs/cli/websocket-event-command/#simulate-subscribing-to-mock-eventsub"))
-
-		fmt.Println()
-
-		log.Printf(lightYellow("Events can be forwarded to this server from another terminal with --transport=websocket\nExample: \"twitch event trigger channel.ban --transport=websocket\""))
-		fmt.Println()
-		log.Printf(lightYellow("You can send to a specific client after its connected with --session\nExample: \"twitch event trigger channel.ban --transport=websocket --session=e411cc1e_a2613d4e\""))
-
-		fmt.Println()
-		log.Printf(lightGreen("For further usage information, please see our official documentation:\nhttps://dev.twitch.tv/docs/cli/websocket-event-command/"))
-		fmt.Println()
-
-		log.Printf(lightBlue("Connect to the WebSocket server at: ")+"ws://%v:%v/ws", ip, port)
+		lightRed := color.New(color.FgHiRed).SprintFunc()
+		brightWhite := color.New(color.FgHiWhite).SprintFunc()
 
 		// Serve HTTP server
-		if err := http.Serve(listen, m); err != nil {
-			log.Fatalf("Cannot start HTTP server: %v", err)
-			return
+		if serverManager.sslEnabled {
+			serverManager.protocolHttp = "https"
+			serverManager.protocolWs = "wss"
+
+			home, err := util.GetApplicationDir()
+			if err != nil {
+				log.Fatalf("Cannot start HTTP server: %v", err)
+				return
+			}
+
+			crtFile := filepath.Join(home, "localhost.crt")
+			keyFile := filepath.Join(home, "localhost.key")
+			_, crtFileErr := os.Stat(crtFile)
+			_, keyFileErr := os.Stat(keyFile)
+			if errors.Is(crtFileErr, os.ErrNotExist) || errors.Is(keyFileErr, os.ErrNotExist) {
+				log.Fatalf(`%v
+** Files must be placed in %v as %v and %v **
+%v
+** However, if you wish to generate the files using OpenSSL, run these commands: **
+	openssl genrsa -out "%v" 2048
+	openssl req -new -x509 -sha256 -key "%v" -out "%v" -days 365`,
+					lightRed("ERROR: Missing one of the required SSL crt/key files."),
+					brightWhite(home),
+					brightWhite("localhost.crt"),
+					brightWhite("localhost.key"),
+					lightYellow("** Testing with Twitch CLI using SSL is meant for users experienced with SSL already, as these files must be added to your systems keychain to work without errors. **"),
+					keyFile, keyFile, crtFile)
+				return
+			}
+
+			printWelcomeMsg()
+
+			if err := http.ServeTLS(listen, m, crtFile, keyFile); err != nil {
+				log.Fatalf("Cannot start HTTP server: %v", err)
+				return
+			}
+		} else {
+			serverManager.protocolHttp = "http"
+			serverManager.protocolWs = "ws"
+
+			printWelcomeMsg()
+
+			if err := http.Serve(listen, m); err != nil {
+				log.Fatalf("Cannot start HTTP server: %v", err)
+				return
+			}
 		}
+
 	}()
 
 	// Initalize RPC handler, to accept EventSub transports
@@ -135,10 +161,41 @@ func StartWebsocketServer(enableDebug bool, ip string, port int, strictMode bool
 	<-stop // Wait for Ctrl + C
 }
 
+func printWelcomeMsg() {
+	lightBlue := color.New(color.FgHiBlue).SprintFunc()
+	lightGreen := color.New(color.FgHiGreen).SprintFunc()
+	lightYellow := color.New(color.FgHiYellow).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
+
+	log.Printf(lightBlue("Started WebSocket server on %v:%v"), serverManager.ip, serverManager.port)
+	if serverManager.strictMode {
+		log.Printf(lightBlue("--require-subscription enabled. Clients will have 10 seconds to subscribe before being disconnected."))
+	}
+
+	fmt.Println()
+
+	log.Printf(yellow("Simulate subscribing to events at: %v://%v:%v/eventsub/subscriptions"), serverManager.protocolHttp, serverManager.ip, serverManager.port)
+	log.Printf(yellow("POST, GET, and DELETE are supported"))
+	log.Printf(yellow("For more info: https://dev.twitch.tv/docs/cli/websocket-event-command/#simulate-subscribing-to-mock-eventsub"))
+
+	fmt.Println()
+
+	log.Printf(lightYellow("Events can be forwarded to this server from another terminal with --transport=websocket\nExample: \"twitch event trigger channel.ban --transport=websocket\""))
+	fmt.Println()
+	log.Printf(lightYellow("You can send to a specific client after its connected with --session\nExample: \"twitch event trigger channel.ban --transport=websocket --session=e411cc1e_a2613d4e\""))
+
+	fmt.Println()
+	log.Printf(lightGreen("For further usage information, please see our official documentation:\nhttps://dev.twitch.tv/docs/cli/websocket-event-command/"))
+	fmt.Println()
+
+	log.Printf(lightBlue("Connect to the WebSocket server at: ")+"%v://%v:%v/ws", serverManager.protocolWs, serverManager.ip, serverManager.port)
+}
+
 func wsPageHandler(w http.ResponseWriter, r *http.Request) {
 	server, ok := serverManager.serverList.Get(serverManager.primaryServer)
 	if !ok {
-		log.Printf("Failed to find primary server [%v] when new client was accessing ws://%v:%v/ws -- Aborting...", serverManager.primaryServer, serverManager.ip, serverManager.port)
+		log.Printf("Failed to find primary server [%v] when new client was accessing %v://%v:%v/ws -- Aborting...",
+			serverManager.primaryServer, serverManager.protocolHttp, serverManager.ip, serverManager.port)
 		return
 	}
 
