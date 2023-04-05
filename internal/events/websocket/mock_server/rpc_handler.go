@@ -215,7 +215,7 @@ func RPCSubscriptionHandler(args rpc.RPCArgs) rpc.RPCResponse {
 		return rpc.RPCResponse{
 			ResponseCode: COMMAND_RESPONSE_MISSING_FLAG,
 			DetailedInfo: "Command \"subscription\" requires flags --status, --subscription, and --session" +
-				fmt.Sprintf("\nThe flag --subscription must be the ID of the subscription made at http://%v:%v/eventsub/subscriptions", serverManager.ip, serverManager.port) +
+				fmt.Sprintf("\nThe flag --subscription must be the ID of the subscription made at %v://%v:%v/eventsub/subscriptions", serverManager.protocolHttp, serverManager.ip, serverManager.port) +
 				"\nThe flag --status must be one of the non-webhook status options defined here:" +
 				"\nhttps://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions" +
 				"\n\nExample: twitch event websocket subscription --status=user_removed --subscription=82a855-fae8-93bff0",
