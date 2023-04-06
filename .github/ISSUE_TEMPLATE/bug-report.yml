@@ -26,6 +26,13 @@ body:
       description: What is the affected operating system?
     validations:
       required: true
+  - type: input
+    id: arch
+    attributes:
+      label: Architecture Version (x86, x64, arm, etc)
+      description: (x86, x64, arm, etc)
+    validations:
+      required: true
   - type: textarea
     id: reproduce
     attributes:
