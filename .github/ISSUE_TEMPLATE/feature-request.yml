@@ -15,7 +15,7 @@ body:
     attributes:
       label: Tell us about your feature request
       description: |
-        Describe what you would like the twitch-cli to be able to do.
+        Describe what you would like the Twitch CLI to be able to do.
     validations:
       required: true
   - type: checkboxes
