@@ -19,15 +19,11 @@ body:
       placeholder: Tell us what you see!
     validations:
       required: true
-  - type: dropdown
+  - type: input
     id: os
     attributes:
       label: Operating System
       description: What is the affected operating system?
-      options:
-        - "Microsoft Windows"
-        - "Apple macOS"
-        - "Linux"
     validations:
       required: true
   - type: textarea
