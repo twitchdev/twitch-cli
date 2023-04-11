@@ -397,19 +397,21 @@ func subscriptionPageHandlerPost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 
 	json.NewEncoder(w).Encode(&SubscriptionPostSuccessResponse{
-		Body: SubscriptionPostSuccessResponseBody{
-			ID:        subscription.SubscriptionID,
-			Status:    subscription.Status,
-			Type:      subscription.Type,
-			Version:   subscription.Version,
-			Condition: EmptyStruct{},
-			CreatedAt: subscription.CreatedAt,
-			Transport: SubscriptionTransport{
-				Method:      "websocket",
-				SessionID:   fmt.Sprintf("%v_%v", server.ServerId, clientName),
-				ConnectedAt: client.ConnectedAtTimestamp,
+		Data: []SubscriptionPostSuccessResponseBody{
+			{
+				ID:        subscription.SubscriptionID,
+				Status:    subscription.Status,
+				Type:      subscription.Type,
+				Version:   subscription.Version,
+				Condition: EmptyStruct{},
+				CreatedAt: subscription.CreatedAt,
+				Transport: SubscriptionTransport{
+					Method:      "websocket",
+					SessionID:   fmt.Sprintf("%v_%v", server.ServerId, clientName),
+					ConnectedAt: client.ConnectedAtTimestamp,
+				},
+				Cost: 0,
 			},
-			Cost: 0,
 		},
 		Total:        0,
 		MaxTotalCost: 10,
@@ -519,7 +521,7 @@ func handlerResponseErrorUnauthorized(w http.ResponseWriter, message string) {
 func handlerResponseErrorConflict(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusConflict)
 	bytes, _ := json.Marshal(&SubscriptionPostErrorResponse{
-		Error:   "Unauthorized",
+		Error:   "Conflict",
 		Message: message,
 		Status:  409,
 	})

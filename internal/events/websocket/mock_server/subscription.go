@@ -27,7 +27,7 @@ type SubscriptionPostRequestTransport struct {
 
 // Response (Success) - POST /eventsub/subscriptions
 type SubscriptionPostSuccessResponse struct {
-	Body SubscriptionPostSuccessResponseBody `json:"body"`
+	Data []SubscriptionPostSuccessResponseBody `json:"data"`
 
 	Total        int `json:"total"`
 	MaxTotalCost int `json:"max_total_cost"`
