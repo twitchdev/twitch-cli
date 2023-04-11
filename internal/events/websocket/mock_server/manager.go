@@ -24,15 +24,15 @@ import (
 
 type ServerManager struct {
 	serverList       *util.List[WebSocketServer]
-	reconnectTesting bool
-	primaryServer    string
-	ip               string
-	port             int
-	debugEnabled     bool
-	strictMode       bool
-	sslEnabled       bool
-	protocolHttp     string
-	protocolWs       string
+	reconnectTesting bool   // Indicates if the server is in the process of running a simulation server reconnect/restart
+	primaryServer    string // The current primary server by its ID. This should be in serverList
+	ip               string // IP the server will bind to
+	port             int    // Port the server will bind to
+	debugEnabled     bool   // Indicates if the server was started with --debug
+	strictMode       bool   // Indicates if the server was started with --require-subscriptions
+	sslEnabled       bool   // Indicates if the server was started with --ssl
+	protocolHttp     string // String for the HTTP protocol URIs (http or https)
+	protocolWs       string // String for the WS protocol URIs (ws or wss)
 }
 
 var serverManager *ServerManager
@@ -269,11 +269,13 @@ func subscriptionPageHandlerGet(w http.ResponseWriter, r *http.Request) {
 					Status:    subscription.Status,
 					Type:      subscription.Type,
 					Version:   subscription.Version,
-					Condition: EmptyStruct{},
+					Condition: subscription.Conditions,
 					CreatedAt: subscription.CreatedAt,
 					Transport: SubscriptionTransport{
-						Method:    "websocket",
-						SessionID: fmt.Sprintf("%v_%v", server.ServerId, clientName),
+						Method:         "websocket",
+						SessionID:      fmt.Sprintf("%v_%v", server.ServerId, clientName),
+						ConnectedAt:    subscription.ClientConnectedAt,
+						DisconnectedAt: subscription.ClientDisconnectedAt,
 					},
 					Cost: 0,
 				})
@@ -378,6 +380,8 @@ func subscriptionPageHandlerPost(w http.ResponseWriter, r *http.Request) {
 		CreatedAt:         time.Now().UTC().Format(time.RFC3339Nano),
 		Status:            STATUS_ENABLED, // https://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions
 		SessionClientName: clientName,
+		Conditions:        body.Condition,
+		ClientConnectedAt: client.ConnectedAtTimestamp,
 	}
 
 	var subs []Subscription
@@ -397,19 +401,21 @@ func subscriptionPageHandlerPost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 
 	json.NewEncoder(w).Encode(&SubscriptionPostSuccessResponse{
-		Body: SubscriptionPostSuccessResponseBody{
-			ID:        subscription.SubscriptionID,
-			Status:    subscription.Status,
-			Type:      subscription.Type,
-			Version:   subscription.Version,
-			Condition: EmptyStruct{},
-			CreatedAt: subscription.CreatedAt,
-			Transport: SubscriptionTransport{
-				Method:      "websocket",
-				SessionID:   fmt.Sprintf("%v_%v", server.ServerId, clientName),
-				ConnectedAt: client.ConnectedAtTimestamp,
+		Data: []SubscriptionPostSuccessResponseBody{
+			{
+				ID:        subscription.SubscriptionID,
+				Status:    subscription.Status,
+				Type:      subscription.Type,
+				Version:   subscription.Version,
+				Condition: subscription.Conditions,
+				CreatedAt: subscription.CreatedAt,
+				Transport: SubscriptionTransport{
+					Method:      "websocket",
+					SessionID:   fmt.Sprintf("%v_%v", server.ServerId, clientName),
+					ConnectedAt: client.ConnectedAtTimestamp,
+				},
+				Cost: 0,
 			},
-			Cost: 0,
 		},
 		Total:        0,
 		MaxTotalCost: 10,
@@ -519,7 +525,7 @@ func handlerResponseErrorUnauthorized(w http.ResponseWriter, message string) {
 func handlerResponseErrorConflict(w http.ResponseWriter, message string) {
 	w.WriteHeader(http.StatusConflict)
 	bytes, _ := json.Marshal(&SubscriptionPostErrorResponse{
-		Error:   "Unauthorized",
+		Error:   "Conflict",
 		Message: message,
 		Status:  409,
 	})
