@@ -1,5 +1,7 @@
 package mock_server
 
+import "github.com/twitchdev/twitch-cli/internal/models"
+
 type Subscription struct {
 	SubscriptionID    string // Random GUID for the subscription
 	ClientID          string // Client ID included in headers
@@ -8,14 +10,16 @@ type Subscription struct {
 	CreatedAt         string // Timestamp of when the subscription was created
 	Status            string // Status of the subscription
 	SessionClientName string // Client name of the session this is associated with.
+
+	Conditions models.EventsubCondition // Values of the subscription's condition object
 }
 
 // Request - POST /eventsub/subscriptions
 type SubscriptionPostRequest struct {
-	Type      string      `json:"type"`
-	Version   string      `json:"version"`
-	Condition interface{} `json:"condition"`
+	Type    string `json:"type"`
+	Version string `json:"version"`
 
+	Condition models.EventsubCondition         `json:"condition"`
 	Transport SubscriptionPostRequestTransport `json:"transport"`
 }
 
@@ -44,8 +48,8 @@ type SubscriptionPostSuccessResponseBody struct {
 	CreatedAt string `json:"created_at"`
 	Cost      int    `json:"cost"`
 
-	Condition EmptyStruct           `json:"condition"`
-	Transport SubscriptionTransport `json:"transport"`
+	Condition models.EventsubCondition `json:"condition"`
+	Transport SubscriptionTransport    `json:"transport"`
 }
 
 // Response (Error) - POST /eventsub/subscriptions
@@ -69,7 +73,7 @@ type SubscriptionGetSuccessResponse struct {
 type SubscriptionTransport struct {
 	Method      string `json:"method"`
 	SessionID   string `json:"session_id"`
-	ConnectedAt string `json:"connected_at"`
+	ConnectedAt string `json:"connected_at,omitempty"`
 }
 
 // Cross-usage
@@ -112,6 +116,8 @@ func getStatusFromCloseMessage(reason *CloseMessage) string {
 	code := reason.code
 
 	switch code {
+	case 1000:
+		return STATUS_WEBSOCKET_DISCONNECTED
 	case 4000:
 		return STATUS_INTERNAL_ERROR
 	case 4001:

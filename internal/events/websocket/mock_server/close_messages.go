@@ -6,6 +6,11 @@ type CloseMessage struct {
 }
 
 var (
+	closeClientDisconnected = &CloseMessage{
+		code:    1000,
+		message: "client disconnected",
+	}
+
 	closeInternalServerError = &CloseMessage{
 		code:    4000,
 		message: "internal server error",

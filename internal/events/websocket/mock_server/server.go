@@ -223,8 +223,8 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 			log.Printf("read err [%v]: %v", client.clientName, err)
 
 			ws.muClients.Lock()
-			client.CloseWithReason(closeNetworkError)
-			ws.handleClientConnectionClose(client, closeNetworkError)
+			client.CloseWithReason(closeClientDisconnected)
+			ws.handleClientConnectionClose(client, closeClientDisconnected)
 			ws.muClients.Unlock()
 			break
 		}
@@ -488,9 +488,9 @@ func (ws *WebSocketServer) handleClientConnectionClose(client *Client, closeReas
 	if ws.Status == 2 {
 		ws.muSubscriptions.Lock()
 		subscriptions := ws.Subscriptions[client.clientName]
-		for _, subscription := range subscriptions {
-			if subscription.Status == STATUS_ENABLED {
-				subscription.Status = getStatusFromCloseMessage(closeReason)
+		for i := range subscriptions {
+			if subscriptions[i].Status == STATUS_ENABLED {
+				subscriptions[i].Status = getStatusFromCloseMessage(closeReason)
 			}
 		}
 		ws.Subscriptions[client.clientName] = subscriptions
