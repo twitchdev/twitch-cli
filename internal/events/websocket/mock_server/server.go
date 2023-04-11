@@ -491,6 +491,8 @@ func (ws *WebSocketServer) handleClientConnectionClose(client *Client, closeReas
 		for i := range subscriptions {
 			if subscriptions[i].Status == STATUS_ENABLED {
 				subscriptions[i].Status = getStatusFromCloseMessage(closeReason)
+				subscriptions[i].ClientConnectedAt = ""
+				subscriptions[i].ClientDisconnectedAt = time.Now().UTC().Format(time.RFC3339Nano)
 			}
 		}
 		ws.Subscriptions[client.clientName] = subscriptions

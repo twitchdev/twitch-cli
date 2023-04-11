@@ -272,8 +272,10 @@ func subscriptionPageHandlerGet(w http.ResponseWriter, r *http.Request) {
 					Condition: subscription.Conditions,
 					CreatedAt: subscription.CreatedAt,
 					Transport: SubscriptionTransport{
-						Method:    "websocket",
-						SessionID: fmt.Sprintf("%v_%v", server.ServerId, clientName),
+						Method:         "websocket",
+						SessionID:      fmt.Sprintf("%v_%v", server.ServerId, clientName),
+						ConnectedAt:    subscription.ClientConnectedAt,
+						DisconnectedAt: subscription.ClientDisconnectedAt,
 					},
 					Cost: 0,
 				})
@@ -379,6 +381,7 @@ func subscriptionPageHandlerPost(w http.ResponseWriter, r *http.Request) {
 		Status:            STATUS_ENABLED, // https://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions
 		SessionClientName: clientName,
 		Conditions:        body.Condition,
+		ClientConnectedAt: client.ConnectedAtTimestamp,
 	}
 
 	var subs []Subscription

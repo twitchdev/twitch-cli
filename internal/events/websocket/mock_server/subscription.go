@@ -11,6 +11,9 @@ type Subscription struct {
 	Status            string // Status of the subscription
 	SessionClientName string // Client name of the session this is associated with.
 
+	ClientConnectedAt    string // Time client connected
+	ClientDisconnectedAt string // Time client disconnected
+
 	Conditions models.EventsubCondition // Values of the subscription's condition object
 }
 
@@ -71,9 +74,10 @@ type SubscriptionGetSuccessResponse struct {
 
 // Cross-usage
 type SubscriptionTransport struct {
-	Method      string `json:"method"`
-	SessionID   string `json:"session_id"`
-	ConnectedAt string `json:"connected_at,omitempty"`
+	Method         string `json:"method"`
+	SessionID      string `json:"session_id"`
+	ConnectedAt    string `json:"connected_at,omitempty"`
+	DisconnectedAt string `json:"disconnected_at,omitempty"`
 }
 
 // Cross-usage
