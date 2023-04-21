@@ -35,7 +35,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	var err error
 	var cursor string
 
-	isExtensionsEndpoint := false // https://github.com/twitchdev/twitch-cli/issues/157
+	isExtensionsLiveEndpoint := false // https://github.com/twitchdev/twitch-cli/issues/157
 
 	data.Data = make([]interface{}, 0)
 	client, err := GetClientInformation()
@@ -104,20 +104,26 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		}
 		if strings.Contains(u.String(), "extensions/live") {
 			// https://github.com/twitchdev/twitch-cli/issues/157
-			isExtensionsEndpoint = true
+			isExtensionsLiveEndpoint = true
 			var extensionsBody models.ExtensionAPIResponse
 			err = json.Unmarshal(resp.Body, &extensionsBody)
 			if err != nil {
 				fmt.Printf("Error unmarshalling body: %v", err)
 				return
 			}
+
+			var cursor string = ""
+			if extensionsBody.Pagination != nil {
+				cursor = *extensionsBody.Pagination
+			}
+
 			apiResponse = models.APIResponse{
 				Data:    extensionsBody.Data,
 				Status:  extensionsBody.Status,
 				Error:   extensionsBody.Error,
 				Message: extensionsBody.Message,
 				Pagination: &models.APIPagination{
-					Cursor: *extensionsBody.Pagination,
+					Cursor: cursor,
 				},
 			}
 		} else {
@@ -175,12 +181,17 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		data.Data = make([]interface{}, 0)
 	}
 	// handle json marshalling better; returns empty slice vs. null
-	if !strings.Contains(path, "schedule") && len(data.Data.([]interface{})) == 0 && data.Error == "" {
+	_, isInterface := data.Data.([]interface{})
+	if isInterface && !strings.Contains(path, "schedule") && len(data.Data.([]interface{})) == 0 && data.Error == "" {
 		data.Data = make([]interface{}, 0)
+	}
+	_, isStringMap := data.Data.(map[string]any)
+	if isStringMap && !strings.Contains(path, "schedule") && len(data.Data.(map[string]any)) == 0 && data.Error == "" {
+		data.Data = make(map[string]any, 0)
 	}
 
 	var d []byte
-	if isExtensionsEndpoint {
+	if isExtensionsLiveEndpoint {
 		extensionBody := models.ExtensionAPIResponse{
 			Data:       data.Data,
 			Pagination: &data.Pagination.Cursor,
