@@ -111,13 +111,19 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 				fmt.Printf("Error unmarshalling body: %v", err)
 				return
 			}
+
+			var cursor string = ""
+			if extensionsBody.Pagination != nil {
+				cursor = *extensionsBody.Pagination
+			}
+
 			apiResponse = models.APIResponse{
 				Data:    extensionsBody.Data,
 				Status:  extensionsBody.Status,
 				Error:   extensionsBody.Error,
 				Message: extensionsBody.Message,
 				Pagination: &models.APIPagination{
-					Cursor: *extensionsBody.Pagination,
+					Cursor: cursor,
 				},
 			}
 		} else {
