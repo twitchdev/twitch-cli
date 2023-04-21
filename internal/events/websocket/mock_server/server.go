@@ -175,7 +175,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 			case <-client.keepAliveLoopChan:
 				client.keepAliveTimer.Stop()
 				client.keepAliveLoopChan = nil
-				break
+				return
 
 			case <-client.keepAliveTimer.C: // Send KeepAlive message
 				keepAliveMsg, _ := json.Marshal(
@@ -207,7 +207,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 			case <-client.pingLoopChan:
 				client.pingTimer.Stop()
 				client.pingLoopChan = nil
-				break
+				return
 
 			case <-client.pingTimer.C: // Send ping
 				err := client.SendMessage(websocket.PingMessage, []byte{})
