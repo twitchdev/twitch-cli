@@ -161,17 +161,21 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 	client.pingLoopChan = make(chan struct{})
 	client.keepAliveChanOpen = true
 	client.pingChanOpen = true
-	go func() {
-		// Set pong handler. Resets the read deadline when pong is received.
-		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
-			return nil
-		})
 
+	// Set pong handler. Resets the read deadline when pong is received.
+	conn.SetPongHandler(func(string) error {
+		conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
+		return nil
+	})
+
+	// Keep Alive message loop
+	go func() {
 		for {
 			select {
 			case <-client.keepAliveLoopChan:
 				client.keepAliveTimer.Stop()
+				client.keepAliveLoopChan = nil
+				return
 
 			case <-client.keepAliveTimer.C: // Send KeepAlive message
 				keepAliveMsg, _ := json.Marshal(
@@ -192,9 +196,18 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 				if ws.DebugEnabled {
 					log.Printf("Sent session_keepalive to client [%s]", client.clientName)
 				}
+			}
+		}
+	}()
 
+	// Ping/pong handler loop
+	go func() {
+		for {
+			select {
 			case <-client.pingLoopChan:
 				client.pingTimer.Stop()
+				client.pingLoopChan = nil
+				return
 
 			case <-client.pingTimer.C: // Send ping
 				err := client.SendMessage(websocket.PingMessage, []byte{})

@@ -6,6 +6,7 @@ Thanks for helping make the Twitch CLI better!
   - [Report an Issue](#report-an-issue)
   - [Contributing Code with Pull Requests](#contributing-code-with-pull-requests)
     - [Requirements](#requirements)
+    - [Profiling](#profiling)
   - [Code of Conduct](#code-of-conduct)
   - [Licensing](#licensing)
 
@@ -46,6 +47,11 @@ The Twitch CLI strives to have a consistent set of documentation that matches th
 As noted in the [README](./README.md), all commands follow the following structure: `twitch <product> <action>`. Each product should live within it's own file in the `cmd` directory, with the applicable actions within it. The logic is then split into the `internal` directory. 
 
 Some commands may not be part of a designated product (for example, the `token` and `version` commands) - if you are building functionality that is not tied to a Twitch product, please open the PR to discuss further. 
+
+### Profiling
+
+The Twitch CLI makes use of [pprof](https://github.com/google/pprof) for CPU profiling. This can be enabled on any system by setting the environment variable `TWITCH_CLI_ENABLE_CPU_PROFILER` to `true`. 
+By default, the CPU profile will be written to your system as `cpu.prof` when the program exits. This filename can be modified with the environment variable `TWITCH_CLI_CPU_PROFILER_FILE`. 
 
 ## Code of Conduct
 
