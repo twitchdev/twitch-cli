@@ -27,3 +27,7 @@ twitch-cli
 *.crt
 *.csr
 *.key
+
+# Go profiler
+*.prof
+*.prof.gz
