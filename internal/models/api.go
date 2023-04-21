@@ -3,7 +3,7 @@
 package models
 
 type APIResponse struct {
-	Data       interface{}               `json:"data,omitempty"`
+	Data       any                       `json:"data,omitempty"`
 	Pagination *APIPagination            `json:"pagination,omitempty"`
 	Error      string                    `json:"error,omitempty"`
 	Status     int                       `json:"status,omitempty"`
@@ -22,7 +22,7 @@ type BitsLeaderboardDateRange struct {
 	EndedAt   string `json:"ended_at"`
 }
 
-type ExtensionAPIResponse struct {
+type ExtensionAPIResponse struct { // extensions/live
 	Data       interface{} `json:"data,omitempty"`
 	Pagination *string     `json:"pagination,omitempty"`
 	Error      string      `json:"error,omitempty"`
