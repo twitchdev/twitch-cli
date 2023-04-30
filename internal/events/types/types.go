@@ -132,11 +132,11 @@ func GetByTriggerAndTransportAndVersion(trigger string, transport string, versio
 		return latestEventSeen, nil
 	}
 
-	// Error for events with non-existent verison used
+	// Error for events with non-existent version used
 	if len(validEventBadVersions) != 0 {
 		errStr := fmt.Sprintf("Invalid version given. Valid version(s): %v", strings.Join(validEventBadVersions, ", "))
 		if version == "" {
-			errStr += "\nUse --verison to specify"
+			errStr += "\nUse --version to specify"
 		}
 		return nil, errors.New(errStr)
 	}
