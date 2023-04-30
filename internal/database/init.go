@@ -41,7 +41,7 @@ CREATE TABLE chat_settings( broadcaster_id text not null primary key, slow_mode 
 INSERT INTO chat_settings (broadcaster_id) SELECT id FROM users;
 ALTER TABLE users ADD COLUMN chat_color text not null default '#9146FF';
 CREATE TABLE vips ( broadcaster_id text not null, user_id text not null, created_at text not null default '', primary key (broadcaster_id, user_id), foreign key (broadcaster_id) references users(id), foreign key (user_id) references users(id) );`,
-		Message: `Updating database to include API changes since last verison. See Twitch CLI changelog for more info.`,
+		Message: `Updating database to include API changes since last version. See Twitch CLI changelog for more info.`,
 	},
 }
 
