@@ -73,7 +73,8 @@ var triggerCmd = &cobra.Command{
 	%s`, types.AllWebhookTopics()),
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: types.AllWebhookTopics(),
-	Run:       triggerCmdRun,
+	PreRun:    silenceBeforeRunE,
+	RunE:      triggerCmdRun,
 	Example:   `twitch event trigger subscribe`,
 	Aliases: []string{
 		"fire", "emit",
@@ -88,7 +89,8 @@ var verifyCmd = &cobra.Command{
 	%s`, types.AllWebhookTopics()),
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: types.AllWebhookTopics(),
-	Run:       verifyCmdRun,
+	PreRun:    silenceBeforeRunE,
+	RunE:      verifyCmdRun,
 	Example:   `twitch event verify-subscription subscribe`,
 	Aliases: []string{
 		"verify",
@@ -96,11 +98,12 @@ var verifyCmd = &cobra.Command{
 }
 
 var websocketCmd = &cobra.Command{
-	Use:   "websocket [action]",
-	Short: `Executes actions regarding the mock EventSub WebSocket server. See "twitch event websocket --help" for usage info.`,
-	Long:  fmt.Sprintf(`Executes actions regarding the mock EventSub WebSocket server.`),
-	Args:  cobra.MaximumNArgs(1),
-	Run:   websocketCmdRun,
+	Use:    "websocket [action]",
+	Short:  `Executes actions regarding the mock EventSub WebSocket server. See "twitch event websocket --help" for usage info.`,
+	Long:   fmt.Sprintf(`Executes actions regarding the mock EventSub WebSocket server.`),
+	Args:   cobra.MaximumNArgs(1),
+	PreRun: silenceBeforeRunE,
+	RunE:   websocketCmdRun,
 	Example: fmt.Sprintf(`  twitch event websocket start-server
   twitch event websocket reconnect
   twitch event websocket close --session=e411cc1e_a2613d4e --reason=4006
@@ -116,13 +119,20 @@ var websocketCmd = &cobra.Command{
 var retriggerCmd = &cobra.Command{
 	Use:     "retrigger",
 	Short:   "Refires events based on the event ID. Can be forwarded to the local webserver for event testing.",
-	Run:     retriggerCmdRun,
+	PreRun:  silenceBeforeRunE,
+	RunE:    retriggerCmdRun,
 	Example: `twitch event retrigger subscribe`,
 }
 
 var startWebsocketServerCmd = &cobra.Command{
 	Use:        "start-websocket-server",
 	Deprecated: `use "twitch event websocket start-server" instead.`,
+}
+
+// This is required with commands that use RunE to solve the issues described below
+func silenceBeforeRunE(cmd *cobra.Command, args []string) {
+	cmd.SilenceErrors = true // Prevents printing the help message after an error occurs
+	cmd.SilenceUsage = true  // Prevents printing the error message; This is already done in root.go[cmd.Execute()]
 }
 
 func init() {
@@ -190,28 +200,25 @@ func init() {
 	websocketCmd.Flags().StringVar(&wsReason, "reason", "", `Sets the close reason when sending a Close message to the client. Used with "websocket close".`)
 }
 
-func triggerCmdRun(cmd *cobra.Command, args []string) {
+func triggerCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		cmd.Help()
-		return
+		return fmt.Errorf("")
 	}
 
 	if transport == "websub" {
-		fmt.Println(websubDeprecationNotice)
-		return
+		return fmt.Errorf(websubDeprecationNotice)
 	}
 
 	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
-		fmt.Println("Invalid secret provided. Secrets must be between 10-100 characters")
-		return
+		return fmt.Errorf("Invalid secret provided. Secrets must be between 10-100 characters")
 	}
 
 	// Validate that the forward address is actually a URL
 	if len(forwardAddress) > 0 {
 		_, err := url.ParseRequestURI(forwardAddress)
 		if err != nil {
-			fmt.Println(err)
-			return
+			return err
 		}
 	}
 
@@ -243,23 +250,22 @@ func triggerCmdRun(cmd *cobra.Command, args []string) {
 		})
 
 		if err != nil {
-			println(err.Error())
-			return
+			return err
 		}
 
 		fmt.Println(res)
 	}
+
+	return nil
 }
 
-func retriggerCmdRun(cmd *cobra.Command, args []string) {
+func retriggerCmdRun(cmd *cobra.Command, args []string) error {
 	if transport == "websub" {
-		fmt.Println(websubDeprecationNotice)
-		return
+		return fmt.Errorf(websubDeprecationNotice)
 	}
 
 	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
-		fmt.Println("Invalid secret provided. Secrets must be between 10-100 characters")
-		return
+		return fmt.Errorf("Invalid secret provided. Secrets must be between 10-100 characters")
 	}
 
 	res, err := trigger.RefireEvent(eventID, trigger.TriggerParameters{
@@ -268,35 +274,32 @@ func retriggerCmdRun(cmd *cobra.Command, args []string) {
 		Timestamp:      util.GetTimestamp().Format(time.RFC3339Nano),
 	})
 	if err != nil {
-		fmt.Printf("Error refiring event: %s", err)
-		return
+		return fmt.Errorf("Error refiring event: %s", err)
 	}
 
 	fmt.Println(res)
+	return nil
 }
 
-func verifyCmdRun(cmd *cobra.Command, args []string) {
+func verifyCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		cmd.Help()
-		return
+		return fmt.Errorf("")
 	}
 
 	if transport == "websub" {
-		fmt.Println(websubDeprecationNotice)
-		return
+		return fmt.Errorf(websubDeprecationNotice)
 	}
 
 	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
-		fmt.Println("Invalid secret provided. Secrets must be between 10-100 characters")
-		return
+		return fmt.Errorf("Invalid secret provided. Secrets must be between 10-100 characters")
 	}
 
 	// Validate that the forward address is actually a URL
 	if len(forwardAddress) > 0 {
 		_, err := url.ParseRequestURI(forwardAddress)
 		if err != nil {
-			fmt.Println(err)
-			return
+			return err
 		}
 	}
 
@@ -306,11 +309,10 @@ func verifyCmdRun(cmd *cobra.Command, args []string) {
 		// Verify custom timestamp
 		_, err := time.Parse(time.RFC3339Nano, timestamp)
 		if err != nil {
-			fmt.Println(
+			return fmt.Errorf(
 				`Discarding verify: Invalid timestamp provided.
 Please follow RFC3339Nano, which is used by Twitch as seen here:
 https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`)
-			return
 		}
 	}
 
@@ -324,15 +326,16 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 	})
 
 	if err != nil {
-		println(err.Error())
-		return
+		return err
 	}
+
+	return nil
 }
 
-func websocketCmdRun(cmd *cobra.Command, args []string) {
+func websocketCmdRun(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		cmd.Help()
-		return
+		return fmt.Errorf("")
 	}
 
 	if args[0] == "start-server" || args[0] == "start" {
@@ -341,11 +344,15 @@ func websocketCmdRun(cmd *cobra.Command, args []string) {
 		mock_server.StartWebsocketServer(wsDebug, wsServerIP, wsServerPort, wsSSL, wsStrict)
 	} else {
 		// Forward all other commands via RPC
-		websocket.ForwardWebsocketCommand(args[0], websocket.WebsocketCommandParameters{
+		err := websocket.ForwardWebsocketCommand(args[0], websocket.WebsocketCommandParameters{
 			Client:             wsClient,
 			Subscription:       wsSubscription,
 			SubscriptionStatus: wsStatus,
 			CloseReason:        wsReason,
 		})
+
+		return err
 	}
+
+	return nil
 }
