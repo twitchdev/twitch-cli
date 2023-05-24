@@ -39,9 +39,10 @@ func RPCReconnectHandler(args rpc.RPCArgs) rpc.RPCResponse {
 	log.Printf("Initiating reconnect testing...")
 
 	if serverManager.reconnectTesting {
-		log.Printf("Error on RPC call (EventSubWebSocketReconnect): Cannot execute reconnect testing while its already in progress. Aborting.")
+		log.Printf("Error on RPC call (EventSubWebSocketReconnect): Cannot execute reconnect testing while its already in progress. Discarding duplicate reconnect command.")
 		return rpc.RPCResponse{
 			ResponseCode: COMMAND_RESPONSE_FAILED_ON_SERVER,
+			DetailedInfo: "Error on RPC call (EventSubWebSocketReconnect): Cannot execute reconnect testing while its already in progress. Discarding duplicate reconnect command.",
 		}
 	}
 
@@ -51,6 +52,7 @@ func RPCReconnectHandler(args rpc.RPCArgs) rpc.RPCResponse {
 		log.Printf("Error on RPC call (EventSubWebSocketReconnect): Primary server not in server list.")
 		return rpc.RPCResponse{
 			ResponseCode: COMMAND_RESPONSE_FAILED_ON_SERVER,
+			DetailedInfo: "Error on RPC call (EventSubWebSocketReconnect): Primary server not in server list.",
 		}
 	}
 
@@ -111,6 +113,7 @@ func RPCFireEventSubHandler(args rpc.RPCArgs) rpc.RPCResponse {
 		log.Printf("Error on RPC call (EventSubWebSocketForwardEvent): Primary server not in server list.")
 		return rpc.RPCResponse{
 			ResponseCode: COMMAND_RESPONSE_FAILED_ON_SERVER,
+			DetailedInfo: "Primary server not in server list.",
 		}
 	}
 
@@ -234,7 +237,7 @@ func RPCSubscriptionHandler(args rpc.RPCArgs) rpc.RPCResponse {
 		log.Printf("Error on RPC call (EventSubWebSocketSubscription): Primary server not in server list.")
 		return rpc.RPCResponse{
 			ResponseCode: COMMAND_RESPONSE_FAILED_ON_SERVER,
-			DetailedInfo: "See server console for more details.",
+			DetailedInfo: "Primary server not in server list.",
 		}
 	}
 

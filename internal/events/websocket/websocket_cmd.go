@@ -50,7 +50,7 @@ func ForwardWebsocketCommand(cmd string, p WebsocketCommandParameters) error {
 
 	switch reply.ResponseCode {
 	case mock_server.COMMAND_RESPONSE_SUCCESS:
-		color.New().Add(color.FgGreen).Println(fmt.Sprintf("✔ Forwarded for use in mock EventSub WebSocket server"))
+		color.New().Add(color.FgGreen).Println(fmt.Sprintf("✔ Forwarded for use in mock EventSub WebSocket server\n"))
 		return nil
 
 	case mock_server.COMMAND_RESPONSE_FAILED_ON_SERVER:
