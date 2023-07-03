@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -33,35 +34,35 @@ var getCmd = &cobra.Command{
 	Short:     "Performs a GET request on the specified command.",
 	Args:      cobra.MaximumNArgs(3),
 	ValidArgs: api.ValidOptions("GET"),
-	Run:       cmdRun,
+	RunE:      cmdRun,
 }
 var postCmd = &cobra.Command{
 	Use:       "post",
 	Short:     "Performs a POST request on the specified command.",
 	Args:      cobra.MaximumNArgs(3),
 	ValidArgs: api.ValidOptions("POST"),
-	Run:       cmdRun,
+	RunE:      cmdRun,
 }
 var patchCmd = &cobra.Command{
 	Use:       "patch",
 	Short:     "Performs a PATCH request on the specified command.",
 	Args:      cobra.MaximumNArgs(3),
 	ValidArgs: api.ValidOptions("PATCH"),
-	Run:       cmdRun,
+	RunE:      cmdRun,
 }
 var deleteCmd = &cobra.Command{
 	Use:       "delete",
 	Short:     "Performs a DELETE request on the specified command.",
 	Args:      cobra.MaximumNArgs(3),
 	ValidArgs: api.ValidOptions("DELETE"),
-	Run:       cmdRun,
+	RunE:      cmdRun,
 }
 var putCmd = &cobra.Command{
 	Use:       "put",
 	Short:     "Performs a PUT request on the specified command.",
 	Args:      cobra.MaximumNArgs(3),
 	ValidArgs: api.ValidOptions("PUT"),
-	Run:       cmdRun,
+	RunE:      cmdRun,
 }
 
 var mockCmd = &cobra.Command{
@@ -72,13 +73,13 @@ var mockCmd = &cobra.Command{
 var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Used to start the server for the mock API.",
-	Run:   mockStartRun,
+	RunE:  mockStartRun,
 }
 
 var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Used to randomly generate data for use with the mock API. By default, this is run on the first invocation of the start command, however this allows you to generate further primitives.",
-	Run:   generateMockRun,
+	RunE:  generateMockRun,
 }
 
 func init() {
@@ -105,12 +106,12 @@ func init() {
 	generateCmd.Flags().IntVarP(&generateCount, "count", "c", 25, "Defines the number of fake users to generate.")
 }
 
-func cmdRun(cmd *cobra.Command, args []string) {
+func cmdRun(cmd *cobra.Command, args []string) error {
 	var path string
 
 	if len(args) == 0 {
 		cmd.Help()
-		return
+		return fmt.Errorf("")
 	} else if len(args) == 1 && args[0][:1] == "/" {
 		path = args[0]
 	} else {
@@ -118,31 +119,35 @@ func cmdRun(cmd *cobra.Command, args []string) {
 	}
 
 	if body != "" && body[:1] == "@" {
-		body = getBodyFromFile(body[1:])
+		var err error
+		body, err = getBodyFromFile(body[1:])
+		if err != nil {
+			return err
+		}
 	}
 
 	if cmd.Name() == "get" && cmd.PersistentFlags().Lookup("autopaginate").Changed {
-		api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, &autoPaginate)
+		return api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, &autoPaginate)
 	} else {
-		api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, nil) // only set on when the user changed the flag
+		return api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, nil) // only set on when the user changed the flag
 	}
-
 }
 
-func getBodyFromFile(filename string) string {
+func getBodyFromFile(filename string) (string, error) {
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	return string(content)
+	return string(content), nil
 }
 
-func mockStartRun(cmd *cobra.Command, args []string) {
+func mockStartRun(cmd *cobra.Command, args []string) error {
 	log.Printf("Starting mock API server on http://localhost:%v", port)
-	mock_server.StartServer(port)
+	return mock_server.StartServer(port)
 }
 
-func generateMockRun(cmd *cobra.Command, args []string) {
+func generateMockRun(cmd *cobra.Command, args []string) error {
 	generate.Generate(generateCount)
+	return nil
 }

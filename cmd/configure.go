@@ -5,7 +5,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/twitchdev/twitch-cli/internal/util"
 
@@ -21,7 +20,7 @@ var clientSecret string
 var configureCmd = &cobra.Command{
 	Use:   "configure",
 	Short: "Configures your Twitch CLI with your Client ID and Secret",
-	Run:   configureCmdRun,
+	RunE:  configureCmdRun,
 }
 
 func init() {
@@ -31,7 +30,7 @@ func init() {
 	configureCmd.Flags().StringVarP(&clientSecret, "client-secret", "s", "", "Client Secret to use.")
 }
 
-func configureCmdRun(cmd *cobra.Command, args []string) {
+func configureCmdRun(cmd *cobra.Command, args []string) error {
 	var err error
 	if clientID == "" {
 		clientIDPrompt := promptui.Prompt{
@@ -62,8 +61,7 @@ func configureCmdRun(cmd *cobra.Command, args []string) {
 	}
 
 	if clientID == "" && clientSecret == "" {
-		fmt.Println("Must specify either the Client ID or Secret")
-		return
+		return fmt.Errorf("Must specify either the Client ID or Secret")
 	}
 
 	viper.Set("clientId", clientID)
@@ -71,13 +69,13 @@ func configureCmdRun(cmd *cobra.Command, args []string) {
 
 	configPath, err := util.GetConfigPath()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if err := viper.WriteConfigAs(configPath); err != nil {
-		log.Fatalf("Failed to write configuration: %v", err.Error())
+		fmt.Errorf("Failed to write configuration: %v", err.Error())
 	}
 
 	fmt.Println("Updated configuration.")
-	return
+	return nil
 }

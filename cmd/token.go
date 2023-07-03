@@ -23,7 +23,7 @@ var tokenServerIP string
 var loginCmd = &cobra.Command{
 	Use:   "token",
 	Short: "Logs into Twitch and returns an access token according to your client id/secret in the configuration.",
-	Run:   loginCmdRun,
+	RunE:  loginCmdRun,
 }
 
 func init() {
@@ -37,7 +37,7 @@ func init() {
 	loginCmd.Flags().IntVarP(&tokenServerPort, "port", "p", 3000, "Manually set the port to be used for the User Token web server.")
 }
 
-func loginCmdRun(cmd *cobra.Command, args []string) {
+func loginCmdRun(cmd *cobra.Command, args []string) error {
 	clientID = viper.GetString("clientId")
 	clientSecret = viper.GetString("clientSecret")
 
@@ -74,4 +74,6 @@ func loginCmdRun(cmd *cobra.Command, args []string) {
 		p.URL = login.ClientCredentialsURL
 		login.ClientCredentialsLogin(p)
 	}
+
+	return nil
 }

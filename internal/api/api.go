@@ -30,7 +30,7 @@ type clientInformation struct {
 }
 
 // NewRequest is used to request data from the Twitch API using a HTTP GET request- this function is a wrapper for the apiRequest function that handles the network call
-func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool, autopaginate *int) {
+func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool, autopaginate *int) error {
 	var data models.APIResponse
 	var err error
 	var cursor string
@@ -40,13 +40,11 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	data.Data = make([]interface{}, 0)
 	client, err := GetClientInformation()
 	if err != nil {
-		fmt.Println("Error fetching client information", err.Error())
-		return
+		return fmt.Errorf("Error fetching client information", err.Error())
 	}
 
 	if autopaginate != nil && *autopaginate < 0 {
-		fmt.Println("Invalid pagination value provided. Must be greater than or equal to 0.")
-		return
+		return fmt.Errorf("Invalid pagination value provided. Must be greater than or equal to 0.")
 	}
 
 	if viper.GetString("BASE_URL") != "" {
@@ -59,8 +57,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 
 		u, err := url.Parse(baseURL + path)
 		if err != nil {
-			fmt.Printf("Error getting url: %v", err)
-			return
+			return fmt.Errorf("Error getting url: %v", err)
 		}
 
 		q := u.Query()
@@ -94,22 +91,20 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 			Token:    client.Token,
 		})
 		if err != nil {
-			fmt.Printf("Error reading body: %v", err)
-			return
+			return fmt.Errorf("Error reading body: %v", err)
 		}
 
 		if resp.StatusCode == http.StatusNoContent {
-			fmt.Println("Endpoint responded with status 204")
-			return
+			return fmt.Errorf("Endpoint responded with status 204")
 		}
+
 		if strings.Contains(u.String(), "extensions/live") {
 			// https://github.com/twitchdev/twitch-cli/issues/157
 			isExtensionsLiveEndpoint = true
 			var extensionsBody models.ExtensionAPIResponse
 			err = json.Unmarshal(resp.Body, &extensionsBody)
 			if err != nil {
-				fmt.Printf("Error unmarshalling body: %v", err)
-				return
+				return fmt.Errorf("Error unmarshalling body: %v", err)
 			}
 
 			var cursor string = ""
@@ -129,8 +124,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		} else {
 			err = json.Unmarshal(resp.Body, &apiResponse)
 			if err != nil {
-				fmt.Printf("Error unmarshalling body: %v", err)
-				return
+				return fmt.Errorf("Error unmarshalling body: %v", err)
 			}
 		}
 
@@ -201,14 +195,12 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		}
 		d, err = json.Marshal(extensionBody)
 		if err != nil {
-			log.Printf("Error marshalling json: %v", err)
-			return
+			return fmt.Errorf("Error marshalling json: %v", err)
 		}
 	} else {
 		d, err = json.Marshal(data)
 		if err != nil {
-			log.Printf("Error marshalling json: %v", err)
-			return
+			return fmt.Errorf("Error marshalling json: %v", err)
 		}
 	}
 
@@ -218,8 +210,13 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		// since Command Prompt/Powershell don't support coloring, will pretty print without colors
 		if runtime.GOOS == "windows" {
 			s, _ := json.MarshalIndent(obj, "", "  ")
-			fmt.Println(string(s))
-			return
+			if data.Error == "" {
+				fmt.Println(string(s))
+			} else {
+				return fmt.Errorf(string(s))
+			}
+
+			return nil
 		}
 
 		f := colorjson.NewFormatter()
@@ -227,14 +224,24 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		f.KeyColor = color.New(color.FgBlue).Add(color.Bold)
 		s, err := f.Marshal(obj)
 		if err != nil {
-			fmt.Println(err)
-			return
+			return err
 		}
-		fmt.Println(string(s))
-		return
+		if data.Error == "" {
+			fmt.Println(string(s))
+		} else {
+			return fmt.Errorf(string(s))
+		}
+		return nil
 	}
 
-	fmt.Println(string(d))
+	if data.Error == "" {
+		fmt.Println(string(d))
+	} else {
+		return fmt.Errorf(string(d))
+	}
+
+	fmt.Printf("done")
+	return nil
 }
 
 // ValidOptions returns a list of supported endpoints given a specified method as noted in the map endpointMethodSupports, which is located in resources.go of this package.

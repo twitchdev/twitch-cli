@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
@@ -24,15 +25,14 @@ const MOCK_NAMESPACE = "/mock"
 const UNITS_NAMESPACE = "/units"
 const AUTH_NAMESPACE = "/auth"
 
-func StartServer(port int) {
+func StartServer(port int) error {
 	m := http.NewServeMux()
 
 	ctx := context.Background()
 
 	db, err := database.NewConnection()
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err.Error())
-		return
+		return fmt.Errorf("Error connecting to database: %v", err.Error())
 	}
 
 	firstTime := db.IsFirstRun()
@@ -40,7 +40,7 @@ func StartServer(port int) {
 	if firstTime {
 		err := generate.Generate(25)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 	}
 
@@ -57,16 +57,24 @@ func StartServer(port int) {
 	stop := make(chan os.Signal)
 	signal.Notify(stop, os.Interrupt)
 
+	var serverErr error = nil
+
 	go func() {
 		log.Print("Mock server started")
+
 		if err := s.ListenAndServe(); err != nil {
 			if err != http.ErrServerClosed {
-				log.Fatal(err)
+				serverErr = err
+				stop <- syscall.SIGINT // Simulate Ctrl+C
 			}
 		}
 	}()
 
 	<-stop
+
+	if serverErr != nil {
+		return serverErr
+	}
 
 	log.Print("shutting down ...\n")
 	db.DB.Close()
@@ -74,8 +82,10 @@ func StartServer(port int) {
 	defer cancel()
 
 	if err := s.Shutdown(ctx); err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
 
 func RegisterHandlers(m *http.ServeMux) {

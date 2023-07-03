@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/twitchdev/twitch-cli/internal/util"
 
 	"github.com/spf13/cobra"
@@ -12,8 +13,9 @@ import (
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Returns the current version of the CLI.",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("twitch-cli/" + util.GetVersion())
+		return nil
 	},
 }
 

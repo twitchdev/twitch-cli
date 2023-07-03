@@ -73,7 +73,6 @@ var triggerCmd = &cobra.Command{
 	%s`, types.AllWebhookTopics()),
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: types.AllWebhookTopics(),
-	PreRun:    silenceBeforeRunE,
 	RunE:      triggerCmdRun,
 	Example:   `twitch event trigger subscribe`,
 	Aliases: []string{
@@ -89,7 +88,6 @@ var verifyCmd = &cobra.Command{
 	%s`, types.AllWebhookTopics()),
 	Args:      cobra.MaximumNArgs(1),
 	ValidArgs: types.AllWebhookTopics(),
-	PreRun:    silenceBeforeRunE,
 	RunE:      verifyCmdRun,
 	Example:   `twitch event verify-subscription subscribe`,
 	Aliases: []string{
@@ -98,12 +96,11 @@ var verifyCmd = &cobra.Command{
 }
 
 var websocketCmd = &cobra.Command{
-	Use:    "websocket [action]",
-	Short:  `Executes actions regarding the mock EventSub WebSocket server. See "twitch event websocket --help" for usage info.`,
-	Long:   fmt.Sprintf(`Executes actions regarding the mock EventSub WebSocket server.`),
-	Args:   cobra.MaximumNArgs(1),
-	PreRun: silenceBeforeRunE,
-	RunE:   websocketCmdRun,
+	Use:   "websocket [action]",
+	Short: `Executes actions regarding the mock EventSub WebSocket server. See "twitch event websocket --help" for usage info.`,
+	Long:  fmt.Sprintf(`Executes actions regarding the mock EventSub WebSocket server.`),
+	Args:  cobra.MaximumNArgs(1),
+	RunE:  websocketCmdRun,
 	Example: fmt.Sprintf(`  twitch event websocket start-server
   twitch event websocket reconnect
   twitch event websocket close --session=e411cc1e_a2613d4e --reason=4006
@@ -119,7 +116,6 @@ var websocketCmd = &cobra.Command{
 var retriggerCmd = &cobra.Command{
 	Use:     "retrigger",
 	Short:   "Refires events based on the event ID. Can be forwarded to the local webserver for event testing.",
-	PreRun:  silenceBeforeRunE,
 	RunE:    retriggerCmdRun,
 	Example: `twitch event retrigger subscribe`,
 }
@@ -127,12 +123,6 @@ var retriggerCmd = &cobra.Command{
 var startWebsocketServerCmd = &cobra.Command{
 	Use:        "start-websocket-server",
 	Deprecated: `use "twitch event websocket start-server" instead.`,
-}
-
-// This is required with commands that use RunE to solve the issues described below
-func silenceBeforeRunE(cmd *cobra.Command, args []string) {
-	cmd.SilenceErrors = true // Prevents printing the help message after an error occurs
-	cmd.SilenceUsage = true  // Prevents printing the error message; This is already done in root.go[cmd.Execute()]
 }
 
 func init() {
