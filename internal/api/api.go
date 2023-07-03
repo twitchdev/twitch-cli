@@ -40,7 +40,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 	data.Data = make([]interface{}, 0)
 	client, err := GetClientInformation()
 	if err != nil {
-		return fmt.Errorf("Error fetching client information", err.Error())
+		return fmt.Errorf("Error fetching client information: %v", err.Error())
 	}
 
 	if autopaginate != nil && *autopaginate < 0 {
