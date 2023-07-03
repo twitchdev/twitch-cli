@@ -11,6 +11,8 @@
 
 The `event` product contains commands to trigger mock events for local webhook testing or migration.
 
+All commands exit the program with a non-zero exit code when the command fails, including when an event does not exist, or when the mock EventSub WebSocket server does not start correctly.
+
 ## Trigger
 
 Used to either create or send mock events for use with local webhooks testing.

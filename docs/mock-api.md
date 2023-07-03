@@ -24,6 +24,8 @@ The second is the actual server used to mock the endpoints. In the next iteratio
 
 As of the 1.1 release, this product is in an **open beta** and any bugs should be filed via GitHub Issues. Given the breadth of the tool, it is likely you may run across oddities; please fill out an issue if that is the case. 
 
+All commands exit the program with a non-zero exit code when the command fails, including when the mock API server fails to start.
+
 ## generate
 
 This command will generate a specified number of users with associated relationships (e.g. subscriptions/mods/blocks).

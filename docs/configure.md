@@ -6,6 +6,8 @@ This should be the first step if the intent is to use either of those functional
 
 If you'd prefer to not use the interactive shell, you can pass the settings via the below flags.
 
+All commands exit the program with a non-zero exit code when the command fails.
+
 **Args**
 
 None.
