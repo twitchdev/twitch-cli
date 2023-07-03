@@ -23,13 +23,13 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 
 	p.Transport = res.Transport
 
-	var previousEventObj models.EventsubSubscription
+	var previousEventObj models.EventsubResponse
 	err = json.Unmarshal([]byte(res.JSON), &previousEventObj)
 	if err != nil {
 		return "", fmt.Errorf("Unable to parse previous event's JSON from database: %v", err.Error())
 	}
 
-	e, err := types.GetByTriggerAndTransportAndVersion(res.Event, p.Transport, previousEventObj.Version)
+	e, err := types.GetByTriggerAndTransportAndVersion(res.Event, p.Transport, previousEventObj.Subscription.Version)
 	if err != nil {
 		return "", err
 	}
