@@ -72,7 +72,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 						ChannelPointsUsed: int(util.RandomInt(10*1000)) + 100,
 					}
 					sum += t.ChannelPointsUsed
-					if params.Trigger == "prediction-lock" || params.Trigger == "prediction-end" {
+					if params.Trigger == "prediction-end" {
 						if i == 0 {
 							t.ChannelPointsWon = intPointer(t.ChannelPointsUsed * 2)
 						} else {
