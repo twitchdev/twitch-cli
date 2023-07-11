@@ -38,6 +38,8 @@ func init() {
 		os.Exit(1)
 	}
 
+	rootCmd.SilenceErrors = true
+	rootCmd.SilenceUsage = true
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", fmt.Sprintf("config file (default is %s)", cfgFile))
 }
 

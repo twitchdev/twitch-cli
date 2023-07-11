@@ -13,6 +13,9 @@ The `api` product enables users to interact with the [Twitch API](https://dev.tw
 
 The format is `api <method> <url> <flags>`.
 
+All commands will exit with code 0 when the command is successful and the HTTP response is 2xx.  
+Commands will return a non-zero exit code when the command failed, or when the HTTP response is not 2xx (e.g. 400).
+
 ## Arguments
 
 All API commands accept one of two formats: 
