@@ -10,7 +10,12 @@ type ChannelUpdateEventSubEvent struct {
 	StreamLanguage       string `json:"language"`
 	StreamCategoryID     string `json:"category_id"`
 	StreamCategoryName   string `json:"category_name"`
-	IsMature             bool   `json:"is_mature"`
+
+	// v1
+	IsMature *bool `json:"is_mature,omitempty"`
+
+	// v2
+	ContentClassificationLabels []string `json:"content_classification_labels,omitempty"`
 }
 
 type ChannelUpdateEventSubResponse struct {
