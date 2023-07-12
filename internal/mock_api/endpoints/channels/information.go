@@ -5,7 +5,9 @@ package channels
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/mattn/go-sqlite3"
 	"github.com/twitchdev/twitch-cli/internal/database"
@@ -15,15 +17,18 @@ import (
 )
 
 type Channel struct {
-	ID           string   `db:"id" json:"broadcaster_id"`
-	UserLogin    string   `db:"user_login" json:"broadcaster_login"`
-	DisplayName  string   `db:"display_name" json:"broadcaster_name"`
-	CategoryID   string   `db:"category_id" json:"game_id"`
-	CategoryName string   `db:"category_name" json:"game_name" dbi:"false"`
-	Title        string   `db:"title" json:"title"`
-	Language     string   `db:"stream_language" json:"broadcaster_language"`
-	Delay        int      `dbi:"false" json:"delay"`
-	Tags         []string `dbi:"false" json:"tags"`
+	ID             string   `db:"id" json:"broadcaster_id"`
+	UserLogin      string   `db:"user_login" json:"broadcaster_login"`
+	DisplayName    string   `db:"display_name" json:"broadcaster_name"`
+	CategoryID     string   `db:"category_id" json:"game_id"`
+	CategoryName   string   `db:"category_name" json:"game_name" dbi:"false"`
+	Title          string   `db:"title" json:"title"`
+	Language       string   `db:"stream_language" json:"broadcaster_language"`
+	Delay          int      `dbi:"false" json:"delay"`
+	Tags           []string `dbi:"false" json:"tags"`
+	BrandedContent bool     `dbi:"false" json:"is_branded_content"`
+
+	ContentClassificationLabels []string `dbi:"false" json:"content_classification_labels"`
 }
 
 var informationMethodsSupported = map[string]bool{
@@ -49,6 +54,13 @@ type PatchInformationEndpointRequest struct {
 	BroadcasterLanguage string `json:"broadcaster_language"`
 	Title               string `json:"title"`
 	Delay               *int   `json:"delay"`
+	// TODO: tags
+	ContentClassificationLabels []PatchInformationEndpointRequestLabel `json:"content_classification_labels"`
+}
+
+type PatchInformationEndpointRequestLabel struct {
+	ID        string `json:"id"`
+	IsEnabled bool   `json:"is_enabled"`
 }
 
 func (e InformationEndpoint) Path() string { return "/channels" }
@@ -128,6 +140,7 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Game ID
 	var gameID = u.CategoryID
 	if params.GameID == "" || params.GameID == "0" {
 		gameID = sql.NullString{}
@@ -135,6 +148,7 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 		gameID = sql.NullString{String: params.GameID, Valid: true}
 	}
 
+	// Delay
 	if params.Delay != nil && u.BroadcasterType != "partner" {
 		mock_errors.WriteBadRequest(w, "Delay is partner only")
 		return
@@ -146,12 +160,23 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 	} else {
 		delay = *params.Delay
 	}
+
+	// TODO: Branded content
+
+	cclDbString, err := handleCCLs(u, params)
+	if err != nil {
+		mock_errors.WriteForbidden(w, err.Error())
+		return
+	}
+
+	// Write
 	err = db.NewQuery(r, 100).UpdateChannel(broadcasterID, database.User{
-		ID:         broadcasterID,
-		Title:      params.Title,
-		Language:   params.BroadcasterLanguage,
-		CategoryID: gameID,
-		Delay:      delay,
+		ID:           broadcasterID,
+		Title:        params.Title,
+		Language:     params.BroadcasterLanguage,
+		CategoryID:   gameID,
+		Delay:        delay,
+		UnparsedCCLs: cclDbString,
 	})
 	if err != nil {
 		if database.DatabaseErrorIs(err, sqlite3.ErrConstraintForeignKey) {
@@ -168,17 +193,80 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 func convertUsers(users []database.User) []Channel {
 	response := []Channel{}
 	for _, u := range users {
+		// Convert CCL array into an actual string array
+		var ccls = []string{}
+		if u.UnparsedCCLs != "" {
+			ccls = strings.Split(u.UnparsedCCLs, ",")
+		}
+
 		response = append(response, Channel{
-			ID:           u.ID,
-			UserLogin:    u.UserLogin,
-			DisplayName:  u.DisplayName,
-			Title:        u.Title,
-			Language:     u.Language,
-			CategoryID:   u.CategoryID.String,
-			CategoryName: u.CategoryName.String,
-			Delay:        u.Delay,
-			Tags:         []string{"English", "CLI Tag"},
+			ID:             u.ID,
+			UserLogin:      u.UserLogin,
+			DisplayName:    u.DisplayName,
+			Title:          u.Title,
+			Language:       u.Language,
+			CategoryID:     u.CategoryID.String,
+			CategoryName:   u.CategoryName.String,
+			Delay:          u.Delay,
+			Tags:           []string{"English", "CLI Tag"},
+			BrandedContent: u.IsBrandedContent,
+
+			ContentClassificationLabels: ccls,
 		})
 	}
 	return response
+}
+
+func handleCCLs(u database.User, params PatchInformationEndpointRequest) (string, error) {
+	// Get list of already enabled CCLs
+	currentCCLsStrings := []string{}
+	if u.UnparsedCCLs != "" {
+		currentCCLsStrings = strings.Split(u.UnparsedCCLs, ",")
+	}
+	cclsDetailed := []PatchInformationEndpointRequestLabel{}
+	for _, ccl := range models.CCL_MAP {
+		newCCL := PatchInformationEndpointRequestLabel{
+			ID:        ccl.ID,
+			IsEnabled: false,
+		}
+		for _, s := range currentCCLsStrings {
+			if s == ccl.ID {
+				newCCL.IsEnabled = true
+			}
+		}
+		cclsDetailed = append(cclsDetailed, newCCL)
+	}
+
+	// Run through user-provided CCLs
+	for _, ccl := range params.ContentClassificationLabels {
+		// Validate CCLs provided by the user
+		foundCCL, ok := models.CCL_MAP[ccl.ID]
+		if !ok {
+			return "", fmt.Errorf("ContentClassificationLabels label provided is not supported")
+		}
+		if foundCCL.RestrictedGaming {
+			return "", fmt.Errorf("User requested gaming CCLs to be added to their channel")
+		}
+
+		// Update anything mentioned by the user
+		for i, updatingThisCCL := range cclsDetailed {
+			if updatingThisCCL.ID == ccl.ID {
+				updatingThisCCL.IsEnabled = ccl.IsEnabled
+				cclsDetailed[i] = updatingThisCCL
+			}
+		}
+	}
+
+	// Convert CCL list to CSV for storage
+	cclDbString := ""
+	for _, ccl := range cclsDetailed {
+		if ccl.IsEnabled {
+			cclDbString += ccl.ID + ","
+		}
+	}
+	if strings.HasSuffix(cclDbString, ",") {
+		cclDbString = cclDbString[:len(cclDbString)-1]
+	}
+
+	return cclDbString, nil
 }
