@@ -70,6 +70,7 @@ func getEntitlements(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	userID := r.URL.Query().Get("user_id")
 	gameID := r.URL.Query().Get("game_id")
+	status := r.URL.Query().Get("fulfillment_status")
 
 	if userCtx.UserID != "" && userID != "" {
 		mock_errors.WriteBadRequest(w, "user_id is invalid when using user access token")
@@ -78,7 +79,7 @@ func getEntitlements(w http.ResponseWriter, r *http.Request) {
 	if userCtx.UserID != "" {
 		userID = userCtx.UserID
 	}
-	e := database.DropsEntitlement{UserID: userID, GameID: gameID, ID: id}
+	e := database.DropsEntitlement{UserID: userID, GameID: gameID, ID: id, Status: status}
 	dbr, err := db.NewQuery(r, 1000).GetDropsEntitlements(e)
 	if err != nil {
 		mock_errors.WriteServerError(w, "error fetching entitlements")
