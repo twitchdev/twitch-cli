@@ -54,6 +54,7 @@ type PatchInformationEndpointRequest struct {
 	BroadcasterLanguage string `json:"broadcaster_language"`
 	Title               string `json:"title"`
 	Delay               *int   `json:"delay"`
+	BrandedContent      *bool  `json:"is_branded_content"`
 	// TODO: tags
 	ContentClassificationLabels []PatchInformationEndpointRequestLabel `json:"content_classification_labels"`
 }
@@ -161,7 +162,10 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 		delay = *params.Delay
 	}
 
-	// TODO: Branded content
+	isBrandedContent := u.IsBrandedContent
+	if params.BrandedContent != nil {
+		isBrandedContent = *params.BrandedContent
+	}
 
 	cclDbString, err := handleCCLs(u, params)
 	if err != nil {
@@ -171,12 +175,13 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 
 	// Write
 	err = db.NewQuery(r, 100).UpdateChannel(broadcasterID, database.User{
-		ID:           broadcasterID,
-		Title:        params.Title,
-		Language:     params.BroadcasterLanguage,
-		CategoryID:   gameID,
-		Delay:        delay,
-		UnparsedCCLs: cclDbString,
+		ID:               broadcasterID,
+		Title:            params.Title,
+		Language:         params.BroadcasterLanguage,
+		CategoryID:       gameID,
+		Delay:            delay,
+		UnparsedCCLs:     cclDbString,
+		IsBrandedContent: isBrandedContent,
 	})
 	if err != nil {
 		if database.DatabaseErrorIs(err, sqlite3.ErrConstraintForeignKey) {
