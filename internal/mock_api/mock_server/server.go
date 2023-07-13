@@ -4,12 +4,14 @@ package mock_server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -19,6 +21,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/mock_api/generate"
 	"github.com/twitchdev/twitch-cli/internal/mock_auth"
 	"github.com/twitchdev/twitch-cli/internal/mock_units"
+	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
 const MOCK_NAMESPACE = "/mock"
@@ -105,6 +108,11 @@ func RegisterHandlers(m *http.ServeMux) {
 	for _, e := range mock_auth.All() {
 		m.Handle(AUTH_NAMESPACE+e.Path(), loggerMiddleware(e))
 	}
+
+	// For removed endpoints we don't have to worry about an actual handler, since its just gonna return 410 Gone
+	for e := range endpoints.Gone() {
+		m.Handle(MOCK_NAMESPACE+e, loggerMiddleware(nil))
+	}
 }
 
 func loggerMiddleware(next http.Handler) http.Handler {
@@ -118,6 +126,39 @@ func loggerMiddleware(next http.Handler) http.Handler {
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(200)
 			return
+		}
+
+		// Check for removed endpoints, which will return 410 Gone
+		for goneEndpoint, methods := range endpoints.Gone() {
+			if r.URL.Path == MOCK_NAMESPACE+goneEndpoint {
+				validRemovedEndpoint := false
+				for _, m := range methods {
+					if strings.EqualFold(m, r.Method) {
+						validRemovedEndpoint = true
+					}
+				}
+
+				// In production, removed API URLs with no previously existing method return 404
+				// e.g., "GET helix/tags/streams" returns 410, but "DELETE helix/tags/streams" returns 404
+				if !validRemovedEndpoint {
+					bytes, _ := json.Marshal(models.APIResponse{
+						Error:   "Not Found",
+						Status:  404,
+						Message: "",
+					})
+					w.WriteHeader(http.StatusNotFound)
+					w.Write(bytes)
+				} else {
+					bytes, _ := json.Marshal(models.APIResponse{
+						Error:   "Gone",
+						Status:  410,
+						Message: "The API is deprecated.",
+					})
+					w.WriteHeader(410)
+					w.Write(bytes)
+				}
+				return
+			}
 		}
 
 		next.ServeHTTP(w, r)

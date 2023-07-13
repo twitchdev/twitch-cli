@@ -12,25 +12,6 @@ import (
 	"github.com/twitchdev/twitch-cli/test_setup/test_server"
 )
 
-func TestAllTags(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-	ts := test_server.SetupTestServer(AllTags{})
-
-	// get
-	req, _ := http.NewRequest(http.MethodGet, ts.URL+AllTags{}.Path(), nil)
-	q := req.URL.Query()
-	req.URL.RawQuery = q.Encode()
-	resp, err := http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(200, resp.StatusCode)
-
-	q.Set("tag_id", "1234")
-	req.URL.RawQuery = q.Encode()
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(200, resp.StatusCode)
-}
-
 func TestFollowedStreams(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 	ts := test_server.SetupTestServer(FollowedStreams{})
@@ -94,45 +75,6 @@ func TestMarkers(t *testing.T) {
 	post.UserID = "2"
 	b, _ = json.Marshal(post)
 	req, _ = http.NewRequest(http.MethodPost, ts.URL+Markers{}.Path(), bytes.NewBuffer(b))
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(400, resp.StatusCode)
-}
-
-func TestStreamTags(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-	ts := test_server.SetupTestServer(StreamTags{})
-
-	// get
-	req, _ := http.NewRequest(http.MethodGet, ts.URL+StreamTags{}.Path(), nil)
-	q := req.URL.Query()
-	req.URL.RawQuery = q.Encode()
-	resp, err := http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(401, resp.StatusCode)
-
-	q.Set("broadcaster_id", "1")
-	req.URL.RawQuery = q.Encode()
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(200, resp.StatusCode)
-
-	// put
-	put := PutBodyStreamTags{
-		TagIDs: []string{"1234"},
-	}
-	b, _ := json.Marshal(put)
-	req, _ = http.NewRequest(http.MethodPut, ts.URL+StreamTags{}.Path(), bytes.NewBuffer(b))
-	q.Del("broadcaster_id")
-	req.URL.RawQuery = q.Encode()
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(401, resp.StatusCode)
-
-	b, _ = json.Marshal(put)
-	req, _ = http.NewRequest(http.MethodPut, ts.URL+StreamTags{}.Path(), bytes.NewBuffer(b))
-	q.Set("broadcaster_id", "1")
-	req.URL.RawQuery = q.Encode()
 	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err)
 	a.Equal(400, resp.StatusCode)
