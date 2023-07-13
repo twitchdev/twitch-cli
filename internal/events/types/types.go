@@ -14,6 +14,8 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/ban"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_redemption"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_reward"
+	"github.com/twitchdev/twitch-cli/internal/events/types/channel_update_v1"
+	"github.com/twitchdev/twitch-cli/internal/events/types/channel_update_v2"
 	"github.com/twitchdev/twitch-cli/internal/events/types/charity"
 	"github.com/twitchdev/twitch-cli/internal/events/types/cheer"
 	"github.com/twitchdev/twitch-cli/internal/events/types/drop"
@@ -29,7 +31,6 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/raid"
 	"github.com/twitchdev/twitch-cli/internal/events/types/shield_mode"
 	"github.com/twitchdev/twitch-cli/internal/events/types/shoutout"
-	"github.com/twitchdev/twitch-cli/internal/events/types/stream_change"
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamdown"
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamup"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscribe"
@@ -60,7 +61,8 @@ func AllEvents() []events.MockEvent {
 		raid.Event{},
 		shield_mode.Event{},
 		shoutout.Event{},
-		stream_change.Event{},
+		channel_update_v1.Event{},
+		channel_update_v2.Event{},
 		streamup.Event{},
 		streamdown.Event{},
 		subscribe.Event{},

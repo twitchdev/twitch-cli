@@ -13,24 +13,28 @@ import (
 )
 
 type User struct {
-	ID              string         `db:"id" json:"id" dbs:"u1.id"`
-	UserLogin       string         `db:"user_login" json:"login"`
-	DisplayName     string         `db:"display_name" json:"display_name"`
-	Email           string         `db:"email" json:"email,omitempty"`
-	UserType        string         `db:"user_type" json:"type"`
-	BroadcasterType string         `db:"broadcaster_type" json:"broadcaster_type"`
-	UserDescription string         `db:"user_description" json:"description"`
-	CreatedAt       string         `db:"created_at" json:"created_at"`
-	ModifiedAt      string         `db:"modified_at" json:"-"`
-	ProfileImageURL string         `dbi:"false" json:"profile_image_url" `
-	OfflineImageURL string         `dbi:"false" json:"offline_image_url" `
-	ViewCount       int            `dbi:"false" json:"view_count"`
-	CategoryID      sql.NullString `db:"category_id" json:"game_id" dbi:"force"`
-	CategoryName    sql.NullString `db:"category_name" json:"game_name" dbi:"false"`
-	Title           string         `db:"title" json:"title"`
-	Language        string         `db:"stream_language" json:"stream_language"`
-	Delay           int            `db:"delay" json:"delay" dbi:"force"`
-	ChatColor       string         `db:"chat_color" json:"-"`
+	ID               string         `db:"id" json:"id" dbs:"u1.id"`
+	UserLogin        string         `db:"user_login" json:"login"`
+	DisplayName      string         `db:"display_name" json:"display_name"`
+	Email            string         `db:"email" json:"email,omitempty"`
+	UserType         string         `db:"user_type" json:"type"`
+	BroadcasterType  string         `db:"broadcaster_type" json:"broadcaster_type"`
+	UserDescription  string         `db:"user_description" json:"description"`
+	CreatedAt        string         `db:"created_at" json:"created_at"`
+	ModifiedAt       string         `db:"modified_at" json:"-"`
+	ProfileImageURL  string         `dbi:"false" json:"profile_image_url" `
+	OfflineImageURL  string         `dbi:"false" json:"offline_image_url" `
+	ViewCount        int            `dbi:"false" json:"view_count"`
+	CategoryID       sql.NullString `db:"category_id" json:"game_id" dbi:"force"`
+	CategoryName     sql.NullString `db:"category_name" json:"game_name" dbi:"false"`
+	Title            string         `db:"title" json:"title"`
+	Language         string         `db:"stream_language" json:"stream_language"`
+	Delay            int            `db:"delay" json:"delay" dbi:"force"`
+	ChatColor        string         `db:"chat_color" json:"-"`
+	IsBrandedContent bool           `db:"branded_content" json:"is_branded_content"`
+
+	// UnparsedCCLs is a comma seperated array (e.g. "Gambling,ViolentGraphic,ProfanityVulgarity")
+	UnparsedCCLs string `db:"content_labels" json:"-"`
 }
 
 type Follow struct {

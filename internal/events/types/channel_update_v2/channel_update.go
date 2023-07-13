@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package stream_change
+package channel_update_v2
 
 import (
 	"encoding/json"
@@ -71,7 +71,10 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				StreamLanguage:       "en",
 				StreamCategoryID:     params.GameID,
 				StreamCategoryName:   params.ItemName,
-				IsMature:             false,
+				ContentClassificationLabels: []string{
+					"MatureGame",
+					"ViolentGraphic",
+				},
 			},
 		}
 		event, err = json.Marshal(body)
@@ -140,5 +143,5 @@ func (e Event) GetEventSubAlias(t string) string {
 }
 
 func (e Event) SubscriptionVersion() string {
-	return "1"
+	return "beta"
 }
