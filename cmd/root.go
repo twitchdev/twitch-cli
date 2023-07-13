@@ -32,7 +32,8 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	cfgFile, err := util.GetConfigPath()
+	var err error
+	cfgFile, err = util.GetConfigPath()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
