@@ -6,6 +6,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/mock_api"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/bits"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/categories"
+	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/ccl"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/channel_points"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/channels"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/endpoints/charity"
@@ -34,6 +35,7 @@ func All() []mock_api.MockEndpoint {
 		bits.Cheermotes{},
 		categories.Games{},
 		categories.TopGames{},
+		ccl.ContentClassificationLabels{},
 		channel_points.Redemption{},
 		channel_points.Reward{},
 		channels.CommercialEndpoint{},

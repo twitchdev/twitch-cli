@@ -3,10 +3,10 @@
 package models
 
 type ContentClassificationLabel struct {
-	Description      string
-	ID               string
-	Name             string
-	RestrictedGaming bool // Restricts users from applying that CCL via the API. Currently only for MatureGame.
+	Description      string `json:"description"`
+	ID               string `json:"id"`
+	Name             string `json:"name"`
+	RestrictedGaming bool   `json:"-"` // Restricts users from applying that CCL via the API. Currently only for MatureGame.
 }
 
 var CCL_MAP = map[string]ContentClassificationLabel{
