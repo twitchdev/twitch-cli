@@ -30,11 +30,6 @@ type Stream struct {
 	ThumbnailURL string `json:"thumbnail_url"`
 }
 
-type StreamTag struct {
-	TagID  string `db:"tag_id" json:"tag_id"`
-	UserID string `db:"user_id" json:"-"`
-}
-
 type Tag struct {
 	ID     string `db:"id" json:"id"`
 	IsAuto bool   `db:"is_auto" dbi:"false" json:"is_auto"`
@@ -145,42 +140,9 @@ func (q *Query) GetTags(t Tag) (*DBResponse, error) {
 	return &dbr, err
 }
 
-func (q *Query) GetStreamTags(id string) (*DBResponse, error) {
-	r := []Tag{}
-	err := q.DB.Select(&r, "select t.* from tags t join stream_tags st on st.tag_id = t.id where st.user_id=$1", id)
-	if err != nil {
-		return nil, err
-	}
-
-	dbr := DBResponse{
-		Data:  r,
-		Limit: q.Limit,
-		Total: len(r),
-	}
-
-	if len(r) != q.Limit {
-		q.PaginationCursor = ""
-	}
-
-	dbr.Cursor = q.PaginationCursor
-
-	return &dbr, err
-}
-
 func (q *Query) InsertTag(t Tag) error {
 	stmt := generateInsertSQL("tags", "", t, false)
 	_, err := q.DB.NamedExec(stmt, t)
-	return err
-}
-
-func (q *Query) InsertStreamTag(st StreamTag) error {
-	stmt := generateInsertSQL("stream_tags", "", st, false)
-	_, err := q.DB.NamedExec(stmt, st)
-	return err
-}
-
-func (q *Query) DeleteAllStreamTags(userID string) error {
-	_, err := q.DB.Exec("delete from stream_tags where user_id = $1", userID)
 	return err
 }
 
@@ -195,7 +157,6 @@ func (q *Query) GetFollowedStreams(userID string) (*DBResponse, error) {
 	}
 
 	for i, s := range r {
-		var st []string
 		if err != nil {
 			return nil, err
 		}
@@ -205,11 +166,6 @@ func (q *Query) GetFollowedStreams(userID string) (*DBResponse, error) {
 		if s.CategoryName.Valid {
 			r[i].RealCategoryName = s.CategoryName.String
 		}
-		err = q.DB.Select(&st, "select tag_id from stream_tags where user_id=$1", s.UserID)
-		if err != nil {
-			return nil, err
-		}
-		r[i].TagIDs = st
 	}
 
 	dbr := DBResponse{

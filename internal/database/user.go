@@ -330,17 +330,10 @@ func (q *Query) SearchChannels(query string, live_only bool) (*DBResponse, error
 	}
 
 	for i, c := range r {
-		st := []string{}
-		err = q.DB.Select(&st, "select tag_id from stream_tags where user_id=$1", c.ID)
-		if err != nil {
-			return nil, err
-		}
-
 		emptyString := ""
 		if c.StartedAt == nil {
 			r[i].StartedAt = &emptyString
 		}
-		r[i].TagIDs = st // // Needs to be removed from db when this is fully removed from API
 		r[i].Tags = []string{"English", "CLI Tag"}
 		r[i].ThumbNailURL = "https://static-cdn.jtvnw.net/jtv_user_pictures/3f13ab61-ec78-4fe6-8481-8682cb3b0ac2-channel_offline_image-300x300.png"
 	}
