@@ -101,5 +101,14 @@ func Gone() map[string][]string {
 			"POST",
 			"PUT",
 		},
+		"/soundtrack/current_track": {
+			"GET",
+		},
+		"/soundtrack/playlist": {
+			"GET",
+		},
+		"/soundtrack/playlists": {
+			"GET",
+		},
 	}
 }
