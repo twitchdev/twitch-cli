@@ -65,7 +65,11 @@ func getDatabase() (sqlx.DB, error) {
 			}
 		}
 		db.SetMaxOpenConns(1)
-		checkAndUpdate(*db)
+		err = checkAndUpdate(*db)
+		if err != nil {
+			os.Exit(99)
+		}
+
 		return *db, nil
 	}
 	return sqlx.DB{}, nil

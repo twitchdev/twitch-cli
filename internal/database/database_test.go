@@ -619,14 +619,6 @@ func TestStreams(t *testing.T) {
 	tags := dbr.Data.([]Tag)
 	a.GreaterOrEqual(len(tags), 1)
 
-	err = q.InsertStreamTag(StreamTag{TagID: tag.ID, UserID: TEST_USER_ID})
-	a.Nil(err)
-
-	dbr, err = q.GetStreamTags(TEST_USER_ID)
-	a.Nil(err)
-	tags = dbr.Data.([]Tag)
-	a.GreaterOrEqual(len(tags), 0)
-
 	dbr, err = q.GetFollowedStreams(s.UserID)
 	a.Nil(err)
 	streams := dbr.Data.([]Stream)
@@ -646,9 +638,6 @@ func TestStreams(t *testing.T) {
 	a.GreaterOrEqual(len(streams), 1)
 	stream := streams[0]
 	a.GreaterOrEqual(len(stream.TagIDs), 0)
-
-	err = q.DeleteAllStreamTags(s.UserID)
-	a.Nil(err)
 
 	v := Video{
 		ID:               util.RandomGUID(),

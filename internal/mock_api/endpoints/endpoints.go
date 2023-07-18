@@ -74,12 +74,10 @@ func All() []mock_api.MockEndpoint {
 		schedule.ScheduleSettings{},
 		search.SearchCategories{},
 		search.SearchChannels{},
-		streams.AllTags{},
 		streams.FollowedStreams{},
 		streams.Markers{},
 		streams.StreamKey{},
 		streams.Streams{},
-		streams.StreamTags{},
 		subscriptions.BroadcasterSubscriptions{},
 		subscriptions.UserSubscriptions{},
 		teams.ChannelTeams{},
@@ -89,5 +87,28 @@ func All() []mock_api.MockEndpoint {
 		users.UsersEndpoint{},
 		videos.Videos{},
 		whispers.Whispers{},
+	}
+}
+
+// All these endpoints return 410 Gone
+func Gone() map[string][]string {
+	return map[string][]string{
+		"/tags/streams": {
+			"GET",
+		},
+		"/streams/tags": {
+			"GET",
+			"POST",
+			"PUT",
+		},
+		"/soundtrack/current_track": {
+			"GET",
+		},
+		"/soundtrack/playlist": {
+			"GET",
+		},
+		"/soundtrack/playlists": {
+			"GET",
+		},
 	}
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const currentVersion = 5
+const currentVersion = 6
 
 type migrateMap struct {
 	SQL     string
@@ -49,6 +49,10 @@ ALTER TABLE users ADD COLUMN branded_content boolean not null default false;
 ALTER TABLE users ADD COLUMN content_labels text not null default '';`,
 		Message: `Updating database to include Content Classification Label field.`,
 	},
+	6: {
+		SQL:     `DROP TABLE IF EXISTS stream_tags;`,
+		Message: `Removing deprecated stream_tags from database.`,
+	},
 }
 
 func checkAndUpdate(db sqlx.DB) error {
@@ -70,6 +74,8 @@ func checkAndUpdate(db sqlx.DB) error {
 	for i := v; i < len(migrateSQL); i++ {
 		_, err = db.Exec(migrateSQL[i].SQL)
 		if err != nil {
+			fmt.Printf("DB Upgrade Error - %v\n", err)
+			fmt.Println("Exiting program. Please report this bug, and delete your Twitch CLI db file to regenerate it.")
 			return err
 		}
 
@@ -99,7 +105,6 @@ create table channel_points_rewards( id text not null primary key, broadcaster_i
 create table channel_points_redemptions( id text not null primary key, reward_id text not null, broadcaster_id text not null, user_id text not null, user_input text, redemption_status text not null, redeemed_at text, foreign key (reward_id) references channel_points_rewards(id), foreign key (broadcaster_id) references users(id), foreign key (user_id) references users(id) );
 create table streams( id text not null primary key, broadcaster_id id text not null, stream_type text not null default 'live', viewer_count int not null, started_at text not null, is_mature boolean not null default false, foreign key (broadcaster_id) references users(id) );
 create table tags( id text not null primary key, is_auto boolean not null default false, tag_name text not null );
-create table stream_tags( user_id text not null, tag_id text not null, primary key(user_id, tag_id), foreign key(user_id) references users(id), foreign key(tag_id) references tags(id) );
 create table teams( id text not null primary key, background_image_url text, banner text, created_at text not null, updated_at text, info text, thumbnail_url text, team_name text, team_display_name text );
 create table team_members( team_id text not null, user_id text not null, primary key (team_id, user_id) foreign key (team_id) references teams(id), foreign key (user_id) references users(id) );
 create table videos( id text not null primary key, stream_id text, broadcaster_id text not null, title text not null, video_description text not null, created_at text not null, published_at text, viewable text not null, view_count int not null default 0, duration text not null, video_language text not null default 'en', category_id text, type text default 'archive', foreign key (stream_id) references streams(id), foreign key (broadcaster_id) references users(id), foreign key (category_id) references categories(id) );

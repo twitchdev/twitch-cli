@@ -463,25 +463,9 @@ func generateUsers(ctx context.Context, count int) error {
 		tagIds = append(tagIds, tag.ID)
 	}
 
-	// creates fake stream tags, videos, and markers
-	log.Printf("Creating stream tags, videos, clips, and stream markers...")
+	// creates fake videos, and markers
+	log.Printf("Creating videos, clips, and stream markers...")
 	for _, s := range streams {
-		var prevTag string
-		for i := 0; i < int(util.RandomInt(5)); i++ {
-			st := database.StreamTag{
-				UserID: s.Broacaster,
-				TagID:  tagIds[util.RandomInt(int64(len(tagIds)-1))],
-			}
-			if prevTag == st.TagID {
-				continue
-			}
-
-			err := db.NewQuery(nil, 100).InsertStreamTag(st)
-			if err != nil {
-				log.Print(err.Error())
-			}
-			prevTag = st.TagID
-		}
 		// markers
 
 		// videos
