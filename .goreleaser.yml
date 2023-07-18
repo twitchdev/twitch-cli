@@ -66,16 +66,17 @@ builds:
       - windows
     goarch:
       - "386" 
-scoop:
-  bucket:
-    owner: twitchdev
-    name: scoop-bucket
-  homepage: https://github.com/twitchdev/twitch-cli
-  description: CLI for Twitch's developer offerings
-  license: Apache-2.0
+scoops:
+  -
+    repository:
+      owner: twitchdev
+      name: scoop-bucket
+    homepage: https://github.com/twitchdev/twitch-cli
+    description: CLI for Twitch's developer offerings
+    license: Apache-2.0
 brews:
   -
-    tap:
+    repository:
       owner: twitchdev
       name: homebrew-twitch
     folder: Formula
@@ -87,12 +88,7 @@ brews:
       system "#{bin}/twitch", "version"
     license: Apache-2.0
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
+  - name_template: '{{ .ProjectName }}_{{ .Version }}_{{- title .Os }}_{{- if eq .Arch "386" }}i386{{- else if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end }}'
     format_overrides:
     - goos: windows
       format: zip
