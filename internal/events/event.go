@@ -14,6 +14,7 @@ type MockEventParameters struct {
 	ToUserName          string
 	IsAnonymous         bool
 	IsGift              bool
+	GiftUser            string
 	EventStatus         string
 	SubscriptionStatus  string
 	ItemID              string

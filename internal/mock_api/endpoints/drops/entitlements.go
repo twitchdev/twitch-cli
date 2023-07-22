@@ -97,6 +97,7 @@ func getEntitlements(w http.ResponseWriter, r *http.Request) {
 			Cursor: dbr.Cursor,
 		}
 	}
+
 	bytes, err := json.Marshal(apiResponse)
 	w.Write(bytes)
 }
@@ -170,6 +171,10 @@ func patchEntitlements(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	bytes, _ := json.Marshal(resp)
+	apiResponse := models.APIResponse{
+		Data: resp,
+	}
+
+	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
 }

@@ -42,9 +42,14 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		params.IsGift = true
 	}
 
+	if params.GiftUser != "" {
+		params.FromUserID = params.GiftUser
+		params.IsGift = true // make doubly sure it's set to to in cases of "twitch event trigger channel.subscribe -g 1"
+	}
+
 	switch params.Transport {
 	case models.TransportWebhook, models.TransportWebSocket:
-		body := *&models.EventsubResponse{
+		body := &models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  params.SubscriptionStatus,

@@ -134,6 +134,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		CharityCurrentValue: p.CharityCurrentValue,
 		CharityTargetValue:  p.CharityTargetValue,
 		ClientID:            p.ClientID,
+		GiftUser:            p.GiftUser,
 	}
 
 	e, err := types.GetByTriggerAndTransportAndVersion(p.Event, p.Transport, p.Version)
