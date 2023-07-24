@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package ban
+package unban
 
 import (
 	"encoding/json"
@@ -16,24 +16,25 @@ var toUser = "4567"
 
 func TestEventSubBan(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
+
 	params := events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          models.TransportWebhook,
-		Trigger:            "ban",
+		Trigger:            "unban",
 		SubscriptionStatus: "enabled",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
-	a.Nil(err, "Error generating body.")
+	a.Nil(err)
 
 	var body models.BanEventSubResponse
 
 	err = json.Unmarshal(r.JSON, &body)
-	a.Nil(err, "Error unmarshalling JSON")
+	a.Nil(err)
 
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
-	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
+	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", fromUser, body.Event.UserID)
 }
 
 func TestFakeTransport(t *testing.T) {
@@ -54,7 +55,7 @@ func TestFakeTransport(t *testing.T) {
 func TestValidTrigger(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.ValidTrigger("ban")
+	r := Event{}.ValidTrigger("unban")
 	a.Equal(true, r)
 
 	r = Event{}.ValidTrigger("notban")
@@ -74,6 +75,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportWebhook, "ban")
+	r := Event{}.GetTopic(models.TransportWebhook, "unban")
 	a.NotNil(r)
 }

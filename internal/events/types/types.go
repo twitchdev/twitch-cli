@@ -35,6 +35,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/streamup"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscribe"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscription_message"
+	"github.com/twitchdev/twitch-cli/internal/events/types/unban"
 	user_update "github.com/twitchdev/twitch-cli/internal/events/types/user"
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
@@ -67,6 +68,7 @@ func AllEvents() []events.MockEvent {
 		streamdown.Event{},
 		subscribe.Event{},
 		subscription_message.Event{},
+		unban.Event{},
 		user_update.Event{},
 	}
 }
