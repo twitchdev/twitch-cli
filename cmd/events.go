@@ -45,6 +45,8 @@ var (
 	clientId            string
 	version             string
 	websocketClient     string
+	banStart            string
+	banEnd              string
 )
 
 // websocketCmd-specific flags
@@ -158,6 +160,8 @@ func init() {
 	triggerCmd.Flags().StringVar(&clientId, "client-id", "", "Manually set the Client ID used in revoke, grant, and bits transaction events.")
 	triggerCmd.Flags().StringVarP(&version, "version", "v", "", "Chooses the EventSub version used for a specific event. Not required for most events.")
 	triggerCmd.Flags().StringVar(&websocketClient, "session", "", "Defines a specific websocket client/session to forward an event to. Used only with \"websocket\" transport.")
+	triggerCmd.Flags().StringVar(&banStart, "ban-start", "", "Sets the timestamp a ban started at.")
+	triggerCmd.Flags().StringVar(&banEnd, "ban-end", "", "Sets the timestamp a ban is intended to end at. If not set, the ban event will appear as permanent. This flag can take a timestamp or relative time (600, 600s, 10d4h12m55s)")
 
 	// retrigger flags
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
@@ -237,6 +241,8 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 			ClientID:            clientId,
 			Version:             version,
 			WebSocketClient:     websocketClient,
+			BanStartTimestamp:   banStart,
+			BanEndTimestamp:     banEnd,
 		})
 
 		if err != nil {

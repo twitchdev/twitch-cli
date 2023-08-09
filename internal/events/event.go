@@ -20,7 +20,6 @@ type MockEventParameters struct {
 	ItemID              string
 	ItemName            string
 	Cost                int64
-	IsPermanent         bool
 	Description         string
 	GameID              string
 	Tier                string
@@ -28,6 +27,8 @@ type MockEventParameters struct {
 	CharityCurrentValue int
 	CharityTargetValue  int
 	ClientID            string
+	BanStartTimestamp   string
+	BanEndTimestamp     string
 }
 
 type MockEventResponse struct {

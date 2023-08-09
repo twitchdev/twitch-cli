@@ -48,6 +48,8 @@ type TriggerParameters struct {
 	ClientID            string
 	Version             string
 	WebSocketClient     string
+	BanStartTimestamp   string
+	BanEndTimestamp     string
 }
 
 type TriggerResponse struct {
@@ -135,6 +137,8 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		CharityTargetValue:  p.CharityTargetValue,
 		ClientID:            p.ClientID,
 		GiftUser:            p.GiftUser,
+		BanStartTimestamp:   p.BanStartTimestamp,
+		BanEndTimestamp:     p.BanEndTimestamp,
 	}
 
 	e, err := types.GetByTriggerAndTransportAndVersion(p.Event, p.Transport, p.Version)
