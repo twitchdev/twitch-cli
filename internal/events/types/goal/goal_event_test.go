@@ -16,7 +16,7 @@ var user = "1234"
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		ToUserID:           user,
 		Description:        "Twitch Subscriber Goal",
 		Transport:          models.TransportWebhook,
@@ -36,7 +36,7 @@ func TestEventSub(t *testing.T) {
 	a.Equal(user, body.Event.BroadcasterUserID, "Expected from user %v, got %v", r.ToUser, body.Event.BroadcasterUserID)
 	a.Equal("Twitch Subscriber Goal", body.Event.Description, "Expected from goal type %v, got %v", "Twitch Subscriber Goal", body.Event.Type)
 
-	params = *&events.MockEventParameters{
+	params = events.MockEventParameters{
 		ToUserID:           user,
 		Description:        "Twitch Follower Goal",
 		Transport:          models.TransportWebhook,
@@ -53,7 +53,7 @@ func TestEventSub(t *testing.T) {
 	a.Equal("channel.goal.progress", body.Subscription.Type, "Expected event type %v, got %v", "channel.goal.progress", body.Subscription.Type)
 	a.Equal(user, body.Event.BroadcasterUserID, "Expected from user %v, got %v", r.ToUser, body.Event.BroadcasterUserID)
 
-	params = *&events.MockEventParameters{
+	params = events.MockEventParameters{
 		ToUserID:           user,
 		Description:        "Twitch Follower Goal",
 		Transport:          models.TransportWebhook,
@@ -76,7 +76,7 @@ func TestEventSub(t *testing.T) {
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		FromUserID: user,
 		Transport:  "fake_transport",
 		Trigger:    "unsubscribe",

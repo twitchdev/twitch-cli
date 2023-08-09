@@ -47,7 +47,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 			ModeratorUserName:    "CLIModerator",
 		}
 
-		body := *&models.EventsubResponse{
+		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  params.SubscriptionStatus,

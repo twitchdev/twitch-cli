@@ -24,7 +24,7 @@ func TestRefireEvent(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	params := *&TriggerParameters{
+	params := TriggerParameters{
 		Event:          "gift",
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
