@@ -30,10 +30,17 @@ type clientInformation struct {
 }
 
 // NewRequest is used to request data from the Twitch API using a HTTP GET request- this function is a wrapper for the apiRequest function that handles the network call
-func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool, autopaginate *int) error {
+func NewRequest(method string, path string, queryParameters []string, body []byte, prettyPrint bool, autopaginate *int, verbose bool) error {
 	var data models.APIResponse
 	var err error
 	var cursor string
+
+	var requestMethod string
+	var requestPath string
+	var requestHeaders http.Header
+	var responseHeaders http.Header
+	var responseStatusCode int
+	var protocol string
 
 	isExtensionsLiveEndpoint := false // https://github.com/twitchdev/twitch-cli/issues/157
 
@@ -130,6 +137,13 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 
 		if runCounter == 1 {
 			data = apiResponse
+
+			requestMethod = resp.HttpMethod
+			requestPath = resp.RequestPath
+			responseStatusCode = resp.StatusCode
+			requestHeaders = resp.RequestHeaders
+			responseHeaders = resp.ResponseHeaders
+			protocol = resp.HttpVersion
 		}
 
 		if resp.StatusCode > 299 || resp.StatusCode < 200 {
@@ -210,6 +224,10 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		// since Command Prompt/Powershell don't support coloring, will pretty print without colors
 		if runtime.GOOS == "windows" {
 			s, _ := json.MarshalIndent(obj, "", "  ")
+
+			if verbose {
+				printVerboseHeaders(requestMethod, requestPath, requestHeaders, responseHeaders, responseStatusCode, protocol)
+			}
 			if data.Error == "" {
 				fmt.Println(string(s))
 			} else {
@@ -226,6 +244,10 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		if err != nil {
 			return err
 		}
+
+		if verbose {
+			printVerboseHeaders(requestMethod, requestPath, requestHeaders, responseHeaders, responseStatusCode, protocol)
+		}
 		if data.Error == "" {
 			fmt.Println(string(s))
 		} else {
@@ -234,6 +256,9 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		return nil
 	}
 
+	if verbose {
+		printVerboseHeaders(requestMethod, requestPath, requestHeaders, responseHeaders, responseStatusCode, protocol)
+	}
 	if data.Error == "" {
 		fmt.Println(string(d))
 	} else {
@@ -296,4 +321,32 @@ func GetClientInformation() (clientInformation, error) {
 	}
 
 	return clientInformation{Token: token, ClientID: clientID}, nil
+}
+
+func printVerboseHeaders(method string, path string, requestHeaders http.Header, responseHeaders http.Header, responseStatusCode int, protocol string) {
+	fmt.Printf("* Using %v\n", protocol)
+	fmt.Printf("> %v %v\n", method, path)
+	for key, value := range requestHeaders {
+		for _, v := range value {
+			if strings.EqualFold(key, "authorization") {
+				parts := strings.Split(v, " ")
+				if len(parts) > 1 {
+					fmt.Printf("> %v: %v *****\n", key, parts[0])
+				} else {
+					fmt.Printf("> %v: *****\n", key)
+				}
+			} else {
+				fmt.Printf("> %v: %v\n", key, v)
+			}
+		}
+	}
+
+	fmt.Printf("\n")
+	fmt.Printf("< %v %v %v\n", protocol, responseStatusCode, http.StatusText(responseStatusCode))
+	for key, value := range responseHeaders {
+		for _, v := range value {
+			fmt.Printf("< %v: %v\n", key, v)
+		}
+	}
+	fmt.Printf("\n")
 }

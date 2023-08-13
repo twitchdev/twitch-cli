@@ -21,6 +21,7 @@ var body string
 var prettyPrint bool
 var autoPaginate int = 0
 var port int
+var verbose bool
 
 var generateCount int
 
@@ -89,6 +90,7 @@ func init() {
 
 	apiCmd.PersistentFlags().StringArrayVarP(&queryParameters, "query-params", "q", nil, "Available multiple times. Passes in query parameters to endpoints using the format of `key=value`.")
 	apiCmd.PersistentFlags().StringVarP(&body, "body", "b", "", "Passes a body to the request. Alteratively supports CURL-like references to files using the format of `@data,json`.")
+	apiCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Whether to display HTTP request and header information above the response of the API call.")
 
 	// default here is false to enable -p commands to toggle off without explicitly defining -p=false as -p false will not work. The below commands invert the bool to pass the true default. Deprecated, so marking as hidden in favor of the unformatted flag.
 	apiCmd.PersistentFlags().BoolVarP(&prettyPrint, "pretty-print", "p", false, "Whether to pretty-print API requests. Default is true.")
@@ -127,9 +129,9 @@ func cmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Name() == "get" && cmd.PersistentFlags().Lookup("autopaginate").Changed {
-		return api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, &autoPaginate)
+		return api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, &autoPaginate, verbose)
 	} else {
-		return api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, nil) // only set on when the user changed the flag
+		return api.NewRequest(cmd.Name(), path, queryParameters, []byte(body), !prettyPrint, nil, verbose) // only set on when the user changed the flag
 	}
 }
 

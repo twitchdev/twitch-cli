@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/request"
@@ -19,6 +20,12 @@ type apiRequestParameters struct {
 type apiRequestResponse struct {
 	StatusCode int
 	Body       []byte
+
+	HttpMethod      string
+	RequestPath     string
+	RequestHeaders  http.Header
+	ResponseHeaders http.Header
+	HttpVersion     string
 }
 
 func apiRequest(method string, url string, payload []byte, p apiRequestParameters) (apiRequestResponse, error) {
@@ -54,5 +61,11 @@ func apiRequest(method string, url string, payload []byte, p apiRequestParameter
 	return apiRequestResponse{
 		StatusCode: resp.StatusCode,
 		Body:       body,
+
+		HttpMethod:      req.Method,
+		RequestPath:     req.URL.RequestURI(),
+		RequestHeaders:  req.Header,
+		ResponseHeaders: resp.Header,
+		HttpVersion:     req.Proto,
 	}, nil
 }
