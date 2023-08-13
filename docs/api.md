@@ -37,6 +37,7 @@ Allows the user to make GET calls to endpoints on Helix. Requires a logged in to
 | `--query-param`  | `-q`      | Query parameters for the endpoint in `key=value` format. Multiple can be entered to give multiple parameters.                                                                                                                                                                         | `get -q login=ninja` | N               |
 | `--unformatted`  | `-u`      | Whether to return unformatted responses. Default is `false`.                                                                                                                                                                                                                          | `get -u`             | N               |
 | `--autopaginate` | `-P`      | Whether to autopaginate the response from Twitch, and optionally the number of pages to limit. **WARNING** This flag can cause extremely large payloads and cause issues with some terminals. Default is to not autopaginate, however if provided, the default is gets all responses. | `get -P=10`          | N               |
+| `--verbose`      | `-v`      | Whether to display HTTP request and header information above the response of the API call.                                                                                                                                                                                            | `get -v`             | N               |
 
 **Examples**
 
