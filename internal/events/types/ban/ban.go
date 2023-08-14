@@ -108,7 +108,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 		ban.EndsAt = endsAt
 		ban.IsPermanent = isPermanent
 
-		body := *&models.EventsubResponse{
+		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  params.SubscriptionStatus,

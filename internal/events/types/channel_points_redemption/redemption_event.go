@@ -53,7 +53,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 	switch params.Transport {
 	case models.TransportWebhook, models.TransportWebSocket:
-		body := *&models.RedemptionEventSubResponse{
+		body := models.RedemptionEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
 				Status:  params.SubscriptionStatus,

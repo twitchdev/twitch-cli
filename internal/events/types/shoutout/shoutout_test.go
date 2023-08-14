@@ -17,7 +17,7 @@ var toUser = "4567"
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	beginParams := *&events.MockEventParameters{
+	beginParams := events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          models.TransportWebhook,
@@ -25,7 +25,7 @@ func TestEventSub(t *testing.T) {
 		SubscriptionStatus: "enabled",
 		Cost:               0,
 	}
-	endParams := *&events.MockEventParameters{
+	endParams := events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          models.TransportWebhook,
@@ -52,14 +52,14 @@ func TestEventSub(t *testing.T) {
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	beginParams := *&events.MockEventParameters{
+	beginParams := events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          "fake_transport",
 		Trigger:            "shoutout-create",
 		SubscriptionStatus: "enabled",
 	}
-	endParams := *&events.MockEventParameters{
+	endParams := events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          "fake_transport",

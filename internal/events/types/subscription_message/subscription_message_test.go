@@ -19,7 +19,7 @@ func TestEventSub(t *testing.T) {
 	ten := 10
 	tierThree := "3000"
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          models.TransportWebhook,
@@ -37,7 +37,7 @@ func TestEventSub(t *testing.T) {
 	a.Equal(&ten, body.Event.StreakMonths)
 	a.GreaterOrEqual(body.Event.CumulativeMonths, 10)
 
-	params = *&events.MockEventParameters{
+	params = events.MockEventParameters{
 		FromUserID:         fromUser,
 		ToUserID:           toUser,
 		Transport:          models.TransportWebhook,
@@ -61,7 +61,7 @@ func TestEventSub(t *testing.T) {
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		FromUserID: fromUser,
 		ToUserID:   toUser,
 		Transport:  "fake_transport",
