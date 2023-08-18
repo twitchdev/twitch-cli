@@ -22,7 +22,7 @@ func TestFire(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	params := *&TriggerParameters{
+	params := TriggerParameters{
 		Event:          "gift",
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
@@ -42,7 +42,7 @@ func TestFire(t *testing.T) {
 	a.Nil(err)
 	a.NotEmpty(res)
 
-	params = *&TriggerParameters{
+	params = TriggerParameters{
 		Event:          "cheer",
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
@@ -61,7 +61,7 @@ func TestFire(t *testing.T) {
 	a.Nil(err)
 	a.NotEmpty(res)
 
-	params = *&TriggerParameters{
+	params = TriggerParameters{
 		Event:          "follow",
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
@@ -81,7 +81,7 @@ func TestFire(t *testing.T) {
 	a.Nil(err)
 	a.NotEmpty(res)
 
-	params = *&TriggerParameters{
+	params = TriggerParameters{
 		Event:          "cheer",
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
@@ -100,7 +100,7 @@ func TestFire(t *testing.T) {
 	a.Nil(err)
 	a.NotEmpty(res)
 
-	params = *&TriggerParameters{
+	params = TriggerParameters{
 		Event:          "add-redemption",
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
@@ -119,7 +119,7 @@ func TestFire(t *testing.T) {
 	a.Nil(err)
 	a.NotEmpty(res)
 
-	params = *&TriggerParameters{
+	params = TriggerParameters{
 		Event:          "add-reward",
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
@@ -138,7 +138,7 @@ func TestFire(t *testing.T) {
 	a.Nil(err)
 	a.NotEmpty(res)
 
-	params = *&TriggerParameters{
+	params = TriggerParameters{
 		Event:          "transaction",
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
@@ -157,7 +157,7 @@ func TestFire(t *testing.T) {
 	a.Nil(err)
 	a.NotEmpty(res)
 
-	params = *&TriggerParameters{
+	params = TriggerParameters{
 		Event:          "add-reward",
 		Transport:      "potato",
 		IsAnonymous:    false,

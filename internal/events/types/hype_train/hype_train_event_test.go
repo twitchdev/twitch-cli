@@ -16,7 +16,7 @@ var toUser = "4567"
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		ToUserID:           toUser,
 		Transport:          models.TransportWebhook,
 		Trigger:            "hype-train-begin",
@@ -33,7 +33,7 @@ func TestEventSub(t *testing.T) {
 	a.Equal("channel.hype_train.begin", body.Subscription.Type, "Expected event type %v, got %v", "channel.hype_train.begin", body.Subscription.Type)
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 
-	params = *&events.MockEventParameters{
+	params = events.MockEventParameters{
 		ToUserID:           toUser,
 		Transport:          models.TransportWebhook,
 		Trigger:            "hype-train-progress",
@@ -50,7 +50,7 @@ func TestEventSub(t *testing.T) {
 	a.Equal("channel.hype_train.progress", body.Subscription.Type, "Expected event type %v, got %v", "channel.hype_train.progress", body.Subscription.Type)
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
 
-	params = *&events.MockEventParameters{
+	params = events.MockEventParameters{
 		ToUserID:  toUser,
 		Transport: models.TransportWebhook,
 		Trigger:   "hype-train-end",
@@ -71,7 +71,7 @@ func TestEventSub(t *testing.T) {
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		ToUserID:  toUser,
 		Transport: "fake_transport",
 		Trigger:   "hype-train-progress",

@@ -16,7 +16,7 @@ var toUser = "4567"
 func TestEventSub(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		ToUserID:  toUser,
 		Transport: models.TransportWebhook,
 		Trigger:   "user-update",
@@ -35,7 +35,7 @@ func TestEventSub(t *testing.T) {
 func TestFakeTransport(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	params := *&events.MockEventParameters{
+	params := events.MockEventParameters{
 		ToUserID:  toUser,
 		Transport: "fake_transport",
 		Trigger:   "unsubscribe",
