@@ -56,17 +56,17 @@ func TestNewRequest(t *testing.T) {
 
 	defaultAutoPaginate := 0
 	// tests for normal get requests
-	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, true, nil)
-	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, false, &defaultAutoPaginate)
+	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, true, nil, false)
+	NewRequest("GET", "", []string{"test=1", "test=2"}, nil, false, &defaultAutoPaginate, false)
 
 	// testing cursors autopagination
-	NewRequest("GET", "/cursor", []string{"test=1", "test=2"}, nil, false, &defaultAutoPaginate)
+	NewRequest("GET", "/cursor", []string{"test=1", "test=2"}, nil, false, &defaultAutoPaginate, false)
 
 	// testing 204 no-content apis
-	NewRequest("POST", "/nocontent", []string{"test=1", "test=2"}, nil, false, nil)
+	NewRequest("POST", "/nocontent", []string{"test=1", "test=2"}, nil, false, nil, false)
 
 	// testing 500 errors
-	NewRequest("GET", "/error", []string{"test=1", "test=2"}, nil, false, &defaultAutoPaginate)
+	NewRequest("GET", "/error", []string{"test=1", "test=2"}, nil, false, &defaultAutoPaginate, false)
 }
 
 func TestValidOptions(t *testing.T) {
