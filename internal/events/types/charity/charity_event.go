@@ -38,11 +38,9 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	var event []byte
 	var err error
 	var campaign_id *string // only used by channel.charity_campaign.donate
-	var id *string          // used by the rest of channel.charity_campaign.*
+	var id string           // used by the rest of channel.charity_campaign.*
 	var user_id *string
 	var user_login_name *string
-	var charity_description *string
-	var charity_website *string
 	var amount *models.CharityEventSubEventAmount
 	var current_amount *models.CharityEventSubEventAmount
 	var target_amount *models.CharityEventSubEventAmount
@@ -58,7 +56,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 	if params.Trigger == "charity-donate" {
 		campaign_id = &randomID
-		id = &randomID2
+		id = randomID2
 		user_id = &params.FromUserID
 		user_login_name = &params.FromUserName
 
@@ -77,9 +75,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	if params.Trigger == "charity-start" {
-		id = &randomID
-		charity_description = &charityDescription
-		charity_website = &charityWebsite
+		id = randomID
 		current_amount = &models.CharityEventSubEventAmount{
 			Value:         params.CharityCurrentValue,
 			DecimalPlaces: 2,
@@ -94,7 +90,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	if params.Trigger == "charity-progress" {
-		id = &randomID
+		id = randomID
 
 		currentValue := params.CharityCurrentValue
 		if params.CharityCurrentValue == 0 {
@@ -116,9 +112,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	if params.Trigger == "charity-stop" {
-		id = &randomID
-		charity_description = &charityDescription
-		charity_website = &charityWebsite
+		id = randomID
 
 		currentValue := params.CharityCurrentValue
 		if params.CharityCurrentValue == 0 {
@@ -169,9 +163,9 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				UserName:             user_login_name,
 				UserLogin:            user_login_name,
 				CharityName:          charityName,
-				CharityDescription:   charity_description,
+				CharityDescription:   charityDescription,
 				CharityLogo:          charityLogo,
-				CharityWebsite:       charity_website,
+				CharityWebsite:       charityWebsite,
 				Amount:               amount,
 				CurrentAmount:        current_amount,
 				TargetAmount:         target_amount,
