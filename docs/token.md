@@ -59,6 +59,8 @@ The `-u` flag is what sets the `token` product to fetch a User Access Token inst
 
 User Access Tokens use scopes to determine which APIs and features they have access to. The requested scopes are defined via a space separated list following an `-s` flag with the `token` product. 
 
+The full list of available scopes [here in the Twitch Documentation](https://dev.twitch.tv/docs/authentication/scopes/)
+
 **Example**
 
 A full example fetching a User Access Token with the ability to do shoutouts and set shield modes looks like this:
@@ -75,7 +77,7 @@ The browser will display a message like:
 Feel free to close this browser window.
 ```
 
-The terminal outputs the response like this:
+The terminal outputs the tokens in a response like this:
 
 ```
 Opening browser. Press Ctrl+C to cancel...
@@ -86,11 +88,6 @@ Refresh Token: 012345asdfetc...
 Expires At: 2023-08-23 22:06:47.036137 +0000 UTC
 Scopes: [moderator:manage:shield_mode moderator:manage:shoutouts]
 ```
-
-**Scope List*
-
-The full list of available scopes [here in the Twitch Documentation](https://dev.twitch.tv/docs/authentication/scopes/)
-
 
 ## Revoking Access Tokens
 
