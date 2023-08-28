@@ -4,9 +4,11 @@ package trigger
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -78,6 +80,12 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 		}
 	}
 
+	var dialer net.Dialer
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialContext = func (ctx context.Context, network, addr string) (net.Conn, error) {
+		return dialer.DialContext(ctx, "tcp4", addr)
+	}
+	
 	if p.Secret != "" {
 		getSignatureHeader(req, p.ID, p.Secret, p.Transport, p.Timestamp, p.JSON)
 	}
@@ -87,6 +95,7 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
+		Transport: transport,
 	}
 	resp, err := client.Do(req)
 	if err != nil {
