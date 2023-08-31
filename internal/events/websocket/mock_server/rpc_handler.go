@@ -253,6 +253,12 @@ func RPCSubscriptionHandler(args rpc.RPCArgs) rpc.RPCResponse {
 				found = true
 
 				server.Subscriptions[client][i].Status = args.Variables["SubscriptionStatus"]
+				if args.Variables["SubscriptionStatus"] == STATUS_ENABLED {
+					server.Subscriptions[client][i].DisabledAt = nil
+				} else {
+					tNow := util.GetTimestamp()
+					server.Subscriptions[client][i].DisabledAt = &tNow
+				}
 				break
 			}
 		}

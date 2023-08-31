@@ -410,6 +410,8 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 						foundClientId = sub.ClientID
 
 						ws.Subscriptions[client][i].Status = STATUS_AUTHORIZATION_REVOKED
+						tNow := util.GetTimestamp()
+						ws.Subscriptions[client][i].DisabledAt = &tNow
 						break
 					}
 				}
@@ -503,9 +505,12 @@ func (ws *WebSocketServer) handleClientConnectionClose(client *Client, closeReas
 		subscriptions := ws.Subscriptions[client.clientName]
 		for i := range subscriptions {
 			if subscriptions[i].Status == STATUS_ENABLED {
+				tNow := util.GetTimestamp()
+
 				subscriptions[i].Status = getStatusFromCloseMessage(closeReason)
 				subscriptions[i].ClientConnectedAt = ""
-				subscriptions[i].ClientDisconnectedAt = time.Now().UTC().Format(time.RFC3339Nano)
+				subscriptions[i].ClientDisconnectedAt = tNow.Format(time.RFC3339Nano)
+				subscriptions[i].DisabledAt = &tNow
 			}
 		}
 		ws.Subscriptions[client.clientName] = subscriptions
