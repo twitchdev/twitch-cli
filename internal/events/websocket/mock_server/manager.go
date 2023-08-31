@@ -270,7 +270,7 @@ func subscriptionPageHandlerGet(w http.ResponseWriter, r *http.Request) {
 
 			if clientID == "debug" || (subscription.ClientID == clientID && !disabledAndExpired) {
 				allSubscriptions = append(allSubscriptions, SubscriptionPostSuccessResponseBody{
-					ID:        subscription.ClientID,
+					ID:        subscription.SubscriptionID,
 					Status:    subscription.Status,
 					Type:      subscription.Type,
 					Version:   subscription.Version,
