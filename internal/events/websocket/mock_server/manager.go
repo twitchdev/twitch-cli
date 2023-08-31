@@ -264,7 +264,7 @@ func subscriptionPageHandlerGet(w http.ResponseWriter, r *http.Request) {
 	for clientName, clientSubscriptions := range server.Subscriptions {
 		for _, subscription := range clientSubscriptions {
 			disabledAndExpired := false // Production EventSub only shows disabled WebSocket subscriptions that were disabled under 1 hour ago
-			if subscription.DisabledAt != nil && subscription.DisabledAt.Add(time.Minute*2).Before(util.GetTimestamp()) {
+			if subscription.DisabledAt != nil && subscription.DisabledAt.Add(time.Hour).Before(util.GetTimestamp()) {
 				disabledAndExpired = true
 			}
 
