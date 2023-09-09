@@ -19,11 +19,11 @@ import (
 const KEEPALIVE_TIMEOUT_SECONDS = 10
 
 type WebSocketServer struct {
-	ServerId string // Int representing the ID of the server
-	//ConnectionUrl string // Server's url for people to connect to. Used for messaging in reconnect testing
-	DebugEnabled bool // Display debug messages; --debug
-	StrictMode   bool // Force stricter production-like qualities; --strict
-	Upgrader     websocket.Upgrader
+	ServerId     string // Int representing the ID of the server
+	DebugEnabled bool   // Display debug messages; --debug
+	StrictMode   bool   // Force stricter production-like qualities; --strict
+
+	Upgrader websocket.Upgrader
 
 	Clients   *util.List[Client] // All connected clients
 	muClients sync.Mutex         // Mutex for WebSocketServer.Clients
@@ -428,6 +428,7 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 		}
 
 		// Check for subscriptions when running with --require-subscription
+		subscriptionCreatedAtTimestamp := "" // Used below if in strict mode
 		if ws.StrictMode {
 			found := false
 			for _, clientSubscriptions := range ws.Subscriptions {
@@ -438,6 +439,7 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 				for _, sub := range clientSubscriptions {
 					if sub.SessionClientName == client.clientName && sub.Type == eventObj.Subscription.Type && sub.Version == eventObj.Subscription.Version {
 						found = true
+						subscriptionCreatedAtTimestamp = sub.CreatedAt
 					}
 				}
 			}
@@ -449,6 +451,16 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 
 		// Change payload's subscription.transport.session_id to contain the correct Session ID
 		eventObj.Subscription.Transport.SessionID = fmt.Sprintf("%v_%v", ws.ServerId, client.clientName)
+
+		// Change payload's subscription.created_at to contain the correct timestamp -- https://github.com/twitchdev/twitch-cli/issues/264
+		if ws.StrictMode {
+			// When running WITH --require-subscription, created_at will be set to the time the subscription was created using the mock EventSub REST endpoint
+			eventObj.Subscription.CreatedAt = subscriptionCreatedAtTimestamp
+		} else {
+			// When running WITHOUT --require-subscription, created_at will be set to the time the client connected
+			// This is because without --require-subscription the server "grants" access to all event subscriptions at the moment the client is connected
+			eventObj.Subscription.CreatedAt = client.ConnectedAtTimestamp
+		}
 
 		// Build notification message
 		notificationMsg, err := json.Marshal(

@@ -117,10 +117,7 @@ func RPCFireEventSubHandler(args rpc.RPCArgs) rpc.RPCResponse {
 		}
 	}
 
-	clientName, exists := args.Variables["ClientName"]
-	if !exists {
-
-	}
+	clientName := args.Variables["ClientName"]
 	if sessionRegex.MatchString(clientName) {
 		// Users can include the full session_id given in the response. If they do, subtract it to just the client name
 		clientName = sessionRegex.FindAllStringSubmatch(clientName, -1)[0][2]
