@@ -29,7 +29,7 @@ var (
 func TestMain(m *testing.M) {
 	test_setup.SetupTestEnv(&testing.T{})
 
-	db, err := database.NewConnection()
+	db, err := database.NewConnection(true)
 	if err != nil {
 		log.Fatal(err)
 	}

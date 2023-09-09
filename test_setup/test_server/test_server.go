@@ -18,7 +18,7 @@ func SetupTestServer(next mock_api.MockEndpoint) *httptest.Server {
 		ctx := context.Background()
 
 		// just stub it all
-		db, err := database.NewConnection()
+		db, err := database.NewConnection(true)
 		if err != nil {
 			log.Fatalf("Error connecting to database: %v", err.Error())
 			return

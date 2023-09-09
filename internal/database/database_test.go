@@ -46,7 +46,7 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	db, err = NewConnection()
+	db, err = NewConnection(true)
 	if err != nil {
 		log.Print(err)
 	}

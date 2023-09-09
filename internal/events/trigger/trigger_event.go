@@ -156,7 +156,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		return "", err
 	}
 
-	db, err := database.NewConnection()
+	db, err := database.NewConnection(false)
 	if err != nil {
 		return "", err
 	}
