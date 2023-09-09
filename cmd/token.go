@@ -30,7 +30,7 @@ func init() {
 	rootCmd.AddCommand(loginCmd)
 
 	loginCmd.Flags().BoolVarP(&isUserToken, "user-token", "u", false, "Whether to login as a user or getting an app access token.")
-	loginCmd.Flags().StringVarP(&userScopes, "scopes", "s", "", "Space seperated list of scopes to request with your user token.")
+	loginCmd.Flags().StringVarP(&userScopes, "scopes", "s", "", "Space separated list of scopes to request with your user token.")
 	loginCmd.Flags().StringVarP(&revokeToken, "revoke", "r", "", "Instead of generating a new token, revoke the one passed to this parameter.")
 	loginCmd.Flags().StringVar(&overrideClientId, "client-id", "", "Override/manually set client ID for token actions. By default client ID from CLI config will be used.")
 	loginCmd.Flags().StringVar(&tokenServerIP, "ip", "localhost", "Manually set the IP address to be binded to for the User Token web server.")
