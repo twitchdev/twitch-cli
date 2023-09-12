@@ -80,6 +80,7 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 		}
 	}
 
+	// Twitch only supports IPv4 currently, so we will force this TCP connection to only use IPv4
 	var dialer net.Dialer
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.DialContext = func (ctx context.Context, network, addr string) (net.Conn, error) {
