@@ -28,7 +28,7 @@ type UserInfo struct {
 var f = false
 
 func Generate(userCount int) error {
-	db, err := database.NewConnection()
+	db, err := database.NewConnection(false)
 	if err != nil {
 		return err
 	}

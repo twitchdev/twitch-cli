@@ -33,7 +33,7 @@ func StartServer(port int) error {
 
 	ctx := context.Background()
 
-	db, err := database.NewConnection()
+	db, err := database.NewConnection(false)
 	if err != nil {
 		return fmt.Errorf("Error connecting to database: %v", err.Error())
 	}

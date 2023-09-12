@@ -91,7 +91,7 @@ func TestValidateToken(t *testing.T) {
 	a.Nil(err, err)
 	a.Equal(401, resp.StatusCode)
 
-	db, err := database.NewConnection()
+	db, err := database.NewConnection(true)
 	a.Nil(err, err)
 	defer db.DB.Close()
 
@@ -152,7 +152,7 @@ func baseMiddleware(next http.Handler) http.Handler {
 		ctx := context.Background()
 
 		// just stub it all
-		db, err := database.NewConnection()
+		db, err := database.NewConnection(true)
 		if err != nil {
 			log.Fatalf("Error connecting to database: %v", err.Error())
 			return
