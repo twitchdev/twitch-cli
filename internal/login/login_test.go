@@ -151,7 +151,7 @@ func TestUserAuthServer(t *testing.T) {
 		userResponse <- *res
 	}()
 
-	time.Sleep(25)
+	time.Sleep(1 * time.Second)
 	_, err = loginRequest(http.MethodGet, fmt.Sprintf("http://localhost:3000?code=%s&state=%s", code, state), nil)
 	a.Nil(err, err)
 
