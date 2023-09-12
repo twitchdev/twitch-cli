@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 	test_setup.SetupTestEnv(&testing.T{})
 
 	// adding mock data
-	db, _ := database.NewConnection()
+	db, _ := database.NewConnection(true)
 	q := db.NewQuery(nil, 100)
 	q.InsertStream(database.Stream{ID: util.RandomGUID(), UserID: "1", StreamType: "live", ViewerCount: 0}, false)
 	db.DB.Close()

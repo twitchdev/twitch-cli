@@ -117,10 +117,7 @@ func RPCFireEventSubHandler(args rpc.RPCArgs) rpc.RPCResponse {
 		}
 	}
 
-	clientName, exists := args.Variables["ClientName"]
-	if !exists {
-
-	}
+	clientName := args.Variables["ClientName"]
 	if sessionRegex.MatchString(clientName) {
 		// Users can include the full session_id given in the response. If they do, subtract it to just the client name
 		clientName = sessionRegex.FindAllStringSubmatch(clientName, -1)[0][2]
@@ -253,6 +250,12 @@ func RPCSubscriptionHandler(args rpc.RPCArgs) rpc.RPCResponse {
 				found = true
 
 				server.Subscriptions[client][i].Status = args.Variables["SubscriptionStatus"]
+				if args.Variables["SubscriptionStatus"] == STATUS_ENABLED {
+					server.Subscriptions[client][i].DisabledAt = nil
+				} else {
+					tNow := util.GetTimestamp()
+					server.Subscriptions[client][i].DisabledAt = &tNow
+				}
 				break
 			}
 		}

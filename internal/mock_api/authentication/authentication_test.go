@@ -94,7 +94,7 @@ func baseMiddleware(next http.Handler) http.Handler {
 		ctx := context.Background()
 
 		// just stub it all
-		db, err := database.NewConnection()
+		db, err := database.NewConnection(false)
 		if err != nil {
 			log.Fatalf("Error connecting to database: %v", err.Error())
 			return

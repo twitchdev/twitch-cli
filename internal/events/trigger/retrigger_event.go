@@ -12,7 +12,7 @@ import (
 )
 
 func RefireEvent(id string, p TriggerParameters) (string, error) {
-	db, err := database.NewConnection()
+	db, err := database.NewConnection(false)
 	if err != nil {
 		return "", err
 	}

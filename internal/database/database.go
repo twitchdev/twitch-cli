@@ -21,8 +21,8 @@ type CLIDatabase struct {
 	DB *sqlx.DB
 }
 
-func NewConnection() (CLIDatabase, error) {
-	db, err := getDatabase()
+func NewConnection(extendedBusyTimeout bool) (CLIDatabase, error) {
+	db, err := getDatabase(extendedBusyTimeout)
 	if err != nil {
 		return CLIDatabase{}, err
 	}
@@ -30,7 +30,8 @@ func NewConnection() (CLIDatabase, error) {
 	return CLIDatabase{DB: &db}, nil
 }
 
-func getDatabase() (sqlx.DB, error) {
+// extendedBusyTimeout sets an extended timeout for waiting on a busy database. This is mainly an issue in tests on WSL, so this flag shouldn't be used in production.
+func getDatabase(extendedBusyTimeout bool) (sqlx.DB, error) {
 	home, err := util.GetApplicationDir()
 	if err != nil {
 		return sqlx.DB{}, err
@@ -46,9 +47,14 @@ func getDatabase() (sqlx.DB, error) {
 		needToInit = true
 	}
 
+	// force Foreign Key support ("fk=true")
+	dbFlags := "?_fk=true&cache=shared"
+	if extendedBusyTimeout {
+		// https://www.sqlite.org/c3ref/busy_timeout.html
+		dbFlags += "&_busy_timeout=60000"
+	}
 	for i := 0; i <= 5; i++ {
-		// open and force Foreign Key support ("fk=true")
-		db, err := sqlx.Open("sqlite3", path+"?_fk=true&cache=shared")
+		db, err := sqlx.Open("sqlite3", path+dbFlags)
 		if err != nil {
 			log.Print(i)
 			if i == 5 {
