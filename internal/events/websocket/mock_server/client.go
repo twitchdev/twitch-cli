@@ -11,7 +11,7 @@ type Client struct {
 	clientName           string // Unique name for the client. Not the Client ID.
 	conn                 *websocket.Conn
 	mutex                sync.Mutex
-	ConnectedAtTimestamp string
+	ConnectedAtTimestamp string // RFC3339Nano timestamp indicating when the client connected to the server
 	connectionUrl        string
 
 	mustSubscribeTimer *time.Timer

@@ -263,9 +263,14 @@ func subscriptionPageHandlerGet(w http.ResponseWriter, r *http.Request) {
 
 	for clientName, clientSubscriptions := range server.Subscriptions {
 		for _, subscription := range clientSubscriptions {
-			if clientID == "debug" || subscription.ClientID == clientID {
+			disabledAndExpired := false // Production EventSub only shows disabled WebSocket subscriptions that were disabled under 1 hour ago
+			if subscription.DisabledAt != nil && subscription.DisabledAt.Add(time.Hour).Before(util.GetTimestamp()) {
+				disabledAndExpired = true
+			}
+
+			if clientID == "debug" || (subscription.ClientID == clientID && !disabledAndExpired) {
 				allSubscriptions = append(allSubscriptions, SubscriptionPostSuccessResponseBody{
-					ID:        subscription.ClientID,
+					ID:        subscription.SubscriptionID,
 					Status:    subscription.Status,
 					Type:      subscription.Type,
 					Version:   subscription.Version,
