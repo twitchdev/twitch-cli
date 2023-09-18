@@ -102,7 +102,7 @@ func getCharityDonations(w http.ResponseWriter, r *http.Request) {
 			UserID:    userCtx.UserID,
 			UserName:  user.DisplayName,
 			UserLogin: user.UserLogin,
-			Amount: CharityAmount{
+			TargetAmount: CharityAmount{
 				Value:         rand.Intn(150000-300) + 300, // Between $3 and $1,500
 				DecimalPlaces: 2,
 				Currency:      "USD",
