@@ -34,11 +34,11 @@ var donationsScopesByMethod = map[string][]string{
 type CharityDonations struct{}
 
 type GetCharityDonationsResponse struct {
-	ID        string        `json:"campaign_id"`
-	UserID    string        `json:"user_id"`
-	UserLogin string        `json:"user_login"`
-	UserName  string        `json:"user_name"`
-	Amount    CharityAmount `json:"amount"`
+	ID        		string        `json:"campaign_id"`
+	UserID    		string        `json:"user_id"`
+	UserLogin 		string        `json:"user_login"`
+	UserName  		string        `json:"user_name"`
+	TargetAmount 	CharityAmount `json:"target_amount"`
 }
 
 func (e CharityDonations) Path() string { return "/charity/donations" }
