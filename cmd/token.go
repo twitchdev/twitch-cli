@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/twitchdev/twitch-cli/internal/login"
 
 	"github.com/spf13/cobra"
@@ -85,20 +86,23 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 
 		expiresInTimestamp := time.Now().Add(time.Duration(r.ExpiresIn) * time.Second).UTC().Format(time.RFC1123)
 
-		println("Client ID: " + r.ClientID)
-		println("Token Type: " + tokenType)
+		lightYellow := color.New(color.FgHiYellow).PrintfFunc()
+		white := color.New(color.FgWhite).SprintfFunc()
+
+		lightYellow("Client ID: %v\n", white(r.ClientID))
+		lightYellow("Token Type: %v\n", white(tokenType))
 		if r.UserID != "" {
-			println("User ID: " + r.UserID)
-			println("User Login: " + r.UserLogin)
+			lightYellow("User ID: %v\n", white(r.UserID))
+			lightYellow("User Login: %v\n", white(r.UserLogin))
 		}
-		println("Expires In: " + strconv.FormatInt(r.ExpiresIn, 10) + " (" + expiresInTimestamp + ")")
+		lightYellow("Expires In: %v\n", white("%v (%v)", strconv.FormatInt(r.ExpiresIn, 10), expiresInTimestamp))
 
 		if len(r.Scopes) == 0 {
-			println("Scopes: None")
+			lightYellow("User ID: %v\n", white("None"))
 		} else {
-			println("Scopes:")
+			lightYellow("Scopes:\n")
 			for _, s := range r.Scopes {
-				println("- " + s)
+				fmt.Println(white("- %v\n", s))
 			}
 		}
 	} else if isUserToken == true {
