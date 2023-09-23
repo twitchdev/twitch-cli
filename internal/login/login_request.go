@@ -16,8 +16,21 @@ type loginRequestResponse struct {
 	Body       []byte
 }
 
+type loginHeader struct {
+	Key   string
+	Value string
+}
+
 func loginRequest(method string, url string, payload io.Reader) (loginRequestResponse, error) {
+	return loginRequestWithHeaders(method, url, payload, []loginHeader{})
+}
+
+func loginRequestWithHeaders(method string, url string, payload io.Reader, headers []loginHeader) (loginRequestResponse, error) {
 	req, err := request.NewRequest(method, url, payload)
+
+	for _, header := range headers {
+		req.Header.Add(header.Key, header.Value)
+	}
 
 	client := &http.Client{
 		Timeout: time.Second * 10,

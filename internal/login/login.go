@@ -57,6 +57,14 @@ type LoginResponse struct {
 	ExpiresAt time.Time
 }
 
+type ValidateResponse struct {
+	ClientID  string   `json:"client_id"`
+	UserLogin string   `json:"login"`
+	UserID    string   `json:"user_id"`
+	Scopes    []string `json:"scopes"`
+	ExpiresIn int64    `json:"expires_in"`
+}
+
 const ClientCredentialsURL = "https://id.twitch.tv/oauth2/token?grant_type=client_credentials"
 
 const UserCredentialsURL = "https://id.twitch.tv/oauth2/token?grant_type=authorization_code"
@@ -65,6 +73,8 @@ const UserAuthorizeURL = "https://id.twitch.tv/oauth2/authorize?response_type=co
 const RefreshTokenURL = "https://id.twitch.tv/oauth2/token?grant_type=refresh_token"
 
 const RevokeTokenURL = "https://id.twitch.tv/oauth2/revoke"
+
+const ValidateTokenURL = "https://id.twitch.tv/oauth2/validate"
 
 func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	u, err := url.Parse(p.URL)
@@ -211,6 +221,31 @@ func RefreshUserToken(p RefreshParameters) (LoginResponse, error) {
 	if err != nil {
 		log.Printf("Error handling login: %v", err)
 		return LoginResponse{}, err
+	}
+
+	return r, nil
+}
+
+func ValidateCredentials(p LoginParameters) (ValidateResponse, error) {
+	u, err := url.Parse(p.URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	resp, err := loginRequestWithHeaders(http.MethodGet, u.String(), nil, []loginHeader{
+		loginHeader{
+			Key:   "Authorization",
+			Value: "OAuth " + p.Token,
+		},
+	})
+	if err != nil {
+		return ValidateResponse{}, err
+	}
+
+	// Handle validate response body
+	var r ValidateResponse
+	if err = json.Unmarshal(resp.Body, &r); err != nil {
+		return ValidateResponse{}, err
 	}
 
 	return r, nil
