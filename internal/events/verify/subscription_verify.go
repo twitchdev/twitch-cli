@@ -5,7 +5,7 @@ package verify
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"mime"
 	"net/http"
 	"net/url"
@@ -86,7 +86,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		}
 		defer resp.Body.Close()
 
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return VerifyResponse{}, err
 		}

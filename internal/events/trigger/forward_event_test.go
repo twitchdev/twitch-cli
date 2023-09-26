@@ -6,7 +6,7 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,7 +29,7 @@ func TestForwardEventEventsub(t *testing.T) {
 		a.NotEmpty(r.Header.Get("Twitch-Eventsub-Subscription-Type"))
 		a.NotEmpty(r.Header.Get("Twitch-Eventsub-Message-Id"))
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		a.Nil(err)
 		a.NotNil(body)
 
