@@ -4,7 +4,6 @@ package login
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -40,7 +39,7 @@ func loginRequestWithHeaders(method string, url string, payload io.Reader, heade
 		return loginRequestResponse{}, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 
 	defer resp.Body.Close()
 

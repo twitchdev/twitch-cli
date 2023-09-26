@@ -233,7 +233,7 @@ func ValidateCredentials(p LoginParameters) (ValidateResponse, error) {
 	}
 
 	resp, err := loginRequestWithHeaders(http.MethodGet, u.String(), nil, []loginHeader{
-		loginHeader{
+		{
 			Key:   "Authorization",
 			Value: "OAuth " + p.Token,
 		},
