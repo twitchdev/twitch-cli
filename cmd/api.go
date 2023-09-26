@@ -4,8 +4,8 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/twitchdev/twitch-cli/internal/api"
@@ -136,7 +136,7 @@ func cmdRun(cmd *cobra.Command, args []string) error {
 }
 
 func getBodyFromFile(filename string) (string, error) {
-	content, err := ioutil.ReadFile(filename)
+	content, err := os.ReadFile(filename)
 	if err != nil {
 		return "", err
 	}
