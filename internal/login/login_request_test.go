@@ -3,7 +3,7 @@
 package login
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,7 +19,7 @@ func TestLoginRequest(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(ok))
 
-		_, err := ioutil.ReadAll(r.Body)
+		_, err := io.ReadAll(r.Body)
 		a.Nil(err)
 
 	}))

@@ -5,7 +5,7 @@ package api
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -49,7 +49,7 @@ func apiRequest(method string, url string, payload []byte, p apiRequestParameter
 		return apiRequestResponse{}, err
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 
 	defer resp.Body.Close()
 

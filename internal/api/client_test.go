@@ -3,7 +3,7 @@
 package api
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,7 +21,7 @@ func TestNewClient(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(ok))
 
-		_, err := ioutil.ReadAll(r.Body)
+		_, err := io.ReadAll(r.Body)
 		a.Nil(err)
 
 	}))
@@ -33,7 +33,7 @@ func TestNewClient(t *testing.T) {
 	resp, err := c.Do(req)
 	a.Nil(err)
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	defer resp.Body.Close()
 	a.NoError(err)
 	a.Equal(ok, string(body), "Body mismatch")

@@ -4,7 +4,7 @@ package verify
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,7 +20,7 @@ func TestSubscriptionVerify(t *testing.T) {
 		var challenge string
 		w.WriteHeader(http.StatusAccepted)
 
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		a.Nil(err)
 
 		if r.Method == http.MethodPost {

@@ -3,7 +3,7 @@
 package api
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,7 +21,7 @@ func TestApiRequest(t *testing.T) {
 		a.Equal("1234", r.Header.Get("Client-ID"), "Client ID invalid.")
 		a.Equal("Bearer 4567", r.Header.Get("Authorization"), "Token invalid.")
 
-		_, err := ioutil.ReadAll(r.Body)
+		_, err := io.ReadAll(r.Body)
 		a.Nil(err)
 	}))
 
