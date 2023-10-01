@@ -4,7 +4,6 @@ package database
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
 	"github.com/twitchdev/twitch-cli/internal/util"
 	"github.com/twitchdev/twitch-cli/test_setup"
@@ -402,12 +400,6 @@ func TestDrops(t *testing.T) {
 	entitlements := dbr.Data.([]DropsEntitlement)
 	a.GreaterOrEqual(len(entitlements), 1)
 	a.Equal(e.BenefitID, entitlements[0].BenefitID)
-}
-
-func TestErrors(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-
-	a.False(DatabaseErrorIs(errors.New(""), sqlite3.ErrReadonlyRollback))
 }
 
 func TestModeration(t *testing.T) {
