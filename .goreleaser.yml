@@ -34,8 +34,8 @@ builds:
     binary: twitch
     env:
       - CGO_ENABLED=1
-      - CC=aarch64-linux-gnu-gcc-6
-      - CXX=aarch64-linux-gnu-g++-6
+      - CC=aarch64-linux-gnu-gcc-9
+      - CXX=aarch64-linux-gnu-g++-9
     goos:
       - linux
     goarch:
