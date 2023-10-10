@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/mattn/go-sqlite3"
 	"github.com/twitchdev/twitch-cli/internal/database"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/authentication"
 	"github.com/twitchdev/twitch-cli/internal/mock_api/mock_errors"
@@ -173,6 +172,19 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if Game ID is valid
+	if params.GameID != "" {
+		dbr, err := db.NewQuery(r, 100).GetCategories(database.Category{ID: gameID.String})
+		if err != nil {
+			mock_errors.WriteServerError(w, err.Error())
+			return
+		}
+		if dbr.Total == 0 {
+			mock_errors.WriteBadRequest(w, "Game ID is invalid")
+			return
+		}
+	}
+
 	// Write
 	err = db.NewQuery(r, 100).UpdateChannel(broadcasterID, database.User{
 		ID:               broadcasterID,
@@ -184,10 +196,6 @@ func patchInformation(w http.ResponseWriter, r *http.Request) {
 		IsBrandedContent: isBrandedContent,
 	})
 	if err != nil {
-		if database.DatabaseErrorIs(err, sqlite3.ErrConstraintForeignKey) {
-			mock_errors.WriteBadRequest(w, "Game ID is invalid")
-			return
-		}
 		mock_errors.WriteServerError(w, err.Error())
 		return
 	}
