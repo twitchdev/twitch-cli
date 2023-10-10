@@ -14,7 +14,7 @@ test-release:
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-w /go/src/github.com/twitchdev/twitch-cli \
 		-e GITHUB_TOKEN=${GITHUB_TOKEN} \
-		twitch-cli:latest --clean --skip-publish --snapshot
+		twitch-cli:latest --clean --skip=publish --snapshot
 	
 build:
 	go build --ldflags "-s -w -X main.buildVersion=source"
