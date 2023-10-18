@@ -257,7 +257,8 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 
 		// Error checking for everything else
 		if reply.ResponseCode == 0 { // Zero will always be success
-			color.New().Add(color.FgGreen).Println(fmt.Sprintf(`✔ Forwarded for use in mock EventSub WebSocket server`))
+			fowardToEvtSubWS := `✔ Forwarded for use in mock EventSub WebSocket server`
+			color.New().Add(color.FgGreen).Println(fowardToEvtSubWS)
 		} else {
 			color.New().Add(color.FgRed).Println(fmt.Sprintf(`✗ EventSub WebSocket server failed to process event: [%v] %v`, reply.DetailedInfo, reply.DetailedInfo))
 		}
