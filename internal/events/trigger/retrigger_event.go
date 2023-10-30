@@ -51,11 +51,13 @@ func RefireEvent(id string, p TriggerParameters) (string, error) {
 			Type:                EventSubMessageTypeNotification,
 			SubscriptionVersion: e.SubscriptionVersion(),
 		})
-		defer resp.Body.Close()
 
 		if err != nil {
 			return "", err
 		}
+
+		defer resp.Body.Close()
+
 		fmt.Printf("[%v] Endpoint received refired event.", resp.StatusCode)
 	}
 
