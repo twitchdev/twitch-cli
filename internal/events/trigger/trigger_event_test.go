@@ -172,6 +172,6 @@ func TestFire(t *testing.T) {
 		Verbose:        false,
 		Count:          0,
 	}
-	res, err = Fire(params)
+	_, err = Fire(params)
 	a.NotNil(err)
 }
