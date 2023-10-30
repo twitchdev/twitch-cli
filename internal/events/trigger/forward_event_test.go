@@ -46,6 +46,4 @@ func TestForwardEventEventsub(t *testing.T) {
 		a.Equal(hash, r.Header.Get("Twitch-Eventsub-Message-Signature"))
 	}))
 	defer ts.Close()
-
-	// TODO update test
 }
