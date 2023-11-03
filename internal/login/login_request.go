@@ -28,7 +28,7 @@ func loginRequestWithHeaders(method string, url string, payload io.Reader, heade
 	req, err := request.NewRequest(method, url, payload)
 
 	if err != nil {
-		return loginRequestResponse{}, nil
+		return loginRequestResponse{}, err
 	}
 
 	for _, header := range headers {
