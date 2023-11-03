@@ -27,6 +27,10 @@ func loginRequest(method string, url string, payload io.Reader) (loginRequestRes
 func loginRequestWithHeaders(method string, url string, payload io.Reader, headers []loginHeader) (loginRequestResponse, error) {
 	req, err := request.NewRequest(method, url, payload)
 
+	if err != nil {
+		return loginRequestResponse{}, err
+	}
+
 	for _, header := range headers {
 		req.Header.Add(header.Key, header.Value)
 	}
