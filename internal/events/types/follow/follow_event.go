@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
-package follow_v1
+package follow
 
 import (
 	"encoding/json"
@@ -41,6 +41,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Version: e.SubscriptionVersion(),
 				Condition: models.EventsubCondition{
 					BroadcasterUserID: params.ToUserID,
+					ModeratorUserID:   params.FromUserID,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",
@@ -125,5 +126,5 @@ func (e Event) GetEventSubAlias(t string) string {
 }
 
 func (e Event) SubscriptionVersion() string {
-	return "1"
+	return "2"
 }

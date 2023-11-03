@@ -20,8 +20,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/cheer"
 	"github.com/twitchdev/twitch-cli/internal/events/types/drop"
 	"github.com/twitchdev/twitch-cli/internal/events/types/extension_transaction"
-	"github.com/twitchdev/twitch-cli/internal/events/types/follow_v1"
-	"github.com/twitchdev/twitch-cli/internal/events/types/follow_v2"
+	"github.com/twitchdev/twitch-cli/internal/events/types/follow"
 	"github.com/twitchdev/twitch-cli/internal/events/types/gift"
 	"github.com/twitchdev/twitch-cli/internal/events/types/goal"
 	"github.com/twitchdev/twitch-cli/internal/events/types/hype_train"
@@ -51,8 +50,7 @@ func AllEvents() []events.MockEvent {
 		cheer.Event{},
 		drop.Event{},
 		extension_transaction.Event{},
-		follow_v1.Event{},
-		follow_v2.Event{},
+		follow.Event{},
 		gift.Event{},
 		goal.Event{},
 		hype_train.Event{},

@@ -110,5 +110,8 @@ func Gone() map[string][]string {
 		"/soundtrack/playlists": {
 			"GET",
 		},
+		"/users/follows": {
+			"GET",
+		},
 	}
 }
