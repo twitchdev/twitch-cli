@@ -50,6 +50,7 @@ type Clip struct {
 	CreatedAt       string  `db:"created_at" json:"created_at"`
 	Duration        float64 `db:"duration" json:"duration"`
 	VodOffset       int     `db:"vod_offset" json:"vod_offset"`
+	IsFeatured      bool    `json:"is_featured"`
 	// calculated fields
 	URL          string `json:"url"`
 	ThumbnailURL string `json:"thumbnail_url"`
