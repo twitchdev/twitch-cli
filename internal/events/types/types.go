@@ -151,3 +151,11 @@ func GetByTriggerAndTransportAndVersion(trigger string, transport string, versio
 	// Default error
 	return nil, errors.New("Invalid event")
 }
+
+// These events were removed from production
+// This does not include any "beta" events, just old production versions
+func RemovedEvents() map[string]string {
+	return map[string]string{
+		"channel.follow": "1",
+	}
+}
