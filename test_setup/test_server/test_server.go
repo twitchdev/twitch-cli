@@ -47,6 +47,7 @@ func SetupTestServer(next mock_api.MockEndpoint) *httptest.Server {
 			"channel:read:subscriptions",
 			"clips:edit",
 			"moderation:read",
+			"moderator:read:followers",
 			"moderator:manage:automod",
 			"user:edit",
 			"user:edit:follows",

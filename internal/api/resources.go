@@ -171,6 +171,20 @@ var endpointMethodSupports = map[string]map[string]bool{
 		"PATCH":  true,
 		"DELETE": false,
 	},
+	"/channels/followed": {
+		"GET":    true,
+		"POST":   false,
+		"PUT":    false,
+		"PATCH":  false,
+		"DELETE": false,
+	},
+	"/channels/followers": {
+		"GET":    true,
+		"POST":   false,
+		"PUT":    false,
+		"PATCH":  false,
+		"DELETE": false,
+	},
 	"/subscriptions": {
 		"GET":    true,
 		"POST":   false,
@@ -191,13 +205,6 @@ var endpointMethodSupports = map[string]map[string]bool{
 		"PUT":    true,
 		"PATCH":  false,
 		"DELETE": false,
-	},
-	"/users/follows": {
-		"GET":    true,
-		"POST":   true,
-		"PUT":    false,
-		"PATCH":  false,
-		"DELETE": true,
 	},
 	"/users/extensions/list": {
 		"GET":    true,

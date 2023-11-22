@@ -38,13 +38,13 @@ type User struct {
 }
 
 type Follow struct {
-	BroadcasterID    string `db:"to_id" json:"to_id"`
-	BroadcasterLogin string `db:"to_login" json:"to_login"`
-	BroadcasterName  string `db:"to_name" json:"to_name"`
-	ViewerID         string `db:"from_id" json:"from_id"`
-	ViewerLogin      string `db:"from_login" json:"from_login"`
-	ViewerName       string `db:"from_name" json:"from_name"`
-	FollowedAt       string `db:"created_at" json:"followed_at"`
+	BroadcasterID    string `db:"to_id"`
+	BroadcasterLogin string `db:"to_login"`
+	BroadcasterName  string `db:"to_name"`
+	ViewerID         string `db:"from_id"`
+	ViewerLogin      string `db:"from_login"`
+	ViewerName       string `db:"from_name"`
+	FollowedAt       string `db:"created_at"`
 }
 
 type UserRequestParams struct {
@@ -185,7 +185,10 @@ func (q *Query) AddFollow(p UserRequestParams) error {
 	return err
 }
 
-func (q *Query) GetFollows(p UserRequestParams) (*DBResponse, error) {
+// "Total" returned depends on totalsFromUser bool.
+// "true" will return the number of people the user from p.UserID currently follows.
+// "false" will return the number of people the user from p.BroadcasterID currently follows.
+func (q *Query) GetFollows(p UserRequestParams, totalsFromUser bool) (*DBResponse, error) {
 	db := q.DB
 	var r []Follow
 	var f Follow
@@ -203,8 +206,16 @@ func (q *Query) GetFollows(p UserRequestParams) (*DBResponse, error) {
 		}
 		r = append(r, f)
 	}
+
+	totalsP := UserRequestParams{}
+	if totalsFromUser {
+		totalsP.UserID = p.UserID
+	} else {
+		totalsP.BroadcasterID = p.BroadcasterID
+	}
+
 	var total int
-	rows, err = q.DB.NamedQuery(generateSQL("select count(*) from follows", p, SEP_AND), p)
+	rows, err = q.DB.NamedQuery(generateSQL("select count(*) from follows", totalsP, SEP_AND), totalsP)
 	for rows.Next() {
 		err := rows.Scan(&total)
 		if err != nil {

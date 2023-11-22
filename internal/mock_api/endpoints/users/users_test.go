@@ -113,22 +113,3 @@ func TestBlocks(t *testing.T) {
 	a.Nil(err)
 	a.Equal(204, resp.StatusCode)
 }
-
-func TestFollows(t *testing.T) {
-	a := test_setup.SetupTestEnv(t)
-	ts := test_server.SetupTestServer(FollowsEndpoint{})
-
-	// get
-	req, _ := http.NewRequest(http.MethodGet, ts.URL+FollowsEndpoint{}.Path(), nil)
-	q := req.URL.Query()
-	req.URL.RawQuery = q.Encode()
-	resp, err := http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(400, resp.StatusCode)
-
-	q.Set("to_id", "1")
-	req.URL.RawQuery = q.Encode()
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(200, resp.StatusCode)
-}

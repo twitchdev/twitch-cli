@@ -189,3 +189,53 @@ func TestInformation(t *testing.T) {
 	a.Nil(err)
 	a.Equal(400, resp.StatusCode)
 }
+
+func TestFollowed(t *testing.T) {
+	a := test_setup.SetupTestEnv(t)
+	ts := test_server.SetupTestServer(FollowedEndpoint{})
+
+	// get
+	req, _ := http.NewRequest(http.MethodGet, ts.URL+FollowedEndpoint{}.Path(), nil)
+	q := req.URL.Query()
+	req.URL.RawQuery = q.Encode()
+	resp, err := http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	q.Set("user_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(200, resp.StatusCode)
+
+	q.Set("broadcaster_id", "2")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(200, resp.StatusCode)
+}
+
+func TestFollowers(t *testing.T) {
+	a := test_setup.SetupTestEnv(t)
+	ts := test_server.SetupTestServer(FollowersEndpoint{})
+
+	// get
+	req, _ := http.NewRequest(http.MethodGet, ts.URL+FollowersEndpoint{}.Path(), nil)
+	q := req.URL.Query()
+	req.URL.RawQuery = q.Encode()
+	resp, err := http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(400, resp.StatusCode)
+
+	q.Set("broadcaster_id", "1")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(200, resp.StatusCode)
+
+	q.Set("user_id", "2")
+	req.URL.RawQuery = q.Encode()
+	resp, err = http.DefaultClient.Do(req)
+	a.Nil(err)
+	a.Equal(200, resp.StatusCode)
+}

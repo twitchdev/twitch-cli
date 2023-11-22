@@ -273,7 +273,7 @@ func TestUsers(t *testing.T) {
 	err = q.AddFollow(urp)
 	a.Nil(err)
 
-	dbr, err = q.GetFollows(urp)
+	dbr, err = q.GetFollows(urp, false)
 	a.Nil(err)
 	follows := dbr.Data.([]Follow)
 	a.GreaterOrEqual(len(follows), 1)
