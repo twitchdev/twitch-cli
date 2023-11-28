@@ -75,15 +75,16 @@ func getBlocks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	apiResponse := models.APIResponse{
-		Data: dbr.Data,
+		Data:       dbr.Data,
+		Pagination: &models.APIPagination{},
 	}
 
 	if len(dbr.Data.([]database.Block)) == 0 {
-		dbr.Data = make([]database.Block, 0)
+		apiResponse.Data = []database.Block{}
 	}
 
 	if len(dbr.Data.([]database.Block)) == dbr.Limit {
-		apiResponse.Pagination = &models.APIPagination{Cursor: dbr.Cursor}
+		apiResponse.Pagination.Cursor = dbr.Cursor
 	}
 
 	bytes, _ := json.Marshal(apiResponse)
