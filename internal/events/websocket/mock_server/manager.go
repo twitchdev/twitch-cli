@@ -337,7 +337,14 @@ func subscriptionPageHandlerPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the topic exists
+	// Check if the topic was deprecated/removed
+	for e, v := range types.RemovedEvents() {
+		if body.Type == e && body.Version == v {
+			handlerResponseErrorGone(w)
+			return
+		}
+	}
+
 	_, err = types.GetByTriggerAndTransportAndVersion(body.Type, body.Transport.Method, body.Version)
 	if err != nil {
 		handlerResponseErrorBadRequest(w, "The combination of values in the type and version fields is not valid")
@@ -543,6 +550,16 @@ func handlerResponseErrorInternalServerError(w http.ResponseWriter, message stri
 		Error:   "Internal Server Error",
 		Message: message,
 		Status:  500,
+	})
+	w.Write(bytes)
+}
+
+func handlerResponseErrorGone(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusGone)
+	bytes, _ := json.Marshal(&SubscriptionPostErrorResponse{
+		Error:   "Gone",
+		Message: "This subscription type is not available.",
+		Status:  410,
 	})
 	w.Write(bytes)
 }

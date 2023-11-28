@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/twitchdev/twitch-cli/internal/database"
@@ -70,6 +72,8 @@ func getClips(w http.ResponseWriter, r *http.Request) {
 	startedAt := r.URL.Query().Get("started_at")
 	endedAt := r.URL.Query().Get("ended_at")
 
+	isFeatured := r.URL.Query().Get("is_featured")
+
 	if broadcasterID == "" && gameID == "" && id == "" {
 		mock_errors.WriteBadRequest(w, "one of broadcaster_id, game_id, or id is required")
 		return
@@ -77,6 +81,11 @@ func getClips(w http.ResponseWriter, r *http.Request) {
 
 	if endedAt != "" && startedAt == "" {
 		mock_errors.WriteBadRequest(w, "started_at is required if ended_at is provided")
+		return
+	}
+
+	if isFeatured != "" && (!strings.EqualFold(isFeatured, "false") && !strings.EqualFold(isFeatured, "true")) {
+		mock_errors.WriteBadRequest(w, "is_featured must be true or false")
 		return
 	}
 
@@ -92,6 +101,18 @@ func getClips(w http.ResponseWriter, r *http.Request) {
 	}
 
 	clips := dbr.Data.([]database.Clip)
+
+	if isFeatured != "" {
+		newClips := []database.Clip{}
+		for _, clip := range clips {
+			featured, _ := strconv.ParseBool(isFeatured)
+			if clip.IsFeatured == featured {
+				newClips = append(newClips, clip)
+			}
+		}
+		clips = newClips
+	}
+
 	apiResponse := models.APIResponse{
 		Data: clips,
 	}
