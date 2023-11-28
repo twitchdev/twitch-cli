@@ -79,7 +79,7 @@ func getBlocks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(dbr.Data.([]database.Block)) == 0 {
-		dbr.Data = make([]database.Block, 0)
+		apiResponse.Data = make([]database.Block, 0)
 	}
 
 	if len(dbr.Data.([]database.Block)) == dbr.Limit {
