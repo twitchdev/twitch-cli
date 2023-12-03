@@ -321,6 +321,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		Timestamp:         timestamp,
 		EventID:           eventID,
 		BroadcasterUserID: toUser,
+		Version:        version,
 	})
 
 	if err != nil {
