@@ -52,7 +52,11 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 
 	if clientID == "" || clientSecret == "" {
 		println("No Client ID or Secret found in configuration. Triggering configuration now.")
-		configureCmd.Run(cmd, args)
+		err := configureCmd.RunE(cmd, args)
+		if err != nil {
+			return err
+		}
+
 		clientID = viper.GetString("clientId")
 		clientSecret = viper.GetString("clientSecret")
 	}
