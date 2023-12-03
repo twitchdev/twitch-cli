@@ -21,6 +21,7 @@ var validateToken string
 var overrideClientId string
 var tokenServerPort int
 var tokenServerIP string
+var redirectHost string
 
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
@@ -37,8 +38,9 @@ func init() {
 	loginCmd.Flags().StringVarP(&revokeToken, "revoke", "r", "", "Instead of generating a new token, revoke the one passed to this parameter.")
 	loginCmd.Flags().StringVarP(&validateToken, "validate", "v", "", "Instead of generating a new token, validate the one passed to this parameter.")
 	loginCmd.Flags().StringVar(&overrideClientId, "client-id", "", "Override/manually set client ID for token actions. By default client ID from CLI config will be used.")
-	loginCmd.Flags().StringVar(&tokenServerIP, "ip", "localhost", "Manually set the IP address to be binded to for the User Token web server.")
+	loginCmd.Flags().StringVar(&tokenServerIP, "ip", "", "Manually set the IP address to be bound to for the User Token web server.")
 	loginCmd.Flags().IntVarP(&tokenServerPort, "port", "p", 3000, "Manually set the port to be used for the User Token web server.")
+	loginCmd.Flags().StringVar(&redirectHost, "redirect-host", "localhost", "Manually set the host to be used for the redirect URL")
 }
 
 func loginCmdRun(cmd *cobra.Command, args []string) error {
@@ -46,11 +48,15 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 	clientSecret = viper.GetString("clientSecret")
 
 	webserverPort := strconv.Itoa(tokenServerPort)
-	redirectURL := fmt.Sprintf("http://%v:%v", tokenServerIP, webserverPort)
+	redirectURL := fmt.Sprintf("http://%v:%v", redirectHost, webserverPort)
 
 	if clientID == "" || clientSecret == "" {
 		println("No Client ID or Secret found in configuration. Triggering configuration now.")
-		configureCmd.Run(cmd, args)
+		err := configureCmd.RunE(cmd, args)
+		if err != nil {
+			return err
+		}
+
 		clientID = viper.GetString("clientId")
 		clientSecret = viper.GetString("clientSecret")
 	}
@@ -76,7 +82,7 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 		p.URL = login.ValidateTokenURL
 		r, err := login.ValidateCredentials(p)
 		if err != nil {
-			return fmt.Errorf("Failed to validate: %v", err.Error())
+			return fmt.Errorf("failed to validate: %v", err.Error())
 		}
 
 		tokenType := "App Access Token"
@@ -105,7 +111,7 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 				fmt.Println(white("- %v\n", s))
 			}
 		}
-	} else if isUserToken == true {
+	} else if isUserToken {
 		p.URL = login.UserCredentialsURL
 		login.UserCredentialsLogin(p, tokenServerIP, webserverPort)
 	} else {
