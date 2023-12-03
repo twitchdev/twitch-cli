@@ -73,7 +73,7 @@ func configureCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := viper.WriteConfigAs(configPath); err != nil {
-		fmt.Errorf("Failed to write configuration: %v", err.Error())
+		return fmt.Errorf("Failed to write configuration: %v", err.Error())
 	}
 
 	fmt.Println("Updated configuration.")
