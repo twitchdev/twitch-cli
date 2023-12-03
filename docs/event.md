@@ -2,16 +2,30 @@
 
 - [Events](#events)
   - [Description](#description)
+  - [Configure](#configure)
   - [Trigger](#trigger)
   - [Retrigger](#retrigger)
   - [Verify-Subscription](#verify-subscription)
-  - [Websocket](#websocket)
+  - [WebSocket](#websocket)
 
 ## Description
 
-The `event` product contains commands to trigger mock events for local webhook testing or migration.
+The `event` command contains subcommands to trigger mock events for local webhook testing or migration.
 
 All commands exit the program with a non-zero exit code when the command fails, including when an event does not exist, or when the mock EventSub WebSocket server does not start correctly.
+
+
+## Configure
+
+Used to configure the forwarding address and/or the secret used with the `trigger`, `verify-subscription`, and `retrigger` subcommands.
+
+**Flags**
+
+| Flag                      | Shorthand | Description                                                                                                                     | Example                                      | Required? (Y/N) |
+|---------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|-----------------|
+| `--forward-address`       | `-F`      | Web server address for where to send mock events.                                                                               | `-F https://localhost:8080`                  | N               |
+| `--secret`                | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.            | `-s testsecret`                              | N               |
+
 
 ## Trigger
 
@@ -92,6 +106,7 @@ This command can take either the Event or Alias listed as an argument. It is pre
 | `--gift-user`             | `-g`      | Used only for subcription-based events, denotes the gifting user ID.                                                            | `-g 44635596`                                | N               |
 | `--item-id`               | `-i`      | Manually set the ID of the event payload item (for example the reward ID in redemption events or game in stream events).        | `-i 032e4a6c-4aef-11eb-a9f5-1f703d1f0b92`    | N               |
 | `--item-name`             | `-n`      | Manually set the name of the event payload item (for example the reward ID in redemption events or game name in stream events). | `-n "Science & Technology"`                  | N               |
+| `--no-config`             | `-D`      | Disables the use of the configuration values should they exist.                                                                 | `-D`                                         | N               |
 | `--secret`                | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.            | `-s testsecret`                              | N               |
 | `--session`               |           | WebSocket session to target. Only used when forwarding to WebSocket servers with --transport=websocket                          | `--session e411cc1e_a2613d4e`                | N               |
 | `--subscription-id`       | `-u`      | Manually set the subscription/event ID of the event itself.                                                                     | `-u 5d3aed06-d019-11ed-afa1-0242ac120002`    | N               |
@@ -134,7 +149,9 @@ None
 |---------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
 | `--forward-address` | `-F`      | Web server address for where to send mock events.                                                                                                             | `-F https://localhost:8080` | N               |
 | `--id`              | `-i`      | The ID of the event to refire.                                                                                                                                | `-i <id>`                   | Y               |
+| `--no-config`       | `-D`      | Disables the use of the configuration values should they exist.                                                                                               | `-D`                        | N               |
 | `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.                                          | `-s testsecret`             | N               |
+
 
 **Examples**
 
@@ -144,7 +161,7 @@ twitch event retrigger -i "713f3254-0178-9757-7439-d779400c0999" -F https://loca
 
 ## Verify-Subscription
 
-Allows you to test if your webserver responds to subscription requests properly.
+Allows you to test if your webserver responds to subscription requests properly. The `forward-address` flag is required *unless* you have configured a default forwarding address via `twitch event configure -F <address>`. 
 
 **Args**
 
@@ -155,6 +172,7 @@ This command takes the same arguments as [Trigger](#trigger).
 | Flag                | Shorthand | Description                                                                                                          | Example                     | Required? (Y/N) |
 |---------------------|-----------|----------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
 | `--forward-address` | `-F`      | Web server address for where to send mock subscription.                                                              | `-F https://localhost:8080` | Y               |
+| `--no-config`       | `-D`      | Disables the use of the configuration values should they exist.                                                      | `-D`                        | N               |
 | `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length. | `-s testsecret`             | N               |
 | `--transport`       | `-T`      | The method used to send events. Default is `eventsub`.                                                               | `-T eventsub`               | N               |
 
