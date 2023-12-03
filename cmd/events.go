@@ -319,6 +319,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		Secret:         secret,
 		Timestamp:      timestamp,
 		EventID:        eventID,
+		Version:        version,
 	})
 
 	if err != nil {
