@@ -176,6 +176,7 @@ func init() {
 	verifyCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 	verifyCmd.Flags().StringVarP(&version, "version", "v", "", "Chooses the EventSub version used for a specific event. Not required for most events.")
+	verifyCmd.Flags().StringVarP(&toUser, "broadcaster", "b", "", "User ID of the broadcaster for the verification event.")
 	verifyCmd.MarkFlagRequired("forward-address")
 
 	// websocket flags
@@ -313,12 +314,13 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 	}
 
 	_, err := verify.VerifyWebhookSubscription(verify.VerifyParameters{
-		Event:          args[0],
-		Transport:      transport,
-		ForwardAddress: forwardAddress,
-		Secret:         secret,
-		Timestamp:      timestamp,
-		EventID:        eventID,
+		Event:             args[0],
+		Transport:         transport,
+		ForwardAddress:    forwardAddress,
+		Secret:            secret,
+		Timestamp:         timestamp,
+		EventID:           eventID,
+		BroadcasterUserID: toUser,
 	})
 
 	if err != nil {
