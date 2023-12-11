@@ -11,7 +11,7 @@ type Prediction struct {
 	WinningOutcomeID *string             `db:"winning_outcome_id" json:"winning_outcome_id"`
 	PredictionWindow int                 `db:"prediction_window" json:"prediction_window"`
 	Status           string              `db:"status" json:"status"`
-	StartedAt        string              `db:"created_at" json:"started_at"`
+	StartedAt        string              `db:"created_at" json:"created_at"`
 	EndedAt          *string             `db:"ended_at" json:"ended_at"`
 	LockedAt         *string             `db:"locked_at" json:"locked_at"`
 	Outcomes         []PredictionOutcome `json:"outcomes"`
