@@ -54,7 +54,7 @@ type Clip struct {
 	// calculated fields
 	URL          string `json:"url"`
 	ThumbnailURL string `json:"thumbnail_url"`
-	EmbedURL     string `json:"embed_urL"`
+	EmbedURL     string `json:"embed_url"`
 	StartedAt    string `db:"started_at" dbi:"false" json:"-"`
 	EndedAt      string `db:"ended_at" dbi:"false" json:"-"`
 }

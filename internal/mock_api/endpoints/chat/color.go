@@ -171,7 +171,7 @@ func putColor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Store in database, and return no body, just HTTP 200
+	// Store in database, and return no body, just HTTP 204
 	u, err := db.NewQuery(r, 100).GetUser(database.User{ID: userID})
 	if err != nil {
 		mock_errors.WriteServerError(w, "Error fetching user: "+err.Error())
@@ -185,4 +185,6 @@ func putColor(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		mock_errors.WriteServerError(w, "Error writing to database: "+err.Error())
 	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
