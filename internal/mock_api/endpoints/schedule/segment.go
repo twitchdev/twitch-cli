@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/twitchdev/twitch-cli/internal/models"
 	"net/http"
 	"strconv"
 	"time"
@@ -190,7 +191,11 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 		b.Vacation = nil
 	}
 
-	bytes, _ := json.Marshal(b)
+	apiResponse := models.APIResponse{
+		Data: b,
+	}
+
+	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
 }
 
@@ -338,6 +343,10 @@ func (e ScheduleSegment) patchSegment(w http.ResponseWriter, r *http.Request) {
 		b.Vacation = nil
 	}
 
-	bytes, _ := json.Marshal(b)
+	apiResponse := models.APIResponse{
+		Data: b,
+	}
+
+	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
 }
