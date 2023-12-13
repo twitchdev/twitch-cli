@@ -5,7 +5,7 @@
   - [Trigger](#trigger)
   - [Retrigger](#retrigger)
   - [Verify-Subscription](#verify-subscription)
-  - [Websocket](#websocket)
+  - [WebSocket](#websocket)
 
 ## Description
 
@@ -154,6 +154,7 @@ This command takes the same arguments as [Trigger](#trigger).
 
 | Flag                | Shorthand | Description                                                                                                          | Example                     | Required? (Y/N) |
 |---------------------|-----------|----------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
+| `--broadcaster`     | `-b`      | The broadcaster's user ID to be used for verification                                                              | `-b 1234`                   | N               |
 | `--forward-address` | `-F`      | Web server address for where to send mock subscription.                                                              | `-F https://localhost:8080` | Y               |
 | `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length. | `-s testsecret`             | N               |
 | `--transport`       | `-T`      | The method used to send events. Default is `eventsub`.                                                               | `-T eventsub`               | N               |
