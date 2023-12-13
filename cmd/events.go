@@ -160,7 +160,7 @@ func init() {
 	triggerCmd.Flags().StringVarP(&subscriptionStatus, "subscription-status", "r", "enabled", "Status of the Subscription object (.subscription.status in JSON). Defaults to \"enabled\".")
 	triggerCmd.Flags().StringVarP(&itemID, "item-id", "i", "", "Manually set the ID of the event payload item (for example the reward ID in redemption events). For stream events, this is the game ID.")
 	triggerCmd.Flags().StringVarP(&itemName, "item-name", "n", "", "Manually set the name of the event payload item (for example the reward ID in redemption events). For stream events, this is the game title.")
-	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of subscriptions, bits, or channel points redeemed/used in the event.")
+	triggerCmd.Flags().Int64VarP(&cost, "cost", "C", 0, "Amount of drops, subscriptions, bits, or channel points redeemed/used in the event.")
 	triggerCmd.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 	triggerCmd.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
 	triggerCmd.Flags().StringVarP(&tier, "tier", "", "", "Sets the subscription tier. Valid values are 1000, 2000, and 3000.")
@@ -189,6 +189,7 @@ func init() {
 	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 	verifyCmd.Flags().StringVarP(&version, "version", "v", "", "Chooses the EventSub version used for a specific event. Not required for most events.")
 	verifyCmd.Flags().BoolVarP(&noConfig, "no-config", "D", false, "Disables the use of the configuration, if it exists.")
+	verifyCmd.Flags().StringVarP(&toUser, "broadcaster", "b", "", "User ID of the broadcaster for the verification event.")
 
 	// websocket flags
 	/// flags for start-server
@@ -358,12 +359,14 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 	}
 
 	_, err := verify.VerifyWebhookSubscription(verify.VerifyParameters{
-		Event:          args[0],
-		Transport:      transport,
-		ForwardAddress: forwardAddress,
-		Secret:         secret,
-		Timestamp:      timestamp,
-		EventID:        eventID,
+		Event:             args[0],
+		Transport:         transport,
+		ForwardAddress:    forwardAddress,
+		Secret:            secret,
+		Timestamp:         timestamp,
+		EventID:           eventID,
+		BroadcasterUserID: toUser,
+		Version:        version,
 	})
 
 	if err != nil {

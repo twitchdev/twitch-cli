@@ -171,6 +171,7 @@ This command takes the same arguments as [Trigger](#trigger).
 
 | Flag                | Shorthand | Description                                                                                                          | Example                     | Required? (Y/N) |
 |---------------------|-----------|----------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
+| `--broadcaster`     | `-b`      | The broadcaster's user ID to be used for verification                                                              | `-b 1234`                   | N               |
 | `--forward-address` | `-F`      | Web server address for where to send mock subscription.                                                              | `-F https://localhost:8080` | Y               |
 | `--no-config`       | `-D`      | Disables the use of the configuration values should they exist.                                                      | `-D`                        | N               |
 | `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length. | `-s testsecret`             | N               |

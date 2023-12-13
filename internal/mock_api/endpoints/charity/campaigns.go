@@ -42,7 +42,7 @@ type GetCharityCampaignResponse struct {
 	CharityDescription string        `json:"charity_description"`
 	CharityLogo        string        `json:"charity_logo"`
 	CharityWebsite     string        `json:"charity_website"`
-	CurrentAmount      CharityAmount `json:"current_ammount"`
+	CurrentAmount      CharityAmount `json:"current_amount"`
 	TargetAmount       CharityAmount `json:"target_amount"`
 }
 
