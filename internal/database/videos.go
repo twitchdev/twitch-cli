@@ -20,7 +20,7 @@ type Video struct {
 	Viewable         string              `db:"viewable" json:"viewable"`
 	ViewCount        int                 `db:"view_count" json:"view_count"`
 	Duration         string              `db:"duration" json:"duration"`
-	VideoLanguage    string              `db:"video_language" json:"video_language"`
+	VideoLanguage    string              `db:"video_language" json:"language"`
 	MutedSegments    []VideoMutedSegment `json:"muted_segments"`
 	CategoryID       *string             `db:"category_id" dbs:"v.category_id" json:"-"`
 	Type             string              `db:"type" json:"type"`
