@@ -16,9 +16,9 @@ type Subscription struct {
 	UserLogin        string          `db:"user_login" json:"user_login"`
 	UserName         string          `db:"user_name" json:"user_name"`
 	IsGift           bool            `db:"is_gift" json:"is_gift"`
-	GifterID         *sql.NullString `db:"gifter_id" json:"gifter_id,omitempty"`
-	GifterName       *sql.NullString `db:"gifter_name" json:"gifter_name,omitempty"`
-	GifterLogin      *sql.NullString `db:"gifter_login" json:"gifter_login,omitempty"`
+	GifterID         *sql.NullString `db:"gifter_id" json:"gifter_id"`
+	GifterName       *sql.NullString `db:"gifter_name" json:"gifter_name"`
+	GifterLogin      *sql.NullString `db:"gifter_login" json:"gifter_login"`
 	Tier             string          `db:"tier" json:"tier"`
 	CreatedAt        string          `db:"created_at" json:"-"`
 	// calculated fields
