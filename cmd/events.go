@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/twitchdev/twitch-cli/internal/events"
+	configure_event "github.com/twitchdev/twitch-cli/internal/events/configure"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
 	"github.com/twitchdev/twitch-cli/internal/events/verify"
@@ -25,6 +26,7 @@ var (
 	forwardAddress      string
 	event               string
 	transport           string
+	noConfig            bool
 	fromUser            string
 	toUser              string
 	giftUser            string
@@ -127,16 +129,25 @@ var startWebsocketServerCmd = &cobra.Command{
 	Deprecated: `use "twitch event websocket start-server" instead.`,
 }
 
+var configureEventCmd = &cobra.Command{
+	Use:     "configure",
+	Short:   "Allows users to configure defaults for the twitch event subcommands.",
+	RunE:    configureEventRun,
+	Example: `twitch event configure`,
+}
+
 func init() {
 	rootCmd.AddCommand(eventCmd)
 
-	eventCmd.AddCommand(triggerCmd, retriggerCmd, verifyCmd, websocketCmd, startWebsocketServerCmd)
+	eventCmd.AddCommand(triggerCmd, retriggerCmd, verifyCmd, websocketCmd, startWebsocketServerCmd, configureEventCmd)
+	eventCmd.Flags().BoolVarP(&noConfig, "no-config", "D", false, "Disables the use of the configuration, if it exists.")
 
 	// trigger flags
 	//// flags for forwarding functionality/changing payloads
 	triggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
 	triggerCmd.Flags().StringVarP(&transport, "transport", "T", "webhook", fmt.Sprintf("Preferred transport method for event. Defaults to /EventSub.\nSupported values: %s", events.ValidTransports()))
 	triggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
+	triggerCmd.Flags().BoolVarP(&noConfig, "no-config", "D", false, "Disables the use of the configuration, if it exists.")
 
 	// trigger flags
 	//// per-topic flags
@@ -167,6 +178,7 @@ func init() {
 	retriggerCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
 	retriggerCmd.Flags().StringVarP(&eventID, "id", "i", "", "ID of the event to be refired.")
 	retriggerCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
+	retriggerCmd.Flags().BoolVarP(&noConfig, "no-config", "D", false, "Disables the use of the configuration, if it exists.")
 	retriggerCmd.MarkFlagRequired("id")
 
 	// verify-subscription flags
@@ -176,8 +188,8 @@ func init() {
 	verifyCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
 	verifyCmd.Flags().StringVarP(&version, "version", "v", "", "Chooses the EventSub version used for a specific event. Not required for most events.")
+	verifyCmd.Flags().BoolVarP(&noConfig, "no-config", "D", false, "Disables the use of the configuration, if it exists.")
 	verifyCmd.Flags().StringVarP(&toUser, "broadcaster", "b", "", "User ID of the broadcaster for the verification event.")
-	verifyCmd.MarkFlagRequired("forward-address")
 
 	// websocket flags
 	/// flags for start-server
@@ -193,6 +205,10 @@ func init() {
 	websocketCmd.Flags().StringVar(&wsSubscription, "subscription", "", `Subscription to target with your server command. Used with "websocket subscription".`)
 	websocketCmd.Flags().StringVar(&wsStatus, "status", "", `Changes the status of an existing subscription. Used with "websocket subscription".`)
 	websocketCmd.Flags().StringVar(&wsReason, "reason", "", `Sets the close reason when sending a Close message to the client. Used with "websocket close".`)
+
+	// configure flags
+	configureEventCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
+	configureEventCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 }
 
 func triggerCmdRun(cmd *cobra.Command, args []string) error {
@@ -205,8 +221,14 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(websubDeprecationNotice)
 	}
 
-	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
-		return fmt.Errorf("Invalid secret provided. Secrets must be between 10-100 characters")
+	defaults := configure_event.GetEventConfiguration(noConfig)
+
+	if secret != "" {
+		if len(secret) < 10 || len(secret) > 100 {
+			return fmt.Errorf("Invalid secret provided. Secrets must be between 10-100 characters")
+		}
+	} else {
+		secret = defaults.Secret
 	}
 
 	// Validate that the forward address is actually a URL
@@ -215,6 +237,8 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		forwardAddress = defaults.ForwardAddress
 	}
 
 	for i := 0; i < count; i++ {
@@ -261,8 +285,21 @@ func retriggerCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(websubDeprecationNotice)
 	}
 
-	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
-		return fmt.Errorf("Invalid secret provided. Secrets must be between 10-100 characters")
+	defaults := configure_event.GetEventConfiguration(noConfig)
+
+	if secret != "" {
+		if len(secret) < 10 || len(secret) > 100 {
+			return fmt.Errorf("Invalid secret provided. Secrets must be between 10-100 characters")
+		}
+	} else {
+		secret = defaults.Secret
+	}
+
+	if forwardAddress == "" {
+		if defaults.ForwardAddress == "" {
+			return fmt.Errorf("if a default configuration is not set, forward-address must be provided")
+		}
+		forwardAddress = defaults.ForwardAddress
 	}
 
 	res, err := trigger.RefireEvent(eventID, trigger.TriggerParameters{
@@ -288,8 +325,14 @@ func verifyCmdRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(websubDeprecationNotice)
 	}
 
-	if secret != "" && (len(secret) < 10 || len(secret) > 100) {
-		return fmt.Errorf("Invalid secret provided. Secrets must be between 10-100 characters")
+	defaults := configure_event.GetEventConfiguration(noConfig)
+
+	if secret != "" {
+		if len(secret) < 10 || len(secret) > 100 {
+			return fmt.Errorf("Invalid secret provided. Secrets must be between 10-100 characters")
+		}
+	} else {
+		secret = defaults.Secret
 	}
 
 	// Validate that the forward address is actually a URL
@@ -298,6 +341,8 @@ func verifyCmdRun(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		forwardAddress = defaults.ForwardAddress
 	}
 
 	if timestamp == "" {
@@ -354,4 +399,11 @@ func websocketCmdRun(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func configureEventRun(cmd *cobra.Command, args []string) error {
+	return configure_event.ConfigureEvents(configure_event.EventConfigurationParams{
+		ForwardAddress: forwardAddress,
+		Secret:         secret,
+	})
 }
