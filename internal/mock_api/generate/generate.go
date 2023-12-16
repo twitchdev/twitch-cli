@@ -297,7 +297,6 @@ func generateUsers(ctx context.Context, count int) error {
 				CategoryID:  &dropsGameID,
 				Title:       "Test Title",
 				UserID:      broadcaster.ID,
-				Timezone:    "America/Los_Angeles",
 				IsCanceled:  &f,
 			}
 
