@@ -32,7 +32,7 @@ type Video struct {
 
 type VideoMutedSegment struct {
 	VideoID     string `db:"video_id" json:"-"`
-	VideoOffset int    `db:"video_offset" json:"video_offset"`
+	VideoOffset int    `db:"video_offset" json:"offset"`
 	Duration    int    `db:"duration" json:"duration"`
 }
 
