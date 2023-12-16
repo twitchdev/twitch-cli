@@ -129,6 +129,7 @@ func (q *Query) InsertVideo(v Video) error {
 
 func (q *Query) DeleteVideo(id string) error {
 	tx := q.DB.MustBegin()
+	tx.MustExec("delete from stream_markers where video_id=$1", id)
 	tx.MustExec("delete from video_muted_segments where video_id=$1", id)
 	tx.MustExec("delete from videos where id = $1", id)
 	return tx.Commit()
