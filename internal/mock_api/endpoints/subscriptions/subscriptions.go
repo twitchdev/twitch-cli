@@ -78,6 +78,8 @@ func getBroadcasterSubscriptions(w http.ResponseWriter, r *http.Request) {
 	body := models.APIResponse{
 		Data:  dbr.Data,
 		Total: &dbr.Total,
+		// This would usually be something like tier 1 = 1 pt, tier 2 = 2 pts, tier 3 = 6 pts. For simplicity, return total instead
+		Points: dbr.Total,
 	}
 
 	if dbr.Cursor != "" {
