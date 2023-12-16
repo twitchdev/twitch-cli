@@ -124,7 +124,9 @@ func getBitsLeaderboard(w http.ResponseWriter, r *http.Request) {
 	// check if the started_at date is valid and then add it to the start/end range
 	if period != "all" {
 		if startedAt == "" {
-			startedAt = time.Now().Format(time.RFC3339)
+			w.Write(mock_errors.GetErrorBytes(http.StatusBadRequest, errors.New("Bad Request"), "invalid value provided for started_at"))
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 
 		sa, err := time.Parse(time.RFC3339, startedAt)
@@ -199,12 +201,9 @@ func getBitsLeaderboard(w http.ResponseWriter, r *http.Request) {
 
 	length := len(bl)
 	apiR := models.APIResponse{
-		Data:  bl,
-		Total: &length,
-	}
-
-	if dateRange.StartedAt != "" {
-		apiR.DateRange = &dateRange
+		Data:      bl,
+		DateRange: &dateRange,
+		Total:     &length,
 	}
 
 	body, _ := json.Marshal(apiR)
