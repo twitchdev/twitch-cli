@@ -68,6 +68,11 @@ func getRedemptions(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	sort := r.URL.Query().Get("sort")
 
+	if id == "" && status == "" {
+		mock_errors.WriteBadRequest(w, "The status query parameter is required if you don't specify the id query parameter.")
+		return
+	}
+
 	if !userCtx.MatchesBroadcasterIDParam(r) {
 		mock_errors.WriteUnauthorized(w, "Broadcaster ID mismatch")
 		return

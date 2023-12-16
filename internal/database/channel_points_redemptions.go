@@ -15,7 +15,7 @@ type ChannelPointsRedemption struct {
 	UserLogin                         string         `db:"user_login" dbi:"false" json:"user_login"`
 	UserName                          string         `db:"user_name" dbi:"false" json:"user_name"`
 	UserInput                         sql.NullString `db:"user_input" json:"-"`
-	RealUserInput                     *string        `json:"user_input"`
+	RealUserInput                     string         `json:"user_input"`
 	RedemptionStatus                  string         `db:"redemption_status" json:"status"`
 	RedeemedAt                        string         `db:"redeemed_at" json:"redeemed_at"`
 	RewardID                          string         `db:"reward_id" json:"-"`
@@ -25,7 +25,7 @@ type ChannelPointsRedemption struct {
 type ChannelPointsRedemptionRewardInfo struct {
 	ID           string `dbi:"false" db:"red_id" json:"id" dbs:"red.id"`
 	Title        string `dbi:"false" db:"title" json:"title"`
-	RewardPrompt string `dbi:"false" db:"reward_prompt" json:"reward_prompt"`
+	RewardPrompt string `dbi:"false" db:"reward_prompt" json:"prompt"`
 	Cost         int    `dbi:"false" db:"cost" json:"cost"`
 }
 
@@ -50,9 +50,9 @@ func (q *Query) GetChannelPointsRedemption(cpr ChannelPointsRedemption, sort str
 		if err != nil {
 			return nil, err
 		}
-		red.RealUserInput = &red.UserInput.String
+		red.RealUserInput = red.UserInput.String
 		if !red.UserInput.Valid {
-			red.RealUserInput = nil
+			red.RealUserInput = ""
 		}
 		r = append(r, red)
 	}
