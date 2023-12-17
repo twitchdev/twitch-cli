@@ -39,6 +39,7 @@ type ScheduleSegment struct{}
 
 type SegmentPatchAndPostBody struct {
 	StartTime   string  `json:"start_time"`
+	Timezone    string  `json:"timezone"`
 	IsRecurring *bool   `json:"is_recurring"`
 	Duration    string  `json:"duration"`
 	CategoryID  *string `json:"category_id"`
@@ -93,6 +94,16 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 	st, err := time.Parse(time.RFC3339, body.StartTime)
 	if err != nil {
 		mock_errors.WriteBadRequest(w, "Invalid/malformed start_time provided")
+		return
+	}
+
+	if body.Timezone == "" {
+		mock_errors.WriteBadRequest(w, "Missing timezone")
+		return
+	}
+	_, err = time.LoadLocation(body.Timezone)
+	if err != nil {
+		mock_errors.WriteBadRequest(w, "Invalid timezone provided")
 		return
 	}
 
@@ -253,6 +264,15 @@ func (e ScheduleSegment) patchSegment(w http.ResponseWriter, r *http.Request) {
 	isCanceled := false
 	if body.IsCanceled != nil {
 		isCanceled = *body.IsCanceled
+	}
+
+	// timezone
+	if body.Timezone != "" {
+		_, err := time.LoadLocation(body.Timezone)
+		if err != nil {
+			mock_errors.WriteBadRequest(w, "Error parsing timezone")
+			return
+		}
 	}
 
 	// title
