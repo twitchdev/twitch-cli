@@ -207,6 +207,7 @@ func TestSegment(t *testing.T) {
 
 	// good request
 	body.Title = "patched_title"
+	body.Timezone = "America/Los_Angeles"
 	b, _ = json.Marshal(body)
 	req, _ = http.NewRequest(http.MethodPatch, ts.URL+ScheduleSegment{}.Path(), bytes.NewBuffer(b))
 	q.Set("broadcaster_id", "1")
