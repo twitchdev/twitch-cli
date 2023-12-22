@@ -10,7 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const currentVersion = 6
+const currentVersion = 7
 
 type migrateMap struct {
 	SQL     string
@@ -52,6 +52,10 @@ ALTER TABLE users ADD COLUMN content_labels text not null default '';`,
 	6: {
 		SQL:     `DROP TABLE IF EXISTS stream_tags;`,
 		Message: `Removing deprecated stream_tags from database.`,
+	},
+	7: {
+		SQL:     `ALTER TABLE stream_schedule DROP COLUMN timezone;`,
+		Message: `Removing deprecated stream_schedule.timezone from database`,
 	},
 }
 
@@ -120,7 +124,7 @@ create table predictions ( id text not null primary key, broadcaster_id text not
 create table prediction_outcomes ( id text not null primary key, title text not null, users int not null default 0, channel_points int not null default 0, color text not null, prediction_id text not null, foreign key (prediction_id) references predictions(id) );
 create table prediction_predictions ( prediction_id text not null, user_id text not null, amount int not null, outcome_id text not null, primary key(prediction_id, user_id), foreign key(user_id) references users(id), foreign key(prediction_id) references predictions(id), foreign key(outcome_id) references prediction_outcomes(id) );
 create table clips ( id text not null primary key, broadcaster_id text not null, creator_id text not null, video_id text not null, game_id text not null, title text not null, view_count int default 0, created_at text not null, duration real not null, vod_offset int default 0, foreign key (broadcaster_id) references users(id), foreign key (creator_id) references users(id) );
-create table stream_schedule( id text not null primary key, broadcaster_id text not null, starttime text not null, endtime text not null, timezone text not null, is_vacation boolean not null default false, is_recurring boolean not null default false, is_canceled boolean not null default false, title text, category_id text, foreign key(broadcaster_id) references users(id), foreign key (category_id) references categories(id));
+create table stream_schedule( id text not null primary key, broadcaster_id text not null, starttime text not null, endtime text not null, is_vacation boolean not null default false, is_recurring boolean not null default false, is_canceled boolean not null default false, title text, category_id text, foreign key(broadcaster_id) references users(id), foreign key (category_id) references categories(id));
 create table chat_settings( broadcaster_id text not null primary key, slow_mode boolean not null default 0, slow_mode_wait_time int not null default 10, follower_mode boolean not null default 0, follower_mode_duration int not null default 60, subscriber_mode boolean not null default 0, emote_mode boolean not null default 0, unique_chat_mode boolean not null default 0, non_moderator_chat_delay boolean not null default 0, non_moderator_chat_delay_duration int not null default 10, shieldmode_is_active boolean not null default 0, shieldmode_moderator_id text not null default '', shieldmode_moderator_login text not null default '', shieldmode_moderator_name text not null default '', shieldmode_last_activated text not null default '' );
 create table vips ( broadcaster_id text not null, user_id text not null, created_at text not null default '', primary key (broadcaster_id, user_id), foreign key (broadcaster_id) references users(id), foreign key (user_id) references users(id) );`
 

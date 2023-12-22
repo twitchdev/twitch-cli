@@ -20,7 +20,7 @@ type Video struct {
 	Viewable         string              `db:"viewable" json:"viewable"`
 	ViewCount        int                 `db:"view_count" json:"view_count"`
 	Duration         string              `db:"duration" json:"duration"`
-	VideoLanguage    string              `db:"video_language" json:"video_language"`
+	VideoLanguage    string              `db:"video_language" json:"language"`
 	MutedSegments    []VideoMutedSegment `json:"muted_segments"`
 	CategoryID       *string             `db:"category_id" dbs:"v.category_id" json:"-"`
 	Type             string              `db:"type" json:"type"`
@@ -32,7 +32,7 @@ type Video struct {
 
 type VideoMutedSegment struct {
 	VideoID     string `db:"video_id" json:"-"`
-	VideoOffset int    `db:"video_offset" json:"video_offset"`
+	VideoOffset int    `db:"video_offset" json:"offset"`
 	Duration    int    `db:"duration" json:"duration"`
 }
 
@@ -54,7 +54,7 @@ type Clip struct {
 	// calculated fields
 	URL          string `json:"url"`
 	ThumbnailURL string `json:"thumbnail_url"`
-	EmbedURL     string `json:"embed_urL"`
+	EmbedURL     string `json:"embed_url"`
 	StartedAt    string `db:"started_at" dbi:"false" json:"-"`
 	EndedAt      string `db:"ended_at" dbi:"false" json:"-"`
 }
@@ -129,6 +129,7 @@ func (q *Query) InsertVideo(v Video) error {
 
 func (q *Query) DeleteVideo(id string) error {
 	tx := q.DB.MustBegin()
+	tx.MustExec("delete from stream_markers where video_id=$1", id)
 	tx.MustExec("delete from video_muted_segments where video_id=$1", id)
 	tx.MustExec("delete from videos where id = $1", id)
 	return tx.Commit()

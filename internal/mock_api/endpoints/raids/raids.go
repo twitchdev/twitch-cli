@@ -102,9 +102,11 @@ func postRaids(w http.ResponseWriter, r *http.Request) {
 	isMature := rand.Float32() < 0.5
 
 	bytes, _ := json.Marshal(models.APIResponse{
-		Data: GetVIPsResponseBody{
-			CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
-			IsMature:  isMature,
+		Data: []GetVIPsResponseBody{
+			{
+				CreatedAt: util.GetTimestamp().Format(time.RFC3339Nano),
+				IsMature:  isMature,
+			},
 		},
 	})
 	w.Write(bytes)

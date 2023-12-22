@@ -86,6 +86,7 @@ func TestRedemption(t *testing.T) {
 	a.Equal(400, resp.StatusCode)
 
 	q.Set("broadcaster_id", "2")
+	q.Set("status", "FULFILLED")
 	req.URL.RawQuery = q.Encode()
 	resp, err = http.DefaultClient.Do(req)
 	a.Nil(err)
