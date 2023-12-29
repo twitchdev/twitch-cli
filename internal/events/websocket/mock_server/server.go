@@ -60,6 +60,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 		conn:                 conn,
 		ConnectedAtTimestamp: connectedAtTimestamp,
 		connectionUrl:        fmt.Sprintf("%v://%v/ws", serverManager.protocolHttp, r.Host),
+		KeepAliveEnabled:     true,
 		keepAliveChanOpen:    false,
 		pingChanOpen:         false,
 	}
@@ -178,6 +179,14 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 				return
 
 			case <-client.keepAliveTimer.C: // Send KeepAlive message
+				if !client.KeepAliveEnabled {
+					// Sending keep alives was disabled manually, so we skip this one.
+					if ws.DebugEnabled {
+						log.Printf("Skipped sending session_keepalive to client [%s]", client.clientName)
+					}
+					continue
+				}
+
 				keepAliveMsg, _ := json.Marshal(
 					KeepaliveMessage{
 						Metadata: MessageMetadata{
