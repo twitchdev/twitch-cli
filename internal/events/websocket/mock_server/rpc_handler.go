@@ -28,6 +28,8 @@ func ResolveRPCName(cmd string) string {
 		return "EventSubWebSocketCloseClient"
 	} else if cmd == "subscription" {
 		return "EventSubWebSocketSubscription"
+	} else if cmd == "keepalive" {
+		return "EventSubWebSocketKeepalive"
 	} else {
 		return ""
 	}
@@ -151,8 +153,6 @@ func RPCCloseHandler(args rpc.RPCArgs) rpc.RPCResponse {
 		}
 	}
 
-	clientName := args.Variables["ClientName"]
-
 	if serverManager.reconnectTesting {
 		log.Printf("Error on RPC call (EventSubWebSocketCloseClient): Could not activate while reconnect testing is active.")
 		return rpc.RPCResponse{
@@ -170,21 +170,21 @@ func RPCCloseHandler(args rpc.RPCArgs) rpc.RPCResponse {
 		}
 	}
 
-	cn := clientName
-	if sessionRegex.MatchString(clientName) {
+	clientName := args.Variables["ClientName"]
+	if sessionRegex.MatchString(args.Variables["ClientName"]) {
 		// Client name given was formatted as <server_id>_<client_name>. We must extract it
-		sessionRegexExec := sessionRegex.FindAllStringSubmatch(clientName, -1)
-		cn = sessionRegexExec[0][2]
+		sessionRegexExec := sessionRegex.FindAllStringSubmatch(args.Variables["ClientName"], -1)
+		clientName = sessionRegexExec[0][2]
 	}
 
 	server.muClients.Lock()
 
-	client, ok := server.Clients.Get(cn)
+	client, ok := server.Clients.Get(clientName)
 	if !ok {
 		server.muClients.Unlock()
 		return rpc.RPCResponse{
 			ResponseCode: COMMAND_RESPONSE_FAILED_ON_SERVER,
-			DetailedInfo: "Client [" + cn + "] does not exist on WebSocket server.",
+			DetailedInfo: "Client [" + clientName + "] does not exist on WebSocket server.",
 		}
 	}
 
@@ -268,6 +268,70 @@ func RPCSubscriptionHandler(args rpc.RPCArgs) rpc.RPCResponse {
 			DetailedInfo: fmt.Sprintf("Subscription ID [%v] does not exist", args.Variables["SubscriptionID"]),
 		}
 	}
+
+	return rpc.RPCResponse{
+		ResponseCode: COMMAND_RESPONSE_SUCCESS,
+	}
+}
+
+func RPCKeepaliveHandler(args rpc.RPCArgs) rpc.RPCResponse {
+	if args.Variables["FeatureEnabled"] == "" || args.Variables["ClientName"] == "" {
+		return rpc.RPCResponse{
+			ResponseCode: COMMAND_RESPONSE_MISSING_FLAG,
+			DetailedInfo: "Command \"keepalive\" requires flags --session and --enabled" +
+				"\n\nExample: twitch event websocket keepalive --session=e411cc1e_a2613d4e --enabled=false",
+		}
+	}
+
+	enabled, err := strconv.ParseBool(args.Variables["FeatureEnabled"])
+	if err != nil {
+		return rpc.RPCResponse{
+			ResponseCode: COMMAND_RESPONSE_MISSING_FLAG,
+			DetailedInfo: "Command \"keepalive\" requires --enabled to be \"true\" or \"false\"" +
+				"\n\nExample: twitch event websocket keepalive --session=e411cc1e_a2613d4e --enabled=false",
+		}
+	}
+
+	if serverManager.reconnectTesting {
+		log.Printf("Error on RPC call (EventSubWebSocketCloseClient): Could not activate while reconnect testing is active.")
+		return rpc.RPCResponse{
+			ResponseCode: COMMAND_RESPONSE_FAILED_ON_SERVER,
+			DetailedInfo: "Cannot activate this command while reconnect testing is active.",
+		}
+	}
+
+	server, ok := serverManager.serverList.Get(serverManager.primaryServer)
+	if !ok {
+		log.Printf("Error on RPC call (EventSubWebSocketCloseClient): Primary server not in server list.")
+		return rpc.RPCResponse{
+			ResponseCode: COMMAND_RESPONSE_FAILED_ON_SERVER,
+			DetailedInfo: "Primary server not in server list.",
+		}
+	}
+
+	clientName := args.Variables["ClientName"]
+	if sessionRegex.MatchString(args.Variables["ClientName"]) {
+		// Client name given was formatted as <server_id>_<client_name>. We must extract it
+		sessionRegexExec := sessionRegex.FindAllStringSubmatch(args.Variables["ClientName"], -1)
+		clientName = sessionRegexExec[0][2]
+	}
+
+	server.muClients.Lock()
+
+	client, ok := server.Clients.Get(clientName)
+	if !ok {
+		server.muClients.Unlock()
+		return rpc.RPCResponse{
+			ResponseCode: COMMAND_RESPONSE_FAILED_ON_SERVER,
+			DetailedInfo: "Client [" + clientName + "] does not exist on WebSocket server.",
+		}
+	}
+
+	client.KeepAliveEnabled = enabled
+
+	server.muClients.Unlock()
+
+	log.Printf("RPC set status on client feature [KeepAliveEnabled] for client [%v]: %v", clientName, enabled)
 
 	return rpc.RPCResponse{
 		ResponseCode: COMMAND_RESPONSE_SUCCESS,

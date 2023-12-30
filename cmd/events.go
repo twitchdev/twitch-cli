@@ -53,15 +53,16 @@ var (
 
 // websocketCmd-specific flags
 var (
-	wsDebug        bool
-	wsStrict       bool
-	wsClient       string
-	wsSubscription string
-	wsStatus       string
-	wsReason       string
-	wsServerIP     string
-	wsServerPort   int
-	wsSSL          bool
+	wsDebug          bool
+	wsStrict         bool
+	wsClient         string
+	wsSubscription   string
+	wsStatus         string
+	wsReason         string
+	wsServerIP       string
+	wsServerPort     int
+	wsSSL            bool
+	wsFeatureEnabled bool
 )
 
 var eventCmd = &cobra.Command{
@@ -108,7 +109,8 @@ var websocketCmd = &cobra.Command{
 	Example: fmt.Sprintf(`  twitch event websocket start-server
   twitch event websocket reconnect
   twitch event websocket close --session=e411cc1e_a2613d4e --reason=4006
-  twitch event websocket subscription --status=user_removed --subscription=82a855-fae8-93bff0`,
+  twitch event websocket subscription --status=user_removed --subscription=82a855-fae8-93bff0
+  twitch event websocket keepalive --session=e411cc1e_a2613d4e --enabled=false`,
 	),
 	Aliases: []string{
 		"websockets",
@@ -205,6 +207,7 @@ func init() {
 	websocketCmd.Flags().StringVar(&wsSubscription, "subscription", "", `Subscription to target with your server command. Used with "websocket subscription".`)
 	websocketCmd.Flags().StringVar(&wsStatus, "status", "", `Changes the status of an existing subscription. Used with "websocket subscription".`)
 	websocketCmd.Flags().StringVar(&wsReason, "reason", "", `Sets the close reason when sending a Close message to the client. Used with "websocket close".`)
+	websocketCmd.Flags().BoolVar(&wsFeatureEnabled, "enabled", false, "Sets on/off for the specified feature.")
 
 	// configure flags
 	configureEventCmd.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
@@ -366,7 +369,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		Timestamp:         timestamp,
 		EventID:           eventID,
 		BroadcasterUserID: toUser,
-		Version:        version,
+		Version:           version,
 	})
 
 	if err != nil {
@@ -393,6 +396,7 @@ func websocketCmdRun(cmd *cobra.Command, args []string) error {
 			Subscription:       wsSubscription,
 			SubscriptionStatus: wsStatus,
 			CloseReason:        wsReason,
+			FeatureEnabled:     wsFeatureEnabled,
 		})
 
 		return err

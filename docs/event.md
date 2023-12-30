@@ -171,7 +171,7 @@ This command takes the same arguments as [Trigger](#trigger).
 
 | Flag                | Shorthand | Description                                                                                                          | Example                     | Required? (Y/N) |
 |---------------------|-----------|----------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
-| `--broadcaster`     | `-b`      | The broadcaster's user ID to be used for verification                                                              | `-b 1234`                   | N               |
+| `--broadcaster`     | `-b`      | The broadcaster's user ID to be used for verification                                                                | `-b 1234`                   | N               |
 | `--forward-address` | `-F`      | Web server address for where to send mock subscription.                                                              | `-F https://localhost:8080` | Y               |
 | `--no-config`       | `-D`      | Disables the use of the configuration values should they exist.                                                      | `-D`                        | N               |
 | `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length. | `-s testsecret`             | N               |
@@ -210,6 +210,7 @@ Provides access to a mock EventSub WebSocket server. More information can be fou
 | `--reason`       |           | Specifies the Close message code you wish to close a client’s connection with. Only used with "twitch websocket close"       | `twitch event websocket close --reason=4006` |
 | `--status`       |           | Specifies the Status code you wish to override an existing subscription’s status to. Only used with "twitch websocket close" | `twitch event websocket subscription --status=user_removed` |
 | `--subscription` |           | Specifies the subscription ID you wish to target. Only used with “twitch websocket subscription”.	                          | `twitch event websocket subscription --subscription=48d3-b9a-f84c` |
+| `--enabled`      |           | Sets on/off for the specified feature.                                                           	                          | `twitch event websocket keepalive --session=e411cc1e_a2613d4e --enabled=false` |
 
 **Examples**
 
@@ -218,4 +219,5 @@ twitch event websocket start-server
 twitch event websocket reconnect
 twitch event websocket close --session=e411cc1e_a2613d4e --reason=4006
 twitch event websocket subscription --status=user_removed --subscription=82a855-fae8-93bff0
+twitch event websocket keepalive --session=e411cc1e_a2613d4e --enabled=false
 ```

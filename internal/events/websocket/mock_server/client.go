@@ -13,6 +13,7 @@ type Client struct {
 	mutex                sync.Mutex
 	ConnectedAtTimestamp string // RFC3339Nano timestamp indicating when the client connected to the server
 	connectionUrl        string
+	KeepAliveEnabled     bool
 
 	mustSubscribeTimer *time.Timer
 	keepAliveChanOpen  bool
