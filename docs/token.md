@@ -152,6 +152,7 @@ None.
 | `--user-token`    | `-u`      | Whether to fetch a user token or not. Default is false.                                                        | `token -u`                                   | N               |
 | `--scopes`        | `-s`      | The space separated scopes to use when getting a user token.                                                   | `-s "user:read:email user_read"`             | N               |
 | `--revoke`        | `-r`      | Instead of generating a new token, revoke the one passed to this parameter.                                    | `-r 0123456789abcdefghijABCDEFGHIJ`          | N               |
+| `--validate`      | `-v`      | Instead of generating a new token, validate the one passed to this parameter.                                  | `-v 0123456789abcdefghijABCDEFGHIJ`          | N               |
 | `--ip`            |           | Manually set the port to be used for the User Token web server. The default binds to all interfaces. (0.0.0.0) | `--ip 127.0.0.1`                             | N               |
 | `--port`          | `-p`      | Override/manually set the port for token actions. (The default is 3000)                                        | `-p 3030`                                    | N               |
 | `--client-id`     |           | Override/manually set client ID for token actions. By default client ID from CLI config will be used.          | `--client-id uo6dggojyb8d6soh92zknwmi5ej1q2` | N               |
