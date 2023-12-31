@@ -116,10 +116,11 @@ This command can take either the Event or Alias listed as an argument. It is pre
 | `--to-user`               | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                              | `-t 44635596`                                | N               |
 | `--transport`             | `-T`      | The method used to send events. Can either be `webhook` or `websocket`. Default is `webhook`.                                   | `-T webhook`                                 | N               |
 
+**Examples**
 
 ```sh
-twitch event trigger subscribe -F https://localhost:8080/ // triggers a randomly generated subscribe event and forwards to the localhost:8080 server
-twitch event trigger cheer -f 1234 -t 4567 // generates JSON for a cheer event from user 1234 to user 4567
+twitch event trigger subscribe -F https://localhost:8080/ # triggers a randomly generated subscribe event and forwards to the localhost:8080 server
+twitch event trigger cheer -f 1234 -t 4567 # generates JSON for a cheer event from user 1234 to user 4567
 ```
 
 ## Retrigger
@@ -156,7 +157,7 @@ None
 **Examples**
 
 ```sh
-twitch event retrigger -i "713f3254-0178-9757-7439-d779400c0999" -F https://localhost:8080/ // triggers the previous cheer event to localhost:8080
+twitch event retrigger -i "713f3254-0178-9757-7439-d779400c0999" -F https://localhost:8080/ # triggers the previous cheer event to localhost:8080
 ```
 
 ## Verify-Subscription
@@ -180,7 +181,7 @@ This command takes the same arguments as [Trigger](#trigger).
 **Examples**
 
 ```sh
-twitch event verify-subscription cheer -F https://localhost:8080/ // triggers a fake "cheer" EventSub subscription and validates if localhost responds properly
+twitch event verify-subscription cheer -F https://localhost:8080/ # triggers a fake "cheer" EventSub subscription and validates if localhost responds properly
 ```
 
 ## WebSocket
