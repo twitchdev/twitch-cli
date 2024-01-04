@@ -3,7 +3,9 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"time"
 
@@ -18,7 +20,9 @@ var isUserToken bool
 var userScopes string
 var revokeToken string
 var validateToken string
+var refreshToken string
 var overrideClientId string
+var overrideClientSecret string
 var tokenServerPort int
 var tokenServerIP string
 var redirectHost string
@@ -37,7 +41,9 @@ func init() {
 	loginCmd.Flags().StringVarP(&userScopes, "scopes", "s", "", "Space separated list of scopes to request with your user token.")
 	loginCmd.Flags().StringVarP(&revokeToken, "revoke", "r", "", "Instead of generating a new token, revoke the one passed to this parameter.")
 	loginCmd.Flags().StringVarP(&validateToken, "validate", "v", "", "Instead of generating a new token, validate the one passed to this parameter.")
-	loginCmd.Flags().StringVar(&overrideClientId, "client-id", "", "Override/manually set client ID for token actions. By default client ID from CLI config will be used.")
+	loginCmd.Flags().StringVarP(&refreshToken, "refresh", "R", "", "Instead of generating a new token, refresh the token associated wtih the Refresh Token passed to this parameter.")
+	loginCmd.Flags().StringVar(&overrideClientId, "client-id", "", "Override/manually set Client ID for token actions. By default Client ID from CLI config will be used.")
+	loginCmd.Flags().StringVar(&overrideClientSecret, "secret", "", "Override/manually set Client Secret for token actions. By default Client Secret from CLI config will be used.")
 	loginCmd.Flags().StringVar(&tokenServerIP, "ip", "", "Manually set the IP address to be bound to for the User Token web server.")
 	loginCmd.Flags().IntVarP(&tokenServerPort, "port", "p", 3000, "Manually set the port to be used for the User Token web server.")
 	loginCmd.Flags().StringVar(&redirectHost, "redirect-host", "localhost", "Manually set the host to be used for the redirect URL")
@@ -63,6 +69,10 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 
 	if overrideClientId != "" {
 		clientID = overrideClientId
+	}
+
+	if overrideClientSecret != "" {
+		clientSecret = overrideClientSecret
 	}
 
 	var p = login.LoginParameters{
@@ -111,12 +121,62 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 				fmt.Println(white("- %v\n", s))
 			}
 		}
+	} else if refreshToken != "" {
+		p.URL = login.RefreshTokenURL
+
+		// If we are overriding the Client ID then we shouldn't store this in the config.
+		shouldStoreInConfig := (overrideClientId == "")
+
+		fmt.Printf("stored - %v", shouldStoreInConfig)
+
+		resp, err := login.RefreshUserToken(login.RefreshParameters{
+			RefreshToken: refreshToken,
+			ClientID:     clientID,
+			ClientSecret: clientSecret,
+			URL:          login.RefreshTokenURL,
+		}, shouldStoreInConfig)
+
+		if err != nil {
+			errDescription := ""
+			if overrideClientId == "" {
+				errDescription = "Check `--refresh` flag to ensure the provided Refresh Token is valid for the Client ID set with `twitch config`."
+			} else {
+				errDescription = "Check `--refresh` and `--client-id` flags to ensure the provided Refresh Token is valid for the provided Client ID."
+			}
+
+			return errors.New(err.Error() + "\n" + errDescription)
+		}
+
+		fmt.Printf("%v", resp)
+
 	} else if isUserToken {
 		p.URL = login.UserCredentialsURL
-		login.UserCredentialsLogin(p, tokenServerIP, webserverPort)
+		resp, err := login.UserCredentialsLogin(p, tokenServerIP, webserverPort)
+
+		if err != nil {
+			return err
+		}
+
+		lightYellow := color.New(color.FgHiYellow).SprintfFunc()
+
+		log.Println("Successfully generated User Access Token.")
+		log.Println(lightYellow("User Access Token: ") + resp.Response.AccessToken)
+		log.Println(lightYellow("Refresh Token: ") + resp.Response.RefreshToken)
+		log.Println(lightYellow("Expires At: ") + resp.ExpiresAt.String())
+		log.Println(lightYellow("Scopes: ") + fmt.Sprintf("%v", resp.Response.Scope))
+
 	} else {
 		p.URL = login.ClientCredentialsURL
-		login.ClientCredentialsLogin(p)
+		resp, err := login.ClientCredentialsLogin(p)
+
+		if err != nil {
+			return errors.New("Error handling login: " + err.Error())
+		}
+
+		lightYellow := color.New(color.FgHiYellow).SprintfFunc()
+
+		log.Println("Successfully generated App Access Token.")
+		log.Println(lightYellow("App Access Token: ") + resp.Response.AccessToken)
 	}
 
 	return nil

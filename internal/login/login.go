@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os/exec"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -66,16 +67,16 @@ type ValidateResponse struct {
 }
 
 const ClientCredentialsURL = "https://id.twitch.tv/oauth2/token?grant_type=client_credentials"
-
 const UserCredentialsURL = "https://id.twitch.tv/oauth2/token?grant_type=authorization_code"
+
 const UserAuthorizeURL = "https://id.twitch.tv/oauth2/authorize?response_type=code"
 
 const RefreshTokenURL = "https://id.twitch.tv/oauth2/token?grant_type=refresh_token"
-
 const RevokeTokenURL = "https://id.twitch.tv/oauth2/revoke"
-
 const ValidateTokenURL = "https://id.twitch.tv/oauth2/validate"
 
+// Sends `https://id.twitch.tv/oauth2/token?grant_type=client_credentials`.
+// Generates a new App Access Token. Stores new token information in the CLI's config.
 func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	u, err := url.Parse(p.URL)
 	if err != nil {
@@ -92,20 +93,19 @@ func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("API responded with an error while generating token: %v", string(resp.Body))
-		return LoginResponse{}, errors.New("API responded with an error while revoking token")
+		return LoginResponse{}, errors.New("API responded with an error while revoking token: " + string(resp.Body))
 	}
 
-	r, err := handleLoginResponse(resp.Body)
+	r, err := handleLoginResponse(resp.Body, true)
 	if err != nil {
-		log.Printf("Error handling login: %v", err)
-		return LoginResponse{}, nil
+		return LoginResponse{}, err
 	}
 
-	log.Printf("App Access Token: %s", r.Response.AccessToken)
 	return r, nil
 }
 
+// Sends `https://id.twitch.tv/oauth2/token?grant_type=authorization_code`.
+// Generates a new App Access Token, requiring the use of a web browser. Stores new token information in the CLI's config.
 func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort string) (LoginResponse, error) {
 	u, err := url.Parse(p.AuthorizeURL)
 	if err != nil {
@@ -136,18 +136,17 @@ func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort s
 
 	urp, err := userAuthServer(webserverIP, webserverPort, execOpenBrowser)
 	if err != nil {
-		fmt.Printf("Error processing request; %v\n", err.Error())
-		return LoginResponse{}, err
+		return LoginResponse{}, fmt.Errorf("Error processing request: %v", err.Error())
 	}
 	ur := *urp
 
 	if ur.State != state {
-		log.Fatal("state mismatch")
+		return LoginResponse{}, fmt.Errorf("Error processing request: state mismatch")
 	}
 
 	u2, err := url.Parse(p.URL)
 	if err != nil {
-		log.Fatal(err.Error())
+		return LoginResponse{}, fmt.Errorf("Internal error: %v", err.Error())
 	}
 
 	q = u2.Query()
@@ -159,19 +158,19 @@ func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort s
 
 	resp, err := loginRequest(http.MethodPost, u2.String(), nil)
 	if err != nil {
-		log.Fatalf("Error reading body: %v", err)
+		return LoginResponse{}, fmt.Errorf("Error reading body: %v", err.Error())
 	}
 
-	r, err := handleLoginResponse(resp.Body)
+	r, err := handleLoginResponse(resp.Body, true)
 	if err != nil {
-		log.Printf("Error handling login: %v", err)
-		return LoginResponse{}, nil
+		return LoginResponse{}, fmt.Errorf("Error handling login: %v", err.Error())
 	}
 
-	log.Printf("User Access Token: %s\nRefresh Token: %s\nExpires At: %s\nScopes: %s", r.Response.AccessToken, r.Response.RefreshToken, r.ExpiresAt, r.Response.Scope)
 	return r, nil
 }
 
+// Sends `https://id.twitch.tv/oauth2/revoke`.
+// Revokes the provided token. Does not change the CLI's config at all.
 func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 	u, err := url.Parse(p.URL)
 	if err != nil {
@@ -197,7 +196,9 @@ func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 	return LoginResponse{}, nil
 }
 
-func RefreshUserToken(p RefreshParameters) (LoginResponse, error) {
+// Sends `POST https://id.twitch.tv/oauth2/token`.
+// Refreshes the provided token and optionally stores the result in the CLI's config.
+func RefreshUserToken(p RefreshParameters, shouldStoreInConfig bool) (LoginResponse, error) {
 	u, err := url.Parse(p.URL)
 	if err != nil {
 		log.Fatal(err)
@@ -214,10 +215,10 @@ func RefreshUserToken(p RefreshParameters) (LoginResponse, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return LoginResponse{}, errors.New("error with client while refreshing. Please rerun twitch configure")
+		return LoginResponse{}, errors.New(fmt.Sprintf("Error with client while refreshing: [%v - `%v`]", resp.StatusCode, strings.TrimSpace(string(resp.Body))))
 	}
 
-	r, err := handleLoginResponse(resp.Body)
+	r, err := handleLoginResponse(resp.Body, shouldStoreInConfig)
 	if err != nil {
 		log.Printf("Error handling login: %v", err)
 		return LoginResponse{}, err
@@ -226,6 +227,8 @@ func RefreshUserToken(p RefreshParameters) (LoginResponse, error) {
 	return r, nil
 }
 
+// Sends `GET https://id.twitch.tv/oauth2/validate`.
+// Only validates. Does not store this information in the CLI's config.
 func ValidateCredentials(p LoginParameters) (ValidateResponse, error) {
 	u, err := url.Parse(p.URL)
 	if err != nil {
@@ -251,13 +254,16 @@ func ValidateCredentials(p LoginParameters) (ValidateResponse, error) {
 	return r, nil
 }
 
-func handleLoginResponse(body []byte) (LoginResponse, error) {
+func handleLoginResponse(body []byte, shouldStoreInConfig bool) (LoginResponse, error) {
 	var r AuthorizationResponse
 	if err := json.Unmarshal(body, &r); err != nil {
 		return LoginResponse{}, err
 	}
 	expiresAt := util.GetTimestamp().Add(time.Duration(int64(time.Second) * int64(r.ExpiresIn)))
-	storeInConfig(r.AccessToken, r.RefreshToken, r.Scope, expiresAt)
+
+	if shouldStoreInConfig {
+		storeInConfig(r.AccessToken, r.RefreshToken, r.Scope, expiresAt)
+	}
 
 	return LoginResponse{
 		Response:  r,

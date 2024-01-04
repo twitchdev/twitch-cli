@@ -126,7 +126,7 @@ func TestRefreshUserToken(t *testing.T) {
 		URL:          ts.URL + "?foo=bar",
 		ClientID:     params.ClientID,
 		ClientSecret: params.ClientSecret,
-	})
+	}, true)
 
 	a.Nil(err)
 	a.NotNil(resp)
