@@ -3,7 +3,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -86,13 +85,20 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 	if revokeToken != "" {
 		p.Token = revokeToken
 		p.URL = login.RevokeTokenURL
-		login.CredentialsLogout(p)
+		_, err := login.CredentialsLogout(p)
+
+		if err != nil {
+			return err
+		}
+
+		log.Printf("Token %s has been successfully revoked", p.Token)
+
 	} else if validateToken != "" {
 		p.Token = validateToken
 		p.URL = login.ValidateTokenURL
 		r, err := login.ValidateCredentials(p)
 		if err != nil {
-			return fmt.Errorf("failed to validate: %v", err.Error())
+			return err
 		}
 
 		tokenType := "App Access Token"
@@ -121,13 +127,12 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 				fmt.Println(white("- %v\n", s))
 			}
 		}
+
 	} else if refreshToken != "" {
 		p.URL = login.RefreshTokenURL
 
 		// If we are overriding the Client ID then we shouldn't store this in the config.
 		shouldStoreInConfig := (overrideClientId == "")
-
-		fmt.Printf("stored - %v", shouldStoreInConfig)
 
 		resp, err := login.RefreshUserToken(login.RefreshParameters{
 			RefreshToken: refreshToken,
@@ -144,7 +149,7 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 				errDescription = "Check `--refresh` and `--client-id` flags to ensure the provided Refresh Token is valid for the provided Client ID."
 			}
 
-			return errors.New(err.Error() + "\n" + errDescription)
+			return fmt.Errorf("%v\n%v", err.Error(), errDescription)
 		}
 
 		fmt.Printf("%v", resp)
@@ -170,7 +175,7 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 		resp, err := login.ClientCredentialsLogin(p)
 
 		if err != nil {
-			return errors.New("Error handling login: " + err.Error())
+			return err
 		}
 
 		lightYellow := color.New(color.FgHiYellow).SprintfFunc()

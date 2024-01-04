@@ -80,7 +80,7 @@ const ValidateTokenURL = "https://id.twitch.tv/oauth2/validate"
 func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	u, err := url.Parse(p.URL)
 	if err != nil {
-		log.Fatal(err)
+		return LoginResponse{}, fmt.Errorf("Internal error: %v", err.Error())
 	}
 	q := u.Query()
 	q.Set("client_id", p.ClientID)
@@ -89,7 +89,7 @@ func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 
 	resp, err := loginRequest(http.MethodPost, u.String(), nil)
 	if err != nil {
-		log.Fatal(err.Error())
+		return LoginResponse{}, fmt.Errorf("Error processing request: %v", err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -98,7 +98,7 @@ func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 
 	r, err := handleLoginResponse(resp.Body, true)
 	if err != nil {
-		return LoginResponse{}, err
+		return LoginResponse{}, fmt.Errorf("Error processing login response: %v", err.Error())
 	}
 
 	return r, nil
@@ -109,7 +109,7 @@ func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort string) (LoginResponse, error) {
 	u, err := url.Parse(p.AuthorizeURL)
 	if err != nil {
-		log.Fatal(err)
+		return LoginResponse{}, fmt.Errorf("Internal error (parsing AuthorizeURL): %v", err.Error())
 	}
 	q := u.Query()
 	q.Set("client_id", p.ClientID)
@@ -120,7 +120,7 @@ func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort s
 
 	state, err := generateState()
 	if err != nil {
-		log.Fatal(err.Error())
+		return LoginResponse{}, fmt.Errorf("Internal error (generating state): %v", err.Error())
 	}
 
 	q.Set("state", state)
@@ -146,7 +146,7 @@ func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort s
 
 	u2, err := url.Parse(p.URL)
 	if err != nil {
-		return LoginResponse{}, fmt.Errorf("Internal error: %v", err.Error())
+		return LoginResponse{}, fmt.Errorf("Internal error (parsing URL): %v", err.Error())
 	}
 
 	q = u2.Query()
@@ -174,7 +174,7 @@ func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort s
 func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 	u, err := url.Parse(p.URL)
 	if err != nil {
-		log.Fatal(err)
+		return LoginResponse{}, fmt.Errorf("Internal error (parsing URL): %v", err.Error())
 	}
 	q := u.Query()
 	q.Set("client_id", p.ClientID)
@@ -183,16 +183,13 @@ func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 
 	resp, err := loginRequest(http.MethodPost, u.String(), nil)
 	if err != nil {
-		log.Print(err.Error())
-		return LoginResponse{}, err
+		return LoginResponse{}, fmt.Errorf("Error reading body: %v", err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("API responded with an error while revoking token: [%v] %v", resp.StatusCode, string(resp.Body))
-		return LoginResponse{}, errors.New("API responded with an error while revoking token")
+		return LoginResponse{}, fmt.Errorf("API responded with an error while revoking token: [%v] %v", resp.StatusCode, string(resp.Body))
 	}
 
-	log.Printf("Token %s has been successfully revoked.", p.Token)
 	return LoginResponse{}, nil
 }
 
@@ -201,7 +198,7 @@ func CredentialsLogout(p LoginParameters) (LoginResponse, error) {
 func RefreshUserToken(p RefreshParameters, shouldStoreInConfig bool) (LoginResponse, error) {
 	u, err := url.Parse(p.URL)
 	if err != nil {
-		log.Fatal(err)
+		return LoginResponse{}, fmt.Errorf("Internal error (parsing URL): %v", err)
 	}
 	q := u.Query()
 	q.Set("client_id", p.ClientID)
@@ -211,17 +208,16 @@ func RefreshUserToken(p RefreshParameters, shouldStoreInConfig bool) (LoginRespo
 
 	resp, err := loginRequest(http.MethodPost, u.String(), nil)
 	if err != nil {
-		return LoginResponse{}, err
+		return LoginResponse{}, fmt.Errorf("Error processing request: %v", err.Error())
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return LoginResponse{}, errors.New(fmt.Sprintf("Error with client while refreshing: [%v - `%v`]", resp.StatusCode, strings.TrimSpace(string(resp.Body))))
+		return LoginResponse{}, fmt.Errorf("Error with client while refreshing: [%v - `%v`]", resp.StatusCode, strings.TrimSpace(string(resp.Body)))
 	}
 
 	r, err := handleLoginResponse(resp.Body, shouldStoreInConfig)
 	if err != nil {
-		log.Printf("Error handling login: %v", err)
-		return LoginResponse{}, err
+		return LoginResponse{}, fmt.Errorf("Error handling login: %v", err.Error())
 	}
 
 	return r, nil
@@ -232,7 +228,7 @@ func RefreshUserToken(p RefreshParameters, shouldStoreInConfig bool) (LoginRespo
 func ValidateCredentials(p LoginParameters) (ValidateResponse, error) {
 	u, err := url.Parse(p.URL)
 	if err != nil {
-		log.Fatal(err)
+		return ValidateResponse{}, fmt.Errorf("Internal error (parsing URL): %v", err)
 	}
 
 	resp, err := loginRequestWithHeaders(http.MethodGet, u.String(), nil, []loginHeader{
@@ -242,13 +238,13 @@ func ValidateCredentials(p LoginParameters) (ValidateResponse, error) {
 		},
 	})
 	if err != nil {
-		return ValidateResponse{}, err
+		return ValidateResponse{}, fmt.Errorf("Error processing request: %v", err)
 	}
 
 	// Handle validate response body
 	var r ValidateResponse
 	if err = json.Unmarshal(resp.Body, &r); err != nil {
-		return ValidateResponse{}, err
+		return ValidateResponse{}, fmt.Errorf("Error handling response: %v", err)
 	}
 
 	return r, nil
