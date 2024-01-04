@@ -40,7 +40,7 @@ func init() {
 	loginCmd.Flags().StringVarP(&userScopes, "scopes", "s", "", "Space separated list of scopes to request with your user token.")
 	loginCmd.Flags().StringVarP(&revokeToken, "revoke", "r", "", "Instead of generating a new token, revoke the one passed to this parameter.")
 	loginCmd.Flags().StringVarP(&validateToken, "validate", "v", "", "Instead of generating a new token, validate the one passed to this parameter.")
-	loginCmd.Flags().StringVarP(&refreshToken, "refresh", "R", "", "Instead of generating a new token, refresh the token associated wtih the Refresh Token passed to this parameter.")
+	loginCmd.Flags().StringVarP(&refreshToken, "refresh", "R", "", "Instead of generating a new token, refresh the token associated with the Refresh Token passed to this parameter.")
 	loginCmd.Flags().StringVar(&overrideClientId, "client-id", "", "Override/manually set Client ID for token actions. By default Client ID from CLI config will be used.")
 	loginCmd.Flags().StringVar(&overrideClientSecret, "secret", "", "Override/manually set Client Secret for token actions. By default Client Secret from CLI config will be used.")
 	loginCmd.Flags().StringVar(&tokenServerIP, "ip", "", "Manually set the IP address to be bound to for the User Token web server.")
