@@ -152,7 +152,12 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("%v\n%v", err.Error(), errDescription)
 		}
 
-		fmt.Printf("%v", resp)
+		lightYellow := color.New(color.FgHiYellow).SprintfFunc()
+
+		log.Println("Successfully refreshed Access Token.")
+		log.Println(lightYellow("Access Token: ") + resp.Response.AccessToken)
+		log.Println(lightYellow("Refresh Token: ") + resp.Response.RefreshToken)
+		log.Println(lightYellow("Expires At: ") + resp.ExpiresAt.String())
 
 	} else if isUserToken {
 		p.URL = login.UserCredentialsURL
@@ -182,6 +187,8 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 
 		log.Println("Successfully generated App Access Token.")
 		log.Println(lightYellow("App Access Token: ") + resp.Response.AccessToken)
+		log.Println(lightYellow("Expires At: ") + resp.ExpiresAt.String())
+		log.Println(lightYellow("Scopes: ") + fmt.Sprintf("%v", resp.Response.Scope))
 	}
 
 	return nil
