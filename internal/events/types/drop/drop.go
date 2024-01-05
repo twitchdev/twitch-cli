@@ -41,6 +41,41 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	case models.TransportWebhook:
 		campaignId := util.RandomGUID()
 
+		dropEvents := []models.DropsEntitlementEventSubEvent{
+			{
+				ID: util.RandomGUID(),
+				Data: models.DropsEntitlementEventSubEventData{
+					OrganizationID: params.FromUserID,
+					CategoryID:     params.GameID,
+					CategoryName:   "Special Events",
+					CampaignID:     campaignId,
+					EntitlementID:  util.RandomGUID(),
+					BenefitID:      params.ItemID,
+					UserID:         params.ToUserID,
+					UserName:       params.ToUserName,
+					UserLogin:      params.ToUserName,
+					CreatedAt:      params.Timestamp,
+				},
+			},
+		}
+
+		for i := int64(1); i < params.Cost; i++ {
+			// for the new events, we'll use the entitlement above except generating new users as to avoid conflicting drops
+			dropEvents = append(dropEvents, models.DropsEntitlementEventSubEvent{
+				ID: util.RandomGUID(),
+				Data: models.DropsEntitlementEventSubEventData{
+					OrganizationID: params.FromUserID,
+					CategoryID:     params.GameID,
+					CategoryName:   "Special Events",
+					CampaignID:     campaignId,
+					EntitlementID:  util.RandomGUID(),
+					BenefitID:      params.ItemID,
+					UserID:         util.RandomUserID(),
+					UserName:       params.ToUserName,
+					UserLogin:      params.ToUserName,
+					CreatedAt:      params.Timestamp,
+				}})
+		}
 		body := &models.DropsEntitlementEventSubResponse{
 			Subscription: models.EventsubSubscription{
 				ID:      params.ID,
@@ -59,23 +94,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				Cost:      0,
 				CreatedAt: params.Timestamp,
 			},
-			Events: []models.DropsEntitlementEventSubEvent{
-				{
-					ID: util.RandomGUID(),
-					Data: models.DropsEntitlementEventSubEventData{
-						OrganizationID: params.FromUserID,
-						CategoryID:     params.GameID,
-						CategoryName:   "Special Events",
-						CampaignID:     campaignId,
-						EntitlementID:  util.RandomGUID(),
-						BenefitID:      params.ItemID,
-						UserID:         params.ToUserID,
-						UserName:       params.ToUserName,
-						UserLogin:      params.ToUserName,
-						CreatedAt:      params.Timestamp,
-					},
-				},
-			},
+			Events: dropEvents,
 		}
 		event, err = json.Marshal(body)
 		if err != nil {

@@ -58,5 +58,10 @@ func GetConfigPath() (string, error) {
 
 	configPath := filepath.Join(home, ".twitch-cli.env")
 
+	// purely for testing purposes- this allows us to run tests without overwriting the user's config
+	if os.Getenv("GOLANG_TESTING") == "true" {
+		configPath = filepath.Join(home, ".twitch-cli-test.env")
+	}
+
 	return configPath, nil
 }

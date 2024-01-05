@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/twitchdev/twitch-cli/internal/models"
 	"net/http"
 	"strconv"
 	"time"
@@ -95,6 +96,7 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 		mock_errors.WriteBadRequest(w, "Invalid/malformed start_time provided")
 		return
 	}
+
 	if body.Timezone == "" {
 		mock_errors.WriteBadRequest(w, "Missing timezone")
 		return
@@ -138,7 +140,6 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 		CategoryID:  body.CategoryID,
 		Title:       body.Title,
 		UserID:      userCtx.UserID,
-		Timezone:    "America/Los_Angeles",
 		IsCanceled:  &f,
 	}
 	err = db.NewQuery(nil, 100).InsertSchedule(segment)
@@ -163,7 +164,6 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 				CategoryID:  body.CategoryID,
 				Title:       body.Title,
 				UserID:      userCtx.UserID,
-				Timezone:    body.Timezone,
 				IsCanceled:  &f,
 			}
 
@@ -181,16 +181,15 @@ func (e ScheduleSegment) postSegment(w http.ResponseWriter, r *http.Request) {
 	}
 	b := dbr.Data.(database.Schedule)
 
-	// Remove timezone from JSON given in response
-	for i := range b.Segments {
-		b.Segments[i].Timezone = ""
-	}
-
 	if b.Vacation.StartTime == "" && b.Vacation.EndTime == "" {
 		b.Vacation = nil
 	}
 
-	bytes, _ := json.Marshal(b)
+	apiResponse := models.APIResponse{
+		Data: b,
+	}
+
+	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
 }
 
@@ -261,24 +260,19 @@ func (e ScheduleSegment) patchSegment(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// timezone
-	tz, err := time.LoadLocation(segment.Timezone)
-	if err != nil {
-		mock_errors.WriteServerError(w, err.Error())
-		return
-	}
-	if body.Timezone != "" {
-		tz, err = time.LoadLocation(body.Timezone)
-		if err != nil {
-			mock_errors.WriteBadRequest(w, "Error parsing timezone")
-			return
-		}
-	}
-
 	// is_canceled
 	isCanceled := false
 	if body.IsCanceled != nil {
 		isCanceled = *body.IsCanceled
+	}
+
+	// timezone
+	if body.Timezone != "" {
+		_, err := time.LoadLocation(body.Timezone)
+		if err != nil {
+			mock_errors.WriteBadRequest(w, "Error parsing timezone")
+			return
+		}
 	}
 
 	// title
@@ -312,7 +306,6 @@ func (e ScheduleSegment) patchSegment(w http.ResponseWriter, r *http.Request) {
 		StartTime:  st.UTC().Format(time.RFC3339),
 		EndTime:    et.UTC().Format(time.RFC3339),
 		IsCanceled: &isCanceled,
-		Timezone:   tz.String(),
 		Title:      title,
 	}
 
@@ -329,15 +322,14 @@ func (e ScheduleSegment) patchSegment(w http.ResponseWriter, r *http.Request) {
 	}
 	b = dbr.Data.(database.Schedule)
 
-	// Remove timezone from JSON given in response
-	for i := range b.Segments {
-		b.Segments[i].Timezone = ""
-	}
-
 	if b.Vacation.StartTime == "" && b.Vacation.EndTime == "" {
 		b.Vacation = nil
 	}
 
-	bytes, _ := json.Marshal(b)
+	apiResponse := models.APIResponse{
+		Data: b,
+	}
+
+	bytes, _ := json.Marshal(apiResponse)
 	w.Write(bytes)
 }

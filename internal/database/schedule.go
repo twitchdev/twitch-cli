@@ -24,7 +24,6 @@ type ScheduleSegment struct {
 	IsVacation    bool             `db:"is_vacation" json:"-"`
 	Category      *SegmentCategory `json:"category"`
 	UserID        string           `db:"broadcaster_id" json:"-"`
-	Timezone      string           `db:"timezone" json:"timezone,omitempty"`
 	CategoryID    *string          `db:"category_id" json:"-"`
 	CategoryName  *string          `db:"category_name" dbi:"false" json:"-"`
 	IsCanceled    *bool            `db:"is_canceled" json:"-"`

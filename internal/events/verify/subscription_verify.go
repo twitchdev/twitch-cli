@@ -19,13 +19,14 @@ import (
 )
 
 type VerifyParameters struct {
-	Transport      string
-	Timestamp      string
-	Event          string
-	ForwardAddress string
-	Secret         string
-	EventID        string
-	Version        string
+	Transport         string
+	Timestamp         string
+	Event             string
+	ForwardAddress    string
+	Secret            string
+	EventID           string
+	Version           string
+	BroadcasterUserID string
 }
 
 type VerifyResponse struct {
@@ -55,7 +56,11 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		p.EventID = util.RandomGUID()
 	}
 
-	body, err := generateWebhookSubscriptionBody(p.Transport, p.EventID, event.GetTopic(p.Transport, p.Event), event.SubscriptionVersion(), challenge, p.ForwardAddress)
+	if p.BroadcasterUserID == "" {
+		p.BroadcasterUserID = util.RandomUserID()
+	}
+
+	body, err := generateWebhookSubscriptionBody(p.Transport, p.EventID, event.GetTopic(p.Transport, p.Event), event.SubscriptionVersion(), p.BroadcasterUserID, challenge, p.ForwardAddress)
 	if err != nil {
 		return VerifyResponse{}, err
 	}
@@ -133,7 +138,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	return r, nil
 }
 
-func generateWebhookSubscriptionBody(transport string, eventID string, event string, subscriptionVersion string, challenge string, callback string) (trigger.TriggerResponse, error) {
+func generateWebhookSubscriptionBody(transport string, eventID string, event string, subscriptionVersion string, broadcaster string, challenge string, callback string) (trigger.TriggerResponse, error) {
 	var res []byte
 	var err error
 	ts := util.GetTimestamp().Format(time.RFC3339Nano)
@@ -147,7 +152,7 @@ func generateWebhookSubscriptionBody(transport string, eventID string, event str
 				Type:    event,
 				Version: subscriptionVersion,
 				Condition: models.EventsubCondition{
-					BroadcasterUserID: util.RandomUserID(),
+					BroadcasterUserID: broadcaster,
 				},
 				Transport: models.EventsubTransport{
 					Method:   "webhook",

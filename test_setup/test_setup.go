@@ -21,5 +21,6 @@ func SetupTestEnv(t *testing.T) *assert.Assertions {
 	viper.SetConfigType("env")
 
 	viper.Set("DB_FILENAME", "test-eventCache.db")
+	t.Setenv("GOLANG_TESTING", "true")
 	return assert
 }

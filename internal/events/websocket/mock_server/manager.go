@@ -154,6 +154,7 @@ func StartWebsocketServer(enableDebug bool, ip string, port int, enableSSL bool,
 	rpc.RegisterHandler("EventSubWebSocketForwardEvent", RPCFireEventSubHandler)
 	rpc.RegisterHandler("EventSubWebSocketCloseClient", RPCCloseHandler)
 	rpc.RegisterHandler("EventSubWebSocketSubscription", RPCSubscriptionHandler)
+	rpc.RegisterHandler("EventSubWebSocketKeepalive", RPCKeepaliveHandler)
 	rpc.StartBackgroundServer()
 
 	// TODO: Interactive shell maybe?

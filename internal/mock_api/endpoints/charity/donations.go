@@ -34,11 +34,12 @@ var donationsScopesByMethod = map[string][]string{
 type CharityDonations struct{}
 
 type GetCharityDonationsResponse struct {
-	ID        		string        `json:"campaign_id"`
-	UserID    		string        `json:"user_id"`
-	UserLogin 		string        `json:"user_login"`
-	UserName  		string        `json:"user_name"`
-	TargetAmount 	CharityAmount `json:"target_amount"`
+	ID         string        `json:"id"`
+	CampaignID string        `json:"campaign_id"`
+	UserID     string        `json:"user_id"`
+	UserLogin  string        `json:"user_login"`
+	UserName   string        `json:"user_name"`
+	Amount     CharityAmount `json:"amount"`
 }
 
 func (e CharityDonations) Path() string { return "/charity/donations" }
@@ -98,11 +99,12 @@ func getCharityDonations(w http.ResponseWriter, r *http.Request) {
 
 	for i := 0; i < first; i++ {
 		d := GetCharityDonationsResponse{
-			ID:        util.RandomGUID(),
-			UserID:    userCtx.UserID,
-			UserName:  user.DisplayName,
-			UserLogin: user.UserLogin,
-			TargetAmount: CharityAmount{
+			ID:         util.RandomGUID(),
+			CampaignID: util.RandomGUID(),
+			UserID:     userCtx.UserID,
+			UserName:   user.DisplayName,
+			UserLogin:  user.UserLogin,
+			Amount: CharityAmount{
 				Value:         rand.Intn(150000-300) + 300, // Between $3 and $1,500
 				DecimalPlaces: 2,
 				Currency:      "USD",

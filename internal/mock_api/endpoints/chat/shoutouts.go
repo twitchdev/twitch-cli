@@ -20,7 +20,7 @@ var shoutoutsMethodsSupported = map[string]bool{
 
 var shoutoutsScopesByMethod = map[string][]string{
 	http.MethodGet:    {},
-	http.MethodPost:   {"moderator:manage:shoutout"},
+	http.MethodPost:   {"moderator:manage:shoutouts"},
 	http.MethodDelete: {},
 	http.MethodPatch:  {},
 	http.MethodPut:    {},

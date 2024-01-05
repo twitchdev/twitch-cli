@@ -11,6 +11,7 @@ type APIResponse struct {
 	Template   string                    `json:"template,omitempty"`
 	Total      *int                      `json:"total,omitempty"`
 	DateRange  *BitsLeaderboardDateRange `json:"date_range,omitempty"`
+	Points     int                       `json:"points,omitempty"`
 }
 
 type APIPagination struct {

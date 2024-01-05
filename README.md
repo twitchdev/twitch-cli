@@ -4,6 +4,7 @@
   - [Download](#download)
     - [Homebrew](#homebrew)
     - [Scoop](#scoop)
+    - [WinGet](#winget)
     - [Manual Download](#manual-download)
   - [Usage](#usage)
   - [Commands](#commands)
@@ -32,6 +33,22 @@ scoop install twitch-cli
 ```
 
 This will install it into your path, and it'll be callable via `twitch`. 
+
+### WinGet
+
+Alternatively on Windows you can use [WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/) for installing the CLI
+
+To install via Winget, run:
+
+```sh
+winget install Twitch.TwitchCLI
+```
+
+To update, run:
+
+```sh
+winget update Twitch.TwitchCLI
+```
 
 ### Manual Download
 

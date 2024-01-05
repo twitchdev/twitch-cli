@@ -2,16 +2,30 @@
 
 - [Events](#events)
   - [Description](#description)
+  - [Configure](#configure)
   - [Trigger](#trigger)
   - [Retrigger](#retrigger)
   - [Verify-Subscription](#verify-subscription)
-  - [Websocket](#websocket)
+  - [WebSocket](#websocket)
 
 ## Description
 
-The `event` product contains commands to trigger mock events for local webhook testing or migration.
+The `event` command contains subcommands to trigger mock events for local webhook testing or migration.
 
 All commands exit the program with a non-zero exit code when the command fails, including when an event does not exist, or when the mock EventSub WebSocket server does not start correctly.
+
+
+## Configure
+
+Used to configure the forwarding address and/or the secret used with the `trigger`, `verify-subscription`, and `retrigger` subcommands.
+
+**Flags**
+
+| Flag                      | Shorthand | Description                                                                                                                     | Example                                      | Required? (Y/N) |
+|---------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|-----------------|
+| `--forward-address`       | `-F`      | Web server address for where to send mock events.                                                                               | `-F https://localhost:8080`                  | N               |
+| `--secret`                | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.            | `-s testsecret`                              | N               |
+
 
 ## Trigger
 
@@ -92,6 +106,7 @@ This command can take either the Event or Alias listed as an argument. It is pre
 | `--gift-user`             | `-g`      | Used only for subcription-based events, denotes the gifting user ID.                                                            | `-g 44635596`                                | N               |
 | `--item-id`               | `-i`      | Manually set the ID of the event payload item (for example the reward ID in redemption events or game in stream events).        | `-i 032e4a6c-4aef-11eb-a9f5-1f703d1f0b92`    | N               |
 | `--item-name`             | `-n`      | Manually set the name of the event payload item (for example the reward ID in redemption events or game name in stream events). | `-n "Science & Technology"`                  | N               |
+| `--no-config`             | `-D`      | Disables the use of the configuration values should they exist.                                                                 | `-D`                                         | N               |
 | `--secret`                | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.            | `-s testsecret`                              | N               |
 | `--session`               |           | WebSocket session to target. Only used when forwarding to WebSocket servers with --transport=websocket                          | `--session e411cc1e_a2613d4e`                | N               |
 | `--subscription-id`       | `-u`      | Manually set the subscription/event ID of the event itself.                                                                     | `-u 5d3aed06-d019-11ed-afa1-0242ac120002`    | N               |
@@ -101,10 +116,11 @@ This command can take either the Event or Alias listed as an argument. It is pre
 | `--to-user`               | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                              | `-t 44635596`                                | N               |
 | `--transport`             | `-T`      | The method used to send events. Can either be `webhook` or `websocket`. Default is `webhook`.                                   | `-T webhook`                                 | N               |
 
+**Examples**
 
 ```sh
-twitch event trigger subscribe -F https://localhost:8080/ // triggers a randomly generated subscribe event and forwards to the localhost:8080 server
-twitch event trigger cheer -f 1234 -t 4567 // generates JSON for a cheer event from user 1234 to user 4567
+twitch event trigger subscribe -F https://localhost:8080/ # triggers a randomly generated subscribe event and forwards to the localhost:8080 server
+twitch event trigger cheer -f 1234 -t 4567 # generates JSON for a cheer event from user 1234 to user 4567
 ```
 
 ## Retrigger
@@ -134,17 +150,19 @@ None
 |---------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
 | `--forward-address` | `-F`      | Web server address for where to send mock events.                                                                                                             | `-F https://localhost:8080` | N               |
 | `--id`              | `-i`      | The ID of the event to refire.                                                                                                                                | `-i <id>`                   | Y               |
+| `--no-config`       | `-D`      | Disables the use of the configuration values should they exist.                                                                                               | `-D`                        | N               |
 | `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.                                          | `-s testsecret`             | N               |
+
 
 **Examples**
 
 ```sh
-twitch event retrigger -i "713f3254-0178-9757-7439-d779400c0999" -F https://localhost:8080/ // triggers the previous cheer event to localhost:8080
+twitch event retrigger -i "713f3254-0178-9757-7439-d779400c0999" -F https://localhost:8080/ # triggers the previous cheer event to localhost:8080
 ```
 
 ## Verify-Subscription
 
-Allows you to test if your webserver responds to subscription requests properly.
+Allows you to test if your webserver responds to subscription requests properly. The `forward-address` flag is required *unless* you have configured a default forwarding address via `twitch event configure -F <address>`. 
 
 **Args**
 
@@ -154,14 +172,16 @@ This command takes the same arguments as [Trigger](#trigger).
 
 | Flag                | Shorthand | Description                                                                                                          | Example                     | Required? (Y/N) |
 |---------------------|-----------|----------------------------------------------------------------------------------------------------------------------|-----------------------------|-----------------|
+| `--broadcaster`     | `-b`      | The broadcaster's user ID to be used for verification                                                                | `-b 1234`                   | N               |
 | `--forward-address` | `-F`      | Web server address for where to send mock subscription.                                                              | `-F https://localhost:8080` | Y               |
+| `--no-config`       | `-D`      | Disables the use of the configuration values should they exist.                                                      | `-D`                        | N               |
 | `--secret`          | `-s`      | Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length. | `-s testsecret`             | N               |
 | `--transport`       | `-T`      | The method used to send events. Default is `eventsub`.                                                               | `-T eventsub`               | N               |
 
 **Examples**
 
 ```sh
-twitch event verify-subscription cheer -F https://localhost:8080/ // triggers a fake "cheer" EventSub subscription and validates if localhost responds properly
+twitch event verify-subscription cheer -F https://localhost:8080/ # triggers a fake "cheer" EventSub subscription and validates if localhost responds properly
 ```
 
 ## WebSocket
@@ -191,6 +211,7 @@ Provides access to a mock EventSub WebSocket server. More information can be fou
 | `--reason`       |           | Specifies the Close message code you wish to close a client’s connection with. Only used with "twitch websocket close"       | `twitch event websocket close --reason=4006` |
 | `--status`       |           | Specifies the Status code you wish to override an existing subscription’s status to. Only used with "twitch websocket close" | `twitch event websocket subscription --status=user_removed` |
 | `--subscription` |           | Specifies the subscription ID you wish to target. Only used with “twitch websocket subscription”.	                          | `twitch event websocket subscription --subscription=48d3-b9a-f84c` |
+| `--enabled`      |           | Sets on/off for the specified feature.                                                           	                          | `twitch event websocket keepalive --session=e411cc1e_a2613d4e --enabled=false` |
 
 **Examples**
 
@@ -199,4 +220,5 @@ twitch event websocket start-server
 twitch event websocket reconnect
 twitch event websocket close --session=e411cc1e_a2613d4e --reason=4006
 twitch event websocket subscription --status=user_removed --subscription=82a855-fae8-93bff0
+twitch event websocket keepalive --session=e411cc1e_a2613d4e --enabled=false
 ```

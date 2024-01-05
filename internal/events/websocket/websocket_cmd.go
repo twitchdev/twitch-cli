@@ -3,6 +3,7 @@ package websocket
 import (
 	"fmt"
 	"net/rpc"
+	"strconv"
 
 	"github.com/fatih/color"
 	"github.com/twitchdev/twitch-cli/internal/events/websocket/mock_server"
@@ -14,6 +15,7 @@ type WebsocketCommandParameters struct {
 	Subscription       string
 	SubscriptionStatus string
 	CloseReason        string
+	FeatureEnabled     bool
 }
 
 func ForwardWebsocketCommand(cmd string, p WebsocketCommandParameters) error {
@@ -36,6 +38,7 @@ func ForwardWebsocketCommand(cmd string, p WebsocketCommandParameters) error {
 	variables["SubscriptionID"] = p.Subscription
 	variables["SubscriptionStatus"] = p.SubscriptionStatus
 	variables["CloseReason"] = p.CloseReason
+	variables["FeatureEnabled"] = strconv.FormatBool(p.FeatureEnabled)
 
 	args := &rpc_handler.RPCArgs{
 		RPCName:   rpcName,

@@ -185,16 +185,6 @@ func TestSegment(t *testing.T) {
 	a.Nil(err)
 	a.Equal(400, resp.StatusCode)
 
-	body.Timezone = segment.Timezone
-	body.IsRecurring = nil
-	b, _ = json.Marshal(body)
-	req, _ = http.NewRequest(http.MethodPost, ts.URL+ScheduleSegment{}.Path(), bytes.NewBuffer(b))
-	q.Set("broadcaster_id", "1")
-	req.URL.RawQuery = q.Encode()
-	resp, err = http.DefaultClient.Do(req)
-	a.Nil(err)
-	a.Equal(400, resp.StatusCode)
-
 	// patch
 	// no id
 	b, _ = json.Marshal(body)
@@ -217,6 +207,7 @@ func TestSegment(t *testing.T) {
 
 	// good request
 	body.Title = "patched_title"
+	body.Timezone = "America/Los_Angeles"
 	b, _ = json.Marshal(body)
 	req, _ = http.NewRequest(http.MethodPatch, ts.URL+ScheduleSegment{}.Path(), bytes.NewBuffer(b))
 	q.Set("broadcaster_id", "1")
