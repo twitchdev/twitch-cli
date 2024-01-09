@@ -55,7 +55,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				UserLogin:            params.FromUserName,
 				UserName:             params.FromUserName,
 				BroadcasterUserID:    params.ToUserID,
-				BroadcasterUserLogin: params.ToUserID,
+				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
 				FollowedAt:           params.Timestamp,
 			},
