@@ -4,6 +4,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -313,9 +314,9 @@ func GetClientInformation() (clientInformation, error) {
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
 			URL:          login.RefreshTokenURL,
-		})
+		}, true)
 		if err != nil {
-			return clientInformation{}, err
+			return clientInformation{}, errors.New(err.Error() + "\nPlease rerun `twitch configure`")
 		}
 		token = r.Response.AccessToken
 	}

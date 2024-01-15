@@ -97,6 +97,21 @@ Access tokens can be revoked with:
 twitch token -r 0123456789abcdefghijABCDEFGHIJ
 ```
 
+## Refreshing Access Tokens
+
+Access tokens can be refreshed using a refresh token:
+
+```
+twitch token --refresh ABCDEfghij0123456789abcdefghijABCDEFGHIJ
+```
+
+By default, this uses the Client ID and Client Secret stored in your config file. You can override this with `--client-id` and `--secret`, as such:
+
+```
+twitch token --refresh ABCDEfghij0123456789abcdefghijABCDEFGHIJ --client-id uo6dggojyb8d6soh92zknwmi5ej1q2 --secret yigv8zib6nuczcoy08u8g1nxh6wjgu
+```
+When overriding the Client ID, your config file will **not** be updated with the new access token, client ID, or secret.
+
 ## Alternate IP for User Token Webserver
 
 If you'd like to bind the webserver used for user tokens (`-u` flag), you can override it with the `--ip` flag. For example:
@@ -147,16 +162,18 @@ None.
 
 **Flags**
 
-| Flag              | Shorthand | Description                                                                                                    | Example                                      | Required? (Y/N) |
-|-------------------|-----------|----------------------------------------------------------------------------------------------------------------|----------------------------------------------|-----------------|
-| `--user-token`    | `-u`      | Whether to fetch a user token or not. Default is false.                                                        | `token -u`                                   | N               |
-| `--scopes`        | `-s`      | The space separated scopes to use when getting a user token.                                                   | `-s "user:read:email user_read"`             | N               |
-| `--revoke`        | `-r`      | Instead of generating a new token, revoke the one passed to this parameter.                                    | `-r 0123456789abcdefghijABCDEFGHIJ`          | N               |
-| `--validate`      | `-v`      | Instead of generating a new token, validate the one passed to this parameter.                                  | `-v 0123456789abcdefghijABCDEFGHIJ`          | N               |
-| `--ip`            |           | Manually set the port to be used for the User Token web server. The default binds to all interfaces. (0.0.0.0) | `--ip 127.0.0.1`                             | N               |
-| `--port`          | `-p`      | Override/manually set the port for token actions. (The default is 3000)                                        | `-p 3030`                                    | N               |
-| `--client-id`     |           | Override/manually set client ID for token actions. By default client ID from CLI config will be used.          | `--client-id uo6dggojyb8d6soh92zknwmi5ej1q2` | N               |
-| `--redirect-host` |           | Override/manually set the redirect host token actions. The default is `localhost`                              | `--redirect-host contoso.com`                | N               |
+| Flag              | Shorthand | Description                                                                                                      | Example                                       | Required? (Y/N) |
+|-------------------|-----------|------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|-----------------|
+| `--user-token`    | `-u`      | Whether to fetch a user token or not. Default is false.                                                          | `token -u`                                    | N               |
+| `--scopes`        | `-s`      | The space separated scopes to use when getting a user token.                                                     | `-s "user:read:email user_read"`              | N               |
+| `--revoke`        | `-r`      | Instead of generating a new token, revoke the one passed to this parameter.                                      | `-r 0123456789abcdefghijABCDEFGHIJ`           | N               |
+| `--validate`      | `-v`      | Instead of generating a new token, validate the one passed to this parameter.                                    | `-v 0123456789abcdefghijABCDEFGHIJ`           | N               |
+| `--refresh`       | `-R`      | Instead of generating a new token, refresh the token associated with the Refresh Token passed to this parameter. | `-R ABCDEfghij0123456789abcdefghijABCDEFGHIJ` | N               |
+| `--ip`            |           | Manually set the port to be used for the User Token web server. The default binds to all interfaces. (0.0.0.0)   | `--ip 127.0.0.1`                              | N               |
+| `--port`          | `-p`      | Override/manually set the port for token actions. (The default is 3000)                                          | `-p 3030`                                     | N               |
+| `--client-id`     |           | Override/manually set Client ID for token actions. By default Client ID from CLI config will be used.            | `--client-id uo6dggojyb8d6soh92zknwmi5ej1q2`  | N               |
+| `--secret`        |           | Override/manually set Client Secret for token actions. By default Client Secret from CLI config will be used.    | `--secret yigv8zib6nuczcoy08u8g1nxh6wjgu`     | N               |
+| `--redirect-host` |           | Override/manually set the redirect host token actions. The default is `localhost`                                | `--redirect-host contoso.com`                 | N               |
 
 ## Notes
 
