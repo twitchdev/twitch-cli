@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -51,9 +52,18 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 
 	// Connection successful. WebSocket is open.
 
+	// keepalive timeout
+	keepalive_seconds := KEEPALIVE_TIMEOUT_SECONDS
+	if keepalive_seconds_string := r.URL.Query().Get("keepalive_timeout_seconds"); keepalive_seconds_string != "" {
+		if val, err := strconv.Atoi(keepalive_seconds_string); err == nil && val >= 10 && val <= 600 {
+			keepalive_seconds = val
+		}
+	}
+	keepalive_duration := time.Duration(keepalive_seconds) * time.Second
+
 	// Get connected at time and set automatic read timeout
 	connectedAtTimestamp := time.Now().UTC().Format(time.RFC3339Nano)
-	conn.SetReadDeadline(time.Now().Add(time.Second * KEEPALIVE_TIMEOUT_SECONDS))
+	conn.SetReadDeadline(time.Now().Add(keepalive_duration))
 
 	client := &Client{
 		clientName:           util.RandomGUID()[:8],
@@ -129,7 +139,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 				Session: WelcomeMessagePayloadSession{
 					ID:                      fmt.Sprintf("%v_%v", ws.ServerId, client.clientName),
 					Status:                  "connected",
-					KeepaliveTimeoutSeconds: KEEPALIVE_TIMEOUT_SECONDS,
+					KeepaliveTimeoutSeconds: keepalive_seconds,
 					ReconnectUrl:            nil,
 					ConnectedAt:             connectedAtTimestamp,
 				},
@@ -156,7 +166,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Set up ping/pong and keepalive handling
-	client.keepAliveTimer = time.NewTicker(10 * time.Second)
+	client.keepAliveTimer = time.NewTicker(keepalive_duration)
 	client.pingTimer = time.NewTicker(5 * time.Second)
 	client.keepAliveLoopChan = make(chan struct{})
 	client.pingLoopChan = make(chan struct{})
