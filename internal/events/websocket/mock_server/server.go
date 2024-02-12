@@ -72,6 +72,7 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 		connectionUrl:        fmt.Sprintf("%v://%v/ws", serverManager.protocolHttp, r.Host),
 		KeepAliveEnabled:     true,
 		keepAliveChanOpen:    false,
+		keepAliveSeconds:     keepalive_seconds,
 		pingChanOpen:         false,
 	}
 
@@ -329,6 +330,12 @@ func (ws *WebSocketServer) InitiateRestart() {
 		reconnectId = reconnectId[:len(reconnectId)-1]
 		clientConnectionUrl := strings.Replace(client.connectionUrl, "http://", "ws://", -1)
 		clientConnectionUrl = strings.Replace(clientConnectionUrl, "https://", "wss://", -1)
+		var reconnecturl string
+		if client.keepAliveSeconds != KEEPALIVE_TIMEOUT_SECONDS {
+			reconnecturl = fmt.Sprintf("%v?reconnect_id=%v&keepalive_timeout_seconds=%d", clientConnectionUrl, reconnectId, client.keepAliveSeconds)
+		} else {
+			reconnecturl = fmt.Sprintf("%v?reconnect_id=%v", clientConnectionUrl, reconnectId)
+		}
 		reconnectMsg, _ := json.Marshal(
 			ReconnectMessage{
 				Metadata: MessageMetadata{
@@ -341,7 +348,7 @@ func (ws *WebSocketServer) InitiateRestart() {
 						ID:                      sessionId,
 						Status:                  "reconnecting",
 						KeepaliveTimeoutSeconds: nil,
-						ReconnectUrl:            fmt.Sprintf("%v?reconnect_id=%v", clientConnectionUrl, reconnectId),
+						ReconnectUrl:            reconnecturl,
 						ConnectedAt:             client.ConnectedAtTimestamp,
 					},
 				},

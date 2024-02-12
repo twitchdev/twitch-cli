@@ -19,6 +19,7 @@ type Client struct {
 	keepAliveChanOpen  bool
 	keepAliveLoopChan  chan struct{}
 	keepAliveTimer     *time.Ticker
+	keepAliveSeconds   int
 	pingChanOpen       bool
 	pingLoopChan       chan struct{}
 	pingTimer          *time.Ticker
