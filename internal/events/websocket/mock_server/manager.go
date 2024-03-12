@@ -170,23 +170,23 @@ func printWelcomeMsg() {
 
 	log.Printf(lightBlue("Started WebSocket server on %v:%v"), serverManager.ip, serverManager.port)
 	if serverManager.strictMode {
-		log.Printf(lightBlue("--require-subscription enabled. Clients will have 10 seconds to subscribe before being disconnected."))
+		log.Println(lightBlue("--require-subscription enabled. Clients will have 10 seconds to subscribe before being disconnected."))
 	}
 
 	fmt.Println()
 
 	log.Printf(yellow("Simulate subscribing to events at: %v://%v:%v/eventsub/subscriptions"), serverManager.protocolHttp, serverManager.ip, serverManager.port)
-	log.Printf(yellow("POST, GET, and DELETE are supported"))
-	log.Printf(yellow("For more info: https://dev.twitch.tv/docs/cli/websocket-event-command/#simulate-subscribing-to-mock-eventsub"))
+	log.Println(yellow("POST, GET, and DELETE are supported"))
+	log.Println(yellow("For more info: https://dev.twitch.tv/docs/cli/websocket-event-command/#simulate-subscribing-to-mock-eventsub"))
 
 	fmt.Println()
 
-	log.Printf(lightYellow("Events can be forwarded to this server from another terminal with --transport=websocket\nExample: \"twitch event trigger channel.ban --transport=websocket\""))
+	log.Println(lightYellow("Events can be forwarded to this server from another terminal with --transport=websocket\nExample: \"twitch event trigger channel.ban --transport=websocket\""))
 	fmt.Println()
-	log.Printf(lightYellow("You can send to a specific client after its connected with --session\nExample: \"twitch event trigger channel.ban --transport=websocket --session=e411cc1e_a2613d4e\""))
+	log.Println(lightYellow("You can send to a specific client after its connected with --session\nExample: \"twitch event trigger channel.ban --transport=websocket --session=e411cc1e_a2613d4e\""))
 
 	fmt.Println()
-	log.Printf(lightGreen("For further usage information, please see our official documentation:\nhttps://dev.twitch.tv/docs/cli/websocket-event-command/"))
+	log.Println(lightGreen("For further usage information, please see our official documentation:\nhttps://dev.twitch.tv/docs/cli/websocket-event-command/"))
 	fmt.Println()
 
 	log.Printf(lightBlue("Connect to the WebSocket server at: ")+"%v://%v:%v/ws", serverManager.protocolWs, serverManager.ip, serverManager.port)
@@ -392,7 +392,6 @@ func subscriptionPageHandlerPost(w http.ResponseWriter, r *http.Request) {
 		Version:           body.Version,
 		CreatedAt:         time.Now().UTC().Format(time.RFC3339Nano),
 		Status:            STATUS_ENABLED, // https://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions
-		SessionClientName: clientName,
 		Conditions:        body.Condition,
 		ClientConnectedAt: client.ConnectedAtTimestamp,
 	}
@@ -444,8 +443,6 @@ func subscriptionPageHandlerPost(w http.ResponseWriter, r *http.Request) {
 			subscription.SubscriptionID,
 		)
 	}
-
-	return
 }
 
 func subscriptionPageHandlerDelete(w http.ResponseWriter, r *http.Request) {

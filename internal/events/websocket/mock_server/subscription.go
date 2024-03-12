@@ -7,14 +7,13 @@ import (
 )
 
 type Subscription struct {
-	SubscriptionID    string     // Random GUID for the subscription
-	ClientID          string     // Client ID included in headers
-	Type              string     // EventSub topic
-	Version           string     // EventSub topic version
-	CreatedAt         string     // Timestamp of when the subscription was created
-	DisabledAt        *time.Time // Not public; Timestamp of when the subscription was disabled
-	Status            string     // Status of the subscription
-	SessionClientName string     // Client name of the session this is associated with.
+	SubscriptionID string     // Random GUID for the subscription
+	ClientID       string     // Client ID included in headers
+	Type           string     // EventSub topic
+	Version        string     // EventSub topic version
+	CreatedAt      string     // Timestamp of when the subscription was created
+	DisabledAt     *time.Time // Not public; Timestamp of when the subscription was disabled
+	Status         string     // Status of the subscription
 
 	ClientConnectedAt    string // Time client connected
 	ClientDisconnectedAt string // Time client disconnected
