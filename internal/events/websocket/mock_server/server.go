@@ -154,14 +154,12 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 	client.mustSubscribeTimer = time.NewTimer(10 * time.Second)
 	if ws.StrictMode {
 		go func() {
-			select {
-			case <-client.mustSubscribeTimer.C:
-				if len(ws.Subscriptions[client.clientName]) == 0 {
-					client.CloseWithReason(closeConnectionUnused)
-					ws.handleClientConnectionClose(client, closeConnectionUnused)
+			<-client.mustSubscribeTimer.C
+			if len(ws.Subscriptions[client.clientName]) == 0 {
+				client.CloseWithReason(closeConnectionUnused)
+				ws.handleClientConnectionClose(client, closeConnectionUnused)
 
-					return
-				}
+				return
 			}
 		}()
 	}
@@ -270,8 +268,6 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 			ws.handleClientConnectionClose(client, closeClientSentInboundTraffic)
 			ws.muClients.Unlock()
 		}
-
-		break
 	}
 }
 
