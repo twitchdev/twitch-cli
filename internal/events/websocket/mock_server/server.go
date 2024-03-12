@@ -457,13 +457,13 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 		subscriptionCreatedAtTimestamp := "" // Used below if in strict mode
 		if ws.StrictMode {
 			found := false
-			for _, clientSubscriptions := range ws.Subscriptions {
+			for subscriptionClientName, clientSubscriptions := range ws.Subscriptions {
 				if found {
 					break
 				}
 
 				for _, sub := range clientSubscriptions {
-					if sub.SessionClientName == client.clientName && sub.Type == eventObj.Subscription.Type && sub.Version == eventObj.Subscription.Version {
+					if subscriptionClientName == client.clientName && sub.Type == eventObj.Subscription.Type && sub.Version == eventObj.Subscription.Version {
 						found = true
 						subscriptionCreatedAtTimestamp = sub.CreatedAt
 					}
@@ -514,7 +514,7 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 	}
 
 	if !didSend {
-		msg := fmt.Sprintf("Error executing remote triggered EventSub: No clients with the subscribed to [%v / %v]", eventObj.Subscription.Type, eventObj.Subscription.Version)
+		msg := fmt.Sprintf("Error executing remote triggered EventSub: No clients are subscribed to [%v / %v]", eventObj.Subscription.Type, eventObj.Subscription.Version)
 		log.Println(msg)
 		return false, msg
 	}

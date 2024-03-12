@@ -392,7 +392,6 @@ func subscriptionPageHandlerPost(w http.ResponseWriter, r *http.Request) {
 		Version:           body.Version,
 		CreatedAt:         time.Now().UTC().Format(time.RFC3339Nano),
 		Status:            STATUS_ENABLED, // https://dev.twitch.tv/docs/api/reference/#get-eventsub-subscriptions
-		SessionClientName: clientName,
 		Conditions:        body.Condition,
 		ClientConnectedAt: client.ConnectedAtTimestamp,
 	}
