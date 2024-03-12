@@ -89,6 +89,36 @@ Expires At: 2023-08-23 22:06:47.036137 +0000 UTC
 Scopes: [moderator:manage:shield_mode moderator:manage:shoutouts]
 ```
 
+## Device Code Flow
+
+If you wish to use Device Code Flow, the `--dcf` flag can be used alongside the `--user-token` flag.
+
+Run the command as you would for a regular User Access Token, but include the `--dcf` flag:
+
+```
+twitch token -u -s "moderator:manage:shoutouts moderator:manage:shield_mode" --dcf
+```
+
+The terminal will then output information about how to authenticate in your web browser:
+
+```
+Started Device Code Flow login.
+Use this URL to log in: https://www.twitch.tv/activate?device-code=SZPPRMFW
+Use this code when prompted at the above URL: SZPPRMFW
+
+This system will check every 5 seconds, and will expire after 30 minutes.
+```
+
+The application will then check Twitch's servers every 5 seconds to see if you have authenticated in your web browser. When it detects you have authenticated, it will output the tokens as expected:
+
+```
+2024/03/12 11:42:24 Successfully generated User Access Token.
+2024/03/12 11:42:24 User Access Token: c012345asdfetc...
+2024/03/12 11:42:24 Refresh Token: 012345asdfetc...
+2024/03/12 11:42:24 Expires At: 2024-03-12 22:30:46.696108405 +0000 UTC
+2024/03/12 11:42:24 Scopes: [moderator:manage:shield_mode moderator:manage:shoutouts]
+```
+
 ## Revoking Access Tokens
 
 Access tokens can be revoked with:
@@ -165,6 +195,7 @@ None.
 | Flag              | Shorthand | Description                                                                                                      | Example                                       | Required? (Y/N) |
 |-------------------|-----------|------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|-----------------|
 | `--user-token`    | `-u`      | Whether to fetch a user token or not. Default is false.                                                          | `token -u`                                    | N               |
+| `--dcf`           |           | Uses Device Code Flow for your User Access Token. Can only be used with --user-token                             | `token -u --dcf`                              | N               |
 | `--scopes`        | `-s`      | The space separated scopes to use when getting a user token.                                                     | `-s "user:read:email user_read"`              | N               |
 | `--revoke`        | `-r`      | Instead of generating a new token, revoke the one passed to this parameter.                                      | `-r 0123456789abcdefghijABCDEFGHIJ`           | N               |
 | `--validate`      | `-v`      | Instead of generating a new token, validate the one passed to this parameter.                                    | `-v 0123456789abcdefghijABCDEFGHIJ`           | N               |
