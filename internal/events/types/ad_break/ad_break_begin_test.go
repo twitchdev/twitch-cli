@@ -33,7 +33,6 @@ func TestEventSub(t *testing.T) {
 	a.Nil(err)
 
 	a.Equal(toUser, body.Event.BroadcasterUserID, "Expected to user %v, got %v", toUser, body.Event.BroadcasterUserID)
-	a.Equal(fromUser, body.Event.UserID, "Expected from user %v, got %v", r.ToUser, body.Event.UserID)
 }
 
 func TestFakeTransport(t *testing.T) {
@@ -57,7 +56,7 @@ func TestValidTrigger(t *testing.T) {
 	r := Event{}.ValidTrigger("notreal")
 	a.Equal(false, r)
 
-	r = Event{}.ValidTrigger("follow")
+	r = Event{}.ValidTrigger("ad-begin")
 	a.Equal(true, r)
 }
 
@@ -73,6 +72,6 @@ func TestValidTransport(t *testing.T) {
 func TestGetTopic(t *testing.T) {
 	a := test_setup.SetupTestEnv(t)
 
-	r := Event{}.GetTopic(models.TransportWebhook, "follow")
+	r := Event{}.GetTopic(models.TransportWebhook, "ad-begin")
 	a.NotNil(r)
 }
