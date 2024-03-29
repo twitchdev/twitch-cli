@@ -66,6 +66,14 @@ type ValidateResponse struct {
 	ExpiresIn int64    `json:"expires_in"`
 }
 
+type DeviceCodeFlowInitResponse struct {
+	DeviceCode      string `json:"device_code"`
+	ExpiresIn       int    `json:"expires_in"`
+	Interval        int    `json:"interval"`
+	UserCode        string `json:"user_code"`
+	VerificationUri string `json:"verification_uri"`
+}
+
 const ClientCredentialsURL = "https://id.twitch.tv/oauth2/token?grant_type=client_credentials"
 const UserCredentialsURL = "https://id.twitch.tv/oauth2/token?grant_type=authorization_code"
 
@@ -74,6 +82,10 @@ const UserAuthorizeURL = "https://id.twitch.tv/oauth2/authorize?response_type=co
 const RefreshTokenURL = "https://id.twitch.tv/oauth2/token?grant_type=refresh_token"
 const RevokeTokenURL = "https://id.twitch.tv/oauth2/revoke"
 const ValidateTokenURL = "https://id.twitch.tv/oauth2/validate"
+
+const DeviceCodeFlowUrl = "https://id.twitch.tv/oauth2/device"
+const DeviceCodeFlowTokenURL = "https://id.twitch.tv/oauth2/token"
+const DeviceCodeFlowGrantType = "urn:ietf:params:oauth:grant-type:device_code"
 
 // Sends `https://id.twitch.tv/oauth2/token?grant_type=client_credentials`.
 // Generates a new App Access Token. Stores new token information in the CLI's config.
@@ -104,9 +116,10 @@ func ClientCredentialsLogin(p LoginParameters) (LoginResponse, error) {
 	return r, nil
 }
 
+// Uses Authorization Code Flow: https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#authorization-code-grant-flow
 // Sends `https://id.twitch.tv/oauth2/token?grant_type=authorization_code`.
-// Generates a new App Access Token, requiring the use of a web browser. Stores new token information in the CLI's config.
-func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort string) (LoginResponse, error) {
+// Generates a new User Access Token, requiring the use of a web browser. Stores new token information in the CLI's config.
+func UserCredentialsLogin_AuthorizationCodeFlow(p LoginParameters, webserverIP string, webserverPort string) (LoginResponse, error) {
 	u, err := url.Parse(p.AuthorizeURL)
 	if err != nil {
 		return LoginResponse{}, fmt.Errorf("Internal error (parsing AuthorizeURL): %v", err.Error())
@@ -161,12 +174,69 @@ func UserCredentialsLogin(p LoginParameters, webserverIP string, webserverPort s
 		return LoginResponse{}, fmt.Errorf("Error reading body: %v", err.Error())
 	}
 
+	if resp.StatusCode == 400 {
+		// If 400 is returned, the applications' Client Type was set up as "Public", and you can only use Implicit Auth or Device Code Flow to get a User Access Token
+		return LoginResponse{}, fmt.Errorf(
+			"This Client Type of this Client ID is set to \"Public\", which doesn't allow the use of Authorization Code Grant Flow.\n" +
+				"Please call the token command with the --dcf flag to use Device Code Flow. For example: twitch token -u --dcf",
+		)
+	}
+
 	r, err := handleLoginResponse(resp.Body, true)
 	if err != nil {
 		return LoginResponse{}, fmt.Errorf("Error handling login: %v", err.Error())
 	}
 
 	return r, nil
+}
+
+// Uses Device Code Flow: https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/#device-code-grant-flow
+// Generates a new User Access Token, requiring the use of a web browser from any device. Stores new token information in the CLI's config.
+func UserCredentialsLogin_DeviceCodeFlow(p LoginParameters) (LoginResponse, error) {
+	// Initiate DCF flow
+	deviceResp, err := dcfInitiateRequest(DeviceCodeFlowUrl, p.ClientID, p.Scopes)
+	if err != nil {
+		return LoginResponse{}, fmt.Errorf("Error initiating Device Code Flow: %v", err.Error())
+	}
+
+	var deviceObj DeviceCodeFlowInitResponse
+	if err := json.Unmarshal(deviceResp.Body, &deviceObj); err != nil {
+		return LoginResponse{}, fmt.Errorf("Error reading body: %v", err.Error())
+	}
+	expirationTime := time.Now().Add(time.Second * time.Duration(deviceObj.ExpiresIn))
+
+	fmt.Printf("Started Device Code Flow login.\n")
+	fmt.Printf("Use this URL to log in: %v\n", deviceObj.VerificationUri)
+	fmt.Printf("Use this code when prompted at the above URL: %v\n\n", deviceObj.UserCode)
+	fmt.Printf("This system will check every %v seconds, and will expire after %v minutes.\n", deviceObj.Interval, (deviceObj.ExpiresIn / 60))
+
+	// Loop and check for user login. Respects given interval, and times out after expiration
+	tokenResp := loginRequestResponse{StatusCode: 999}
+	for tokenResp.StatusCode != 0 {
+		// Check for expiration
+		if time.Now().After(expirationTime) {
+			return LoginResponse{}, fmt.Errorf("The Device Code used for getting access token has expired. Run token command again to generate a new user.")
+		}
+
+		// Wait interval
+		time.Sleep(time.Second * time.Duration(deviceObj.Interval))
+
+		// Check for token
+		tokenResp, err = dcfTokenRequest(DeviceCodeFlowTokenURL, p.ClientID, p.Scopes, deviceObj.DeviceCode, DeviceCodeFlowGrantType)
+		if err != nil {
+			return LoginResponse{}, fmt.Errorf("Error getting token via Device Code Flow: %v", err)
+		}
+
+		if tokenResp.StatusCode == 200 {
+			r, err := handleLoginResponse(tokenResp.Body, true)
+			if err != nil {
+				return LoginResponse{}, fmt.Errorf("Error handling login: %v", err.Error())
+			}
+			return r, nil
+		}
+	}
+
+	return LoginResponse{}, nil
 }
 
 // Sends `https://id.twitch.tv/oauth2/revoke`.
