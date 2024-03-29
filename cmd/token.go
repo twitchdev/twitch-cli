@@ -25,6 +25,7 @@ var overrideClientSecret string
 var tokenServerPort int
 var tokenServerIP string
 var redirectHost string
+var useDeviceCodeFlow bool
 
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
@@ -46,6 +47,7 @@ func init() {
 	loginCmd.Flags().StringVar(&tokenServerIP, "ip", "", "Manually set the IP address to be bound to for the User Token web server.")
 	loginCmd.Flags().IntVarP(&tokenServerPort, "port", "p", 3000, "Manually set the port to be used for the User Token web server.")
 	loginCmd.Flags().StringVar(&redirectHost, "redirect-host", "localhost", "Manually set the host to be used for the redirect URL")
+	loginCmd.Flags().BoolVar(&useDeviceCodeFlow, "dcf", false, "Uses Device Code Flow for your User Access Token. Can only be used with --user-token")
 }
 
 func loginCmdRun(cmd *cobra.Command, args []string) error {
@@ -160,8 +162,15 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 		log.Println(lightYellow("Expires At: ") + resp.ExpiresAt.String())
 
 	} else if isUserToken {
-		p.URL = login.UserCredentialsURL
-		resp, err := login.UserCredentialsLogin(p, tokenServerIP, webserverPort)
+		var resp login.LoginResponse
+		var err error
+
+		if useDeviceCodeFlow {
+			resp, err = login.UserCredentialsLogin_DeviceCodeFlow(p)
+		} else {
+			p.URL = login.UserCredentialsURL
+			resp, err = login.UserCredentialsLogin_AuthorizationCodeFlow(p, tokenServerIP, webserverPort)
+		}
 
 		if err != nil {
 			return err
