@@ -221,7 +221,10 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 	if strings.EqualFold(p.Transport, "websocket") {
 		client, err := rpc.DialHTTP("tcp", ":44747")
 		if err != nil {
-			return "", errors.New("Failed to dial RPC handler for WebSocket server. Is it online?\nError: " + err.Error())
+			return "", errors.New(
+				"Failed to dial RPC handler for WebSocket server; It may not be running. See `twitch event websocket --help` for help on starting the WebSocket server.\n" +
+					"Error: " + err.Error(),
+			)
 		}
 
 		var reply rpc_handler.RPCResponse
