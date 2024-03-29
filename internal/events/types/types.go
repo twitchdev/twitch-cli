@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
+	"github.com/twitchdev/twitch-cli/internal/events/types/ad_break"
 	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_grant"
 	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_revoke"
 	"github.com/twitchdev/twitch-cli/internal/events/types/ban"
@@ -41,6 +42,7 @@ import (
 
 func AllEvents() []events.MockEvent {
 	return []events.MockEvent{
+		ad_break.Event{},
 		authorization_grant.Event{},
 		authorization_revoke.Event{},
 		ban.Event{},
