@@ -54,7 +54,7 @@ func CheckForUpdatesAndPrintNotice() {
 			" A new Twitch CLI release is available: " + latestVersionTag + " ",
 			"",
 			" See upgrade instructions at: ",
-			" https://github.com/twitchdev/twitch-cli/blob/main/README.md#update ",
+			" https://github.com/twitchdev/twitch-cli/blob/main/README.md#updating ",
 			"",
 			" Check out the release notes at: ",
 			" https://github.com/twitchdev/twitch-cli/releases/latest ",
