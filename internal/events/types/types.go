@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/twitchdev/twitch-cli/internal/events"
+	"github.com/twitchdev/twitch-cli/internal/events/types/ad_break"
 	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_grant"
 	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_revoke"
 	"github.com/twitchdev/twitch-cli/internal/events/types/ban"
@@ -35,12 +36,14 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscribe"
 	"github.com/twitchdev/twitch-cli/internal/events/types/subscription_message"
 	"github.com/twitchdev/twitch-cli/internal/events/types/unban"
+	"github.com/twitchdev/twitch-cli/internal/events/types/unban_requests"
 	user_update "github.com/twitchdev/twitch-cli/internal/events/types/user"
 	"github.com/twitchdev/twitch-cli/internal/models"
 )
 
 func AllEvents() []events.MockEvent {
 	return []events.MockEvent{
+		ad_break.Event{},
 		authorization_grant.Event{},
 		authorization_revoke.Event{},
 		ban.Event{},
@@ -67,6 +70,7 @@ func AllEvents() []events.MockEvent {
 		subscribe.Event{},
 		subscription_message.Event{},
 		unban.Event{},
+		unban_requests.Event{},
 		user_update.Event{},
 	}
 }
