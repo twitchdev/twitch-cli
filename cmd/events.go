@@ -31,6 +31,7 @@ var (
 	toUser              string
 	giftUser            string
 	eventID             string
+	eventMessageID      string
 	secret              string
 	eventStatus         string
 	subscriptionStatus  string
@@ -166,7 +167,8 @@ func init() {
 	triggerCmd.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 	triggerCmd.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
 	triggerCmd.Flags().StringVarP(&tier, "tier", "", "", "Sets the subscription tier. Valid values are 1000, 2000, and 3000.")
-	triggerCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
+	triggerCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.")
+	triggerCmd.Flags().StringVarP(&eventMessageID, "event-id", "I", "", "Manually set the Twitch-Eventsub-Message-Id header value for the event.")
 	triggerCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	triggerCmd.Flags().IntVar(&charityCurrentValue, "charity-current-value", 0, "Only used for \"charity-*\" events. Manually set the current dollar value for charity events.")
 	triggerCmd.Flags().IntVar(&charityTargetValue, "charity-target-value", 1500000, "Only used for \"charity-*\" events. Manually set the target dollar value for charity events.")
@@ -188,7 +190,8 @@ func init() {
 	verifyCmd.Flags().StringVarP(&transport, "transport", "T", "webhook", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	verifyCmd.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	verifyCmd.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
-	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
+	verifyCmd.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.")
+	verifyCmd.Flags().StringVarP(&eventMessageID, "event-id", "I", "", "Manually set the Twitch-Eventsub-Message-Id header value for the event.")
 	verifyCmd.Flags().StringVarP(&version, "version", "v", "", "Chooses the EventSub version used for a specific event. Not required for most events.")
 	verifyCmd.Flags().BoolVarP(&noConfig, "no-config", "D", false, "Disables the use of the configuration, if it exists.")
 	verifyCmd.Flags().StringVarP(&toUser, "broadcaster", "b", "", "User ID of the broadcaster for the verification event.")
@@ -248,6 +251,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 		res, err := trigger.Fire(trigger.TriggerParameters{
 			Event:               args[0],
 			EventID:             eventID,
+			EventMessageID:      eventMessageID,
 			Transport:           transport,
 			ForwardAddress:      forwardAddress,
 			FromUser:            fromUser,
@@ -277,6 +281,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
+		fmt.Println("PEOS")
 		fmt.Println(res)
 	}
 
@@ -368,6 +373,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		Secret:            secret,
 		Timestamp:         timestamp,
 		EventID:           eventID,
+		EventMessageID:    eventMessageID,
 		BroadcasterUserID: toUser,
 		Version:           version,
 	})
