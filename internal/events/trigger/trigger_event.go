@@ -42,7 +42,8 @@ type TriggerParameters struct {
 	GameID              string
 	Tier                string
 	Timestamp           string
-	EventID             string // Also serves as subscription ID. See https://github.com/twitchdev/twitch-cli/issues/184
+	EventID             string
+	EventMessageID      string
 	CharityCurrentValue int
 	CharityTargetValue  int
 	ClientID            string
@@ -98,8 +99,8 @@ func Fire(p TriggerParameters) (string, error) {
 				"Valid values are 1000, 2000 or 3000")
 	}
 
-	if p.EventID == "" {
-		p.EventID = util.RandomGUID()
+	if p.EventMessageID == "" {
+		p.EventMessageID = util.RandomGUID()
 	}
 
 	if p.Timestamp == "" {
@@ -194,6 +195,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 			Secret:              p.Secret,
 			ForwardAddress:      p.ForwardAddress,
 			Event:               topic,
+			EventMessageID:      p.EventMessageID,
 			Type:                messageType,
 			SubscriptionVersion: e.SubscriptionVersion(),
 		})
