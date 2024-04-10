@@ -25,6 +25,7 @@ type VerifyParameters struct {
 	ForwardAddress    string
 	Secret            string
 	EventID           string
+	EventMessageID    string
 	Version           string
 	BroadcasterUserID string
 }
