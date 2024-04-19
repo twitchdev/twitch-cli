@@ -281,7 +281,6 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		fmt.Println("PEOS")
 		fmt.Println(res)
 	}
 
