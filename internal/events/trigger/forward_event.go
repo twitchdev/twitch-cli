@@ -24,6 +24,7 @@ type ForwardParamters struct {
 	Timestamp           string
 	Secret              string
 	Event               string
+	EventMessageID      string
 	Method              string
 	Type                string
 	SubscriptionVersion string
@@ -67,7 +68,7 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 
 	switch p.Transport {
 	case models.TransportWebhook:
-		req.Header.Set("Twitch-Eventsub-Message-Id", p.ID)
+		req.Header.Set("Twitch-Eventsub-Message-Id", p.EventMessageID)
 		req.Header.Set("Twitch-Eventsub-Subscription-Type", p.Event)
 		req.Header.Set("Twitch-Eventsub-Subscription-Version", p.SubscriptionVersion)
 		switch p.Type {
@@ -83,10 +84,10 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 	// Twitch only supports IPv4 currently, so we will force this TCP connection to only use IPv4
 	var dialer net.Dialer
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.DialContext = func (ctx context.Context, network, addr string) (net.Conn, error) {
+	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		return dialer.DialContext(ctx, "tcp4", addr)
 	}
-	
+
 	if p.Secret != "" {
 		getSignatureHeader(req, p.ID, p.Secret, p.Transport, p.Timestamp, p.JSON)
 	}

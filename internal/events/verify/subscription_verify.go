@@ -25,6 +25,7 @@ type VerifyParameters struct {
 	ForwardAddress    string
 	Secret            string
 	EventID           string
+	EventMessageID    string
 	Version           string
 	BroadcasterUserID string
 }
@@ -52,8 +53,8 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		}
 	}
 
-	if p.EventID == "" {
-		p.EventID = util.RandomGUID()
+	if p.EventMessageID == "" {
+		p.EventMessageID = util.RandomGUID()
 	}
 
 	if p.BroadcasterUserID == "" {

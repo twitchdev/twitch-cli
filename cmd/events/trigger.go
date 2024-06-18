@@ -47,7 +47,8 @@ func TriggerCommand() (command *cobra.Command) {
 	command.Flags().StringVarP(&description, "description", "d", "", "Title the stream should be updated with.")
 	command.Flags().StringVarP(&gameID, "game-id", "G", "", "Sets the game/category ID for applicable events.")
 	command.Flags().StringVarP(&tier, "tier", "", "", "Sets the subscription tier. Valid values are 1000, 2000, and 3000.")
-	command.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.") // TODO: This description will need to change with https://github.com/twitchdev/twitch-cli/issues/184
+	command.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.")
+	command.Flags().StringVarP(&eventMessageID, "event-id", "I", "", "Manually set the Twitch-Eventsub-Message-Id header value for the event.")
 	command.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
 	command.Flags().IntVar(&charityCurrentValue, "charity-current-value", 0, "Only used for \"charity-*\" events. Manually set the current dollar value for charity events.")
 	command.Flags().IntVar(&charityTargetValue, "charity-target-value", 1500000, "Only used for \"charity-*\" events. Manually set the target dollar value for charity events.")
@@ -94,6 +95,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 		res, err := trigger.Fire(trigger.TriggerParameters{
 			Event:               args[0],
 			EventID:             eventID,
+			EventMessageID:      eventMessageID,
 			Transport:           transport,
 			ForwardAddress:      forwardAddress,
 			FromUser:            fromUser,
