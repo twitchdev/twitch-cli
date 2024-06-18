@@ -11,6 +11,7 @@ var (
 	toUser              string
 	giftUser            string
 	eventID             string
+	eventMessageID      string
 	secret              string
 	eventStatus         string
 	subscriptionStatus  string
