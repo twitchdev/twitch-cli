@@ -122,7 +122,7 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 		lightYellow("Expires In: %v\n", white("%v (%v)", strconv.FormatInt(r.ExpiresIn, 10), expiresInTimestamp))
 
 		if len(r.Scopes) == 0 {
-			lightYellow("User ID: %v\n", white("None"))
+			lightYellow("Scopes: %v\n", white("None"))
 		} else {
 			lightYellow("Scopes:\n")
 			for _, s := range r.Scopes {
