@@ -1,5 +1,7 @@
 # This is an example .goreleaser.yml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
+version: 2
+
 before:
   hooks:
     - sh -c "go env -w GOPROXY=direct"
@@ -79,7 +81,7 @@ brews:
     repository:
       owner: twitchdev
       name: homebrew-twitch
-    folder: Formula
+    directory: Formula
     homepage: https://github.com/twitchdev/twitch-cli
     description: CLI for Twitch's developer offerings
     install: |
