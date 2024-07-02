@@ -42,7 +42,7 @@ type TriggerParameters struct {
 	GameID              string
 	Tier                string
 	Timestamp           string
-	EventID             string
+	SubscriptionID      string
 	EventMessageID      string
 	CharityCurrentValue int
 	CharityTargetValue  int
@@ -99,8 +99,14 @@ func Fire(p TriggerParameters) (string, error) {
 				"Valid values are 1000, 2000 or 3000")
 	}
 
+	// the header twitch-eventsub-message-id
 	if p.EventMessageID == "" {
 		p.EventMessageID = util.RandomGUID()
+	}
+
+	// the body subscription.id
+	if p.SubscriptionID == "" {
+		p.SubscriptionID = util.RandomGUID()
 	}
 
 	if p.Timestamp == "" {
@@ -117,7 +123,8 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 	}
 
 	eventParamaters := events.MockEventParameters{
-		ID:                  p.EventID,
+		SubscriptionID:      p.SubscriptionID,
+		EventMessageID:      p.EventMessageID,
 		Trigger:             p.Event,
 		Transport:           p.Transport,
 		FromUserID:          p.FromUser,
@@ -162,6 +169,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		return "", err
 	}
 
+	//color.New().Add(color.FgGreen).Println(fmt.Sprintf(`Insert into DB with %v`, resp.ID));
 	err = db.NewQuery(nil, 100).InsertIntoDB(database.EventCacheParameters{
 		ID:        resp.ID,
 		Event:     p.Event,

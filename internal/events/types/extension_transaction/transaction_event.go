@@ -8,6 +8,7 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/models"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 var transportsSupported = map[string]bool{
@@ -44,7 +45,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	case models.TransportWebhook:
 		body := &models.TransactionEventSubResponse{
 			Subscription: models.EventsubSubscription{
-				ID:      params.ID,
+				ID:      params.SubscriptionID,
 				Status:  params.SubscriptionStatus,
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
@@ -59,7 +60,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				CreatedAt: params.Timestamp,
 			},
 			Event: models.TransactionEventSubEvent{
-				ID:                   params.ID,
+				ID:                   util.RandomGUID(),
 				ExtensionClientID:    params.ClientID,
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: "testBroadcaster",
@@ -100,7 +101,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	return events.MockEventResponse{
-		ID:       params.ID,
+		ID:       params.EventMessageID,
 		JSON:     event,
 		FromUser: params.FromUserID,
 		ToUser:   params.ToUserID,

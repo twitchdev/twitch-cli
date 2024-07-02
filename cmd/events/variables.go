@@ -10,7 +10,7 @@ var (
 	fromUser            string
 	toUser              string
 	giftUser            string
-	eventID             string
+	subscriptionID      string
 	eventMessageID      string
 	secret              string
 	eventStatus         string

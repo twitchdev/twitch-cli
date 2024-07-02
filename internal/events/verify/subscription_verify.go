@@ -24,7 +24,7 @@ type VerifyParameters struct {
 	Event             string
 	ForwardAddress    string
 	Secret            string
-	EventID           string
+	SubscriptionID    string
 	EventMessageID    string
 	Version           string
 	BroadcasterUserID string
@@ -53,15 +53,21 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 		}
 	}
 
+	// the header twitch-eventsub-message-id
 	if p.EventMessageID == "" {
 		p.EventMessageID = util.RandomGUID()
+	}
+
+	// the body subscription.id
+	if p.SubscriptionID == "" {
+		p.SubscriptionID = util.RandomGUID()
 	}
 
 	if p.BroadcasterUserID == "" {
 		p.BroadcasterUserID = util.RandomUserID()
 	}
 
-	body, err := generateWebhookSubscriptionBody(p.Transport, p.EventID, event.GetTopic(p.Transport, p.Event), event.SubscriptionVersion(), p.BroadcasterUserID, challenge, p.ForwardAddress)
+	body, err := generateWebhookSubscriptionBody(p.Transport, p.EventMessageID, p.SubscriptionID, event.GetTopic(p.Transport, p.Event), event.SubscriptionVersion(), p.BroadcasterUserID, challenge, p.ForwardAddress)
 	if err != nil {
 		return VerifyResponse{}, err
 	}
@@ -139,7 +145,7 @@ func VerifyWebhookSubscription(p VerifyParameters) (VerifyResponse, error) {
 	return r, nil
 }
 
-func generateWebhookSubscriptionBody(transport string, eventID string, event string, subscriptionVersion string, broadcaster string, challenge string, callback string) (trigger.TriggerResponse, error) {
+func generateWebhookSubscriptionBody(transport string, messageID string, subscriptionID string, event string, subscriptionVersion string, broadcaster string, challenge string, callback string) (trigger.TriggerResponse, error) {
 	var res []byte
 	var err error
 	ts := util.GetTimestamp().Format(time.RFC3339Nano)
@@ -148,7 +154,7 @@ func generateWebhookSubscriptionBody(transport string, eventID string, event str
 		body := models.EventsubSubscriptionVerification{
 			Challenge: challenge,
 			Subscription: models.EventsubSubscription{
-				ID:      eventID,
+				ID:      subscriptionID,
 				Status:  "webhook_callback_verification_pending",
 				Type:    event,
 				Version: subscriptionVersion,
@@ -170,7 +176,7 @@ func generateWebhookSubscriptionBody(transport string, eventID string, event str
 		res = []byte("")
 	}
 	return trigger.TriggerResponse{
-		ID:        eventID,
+		ID:        messageID,
 		JSON:      res,
 		Timestamp: ts,
 	}, nil

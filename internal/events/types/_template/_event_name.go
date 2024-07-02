@@ -62,7 +62,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	return events.MockEventResponse{
-		ID:       params.ID,
+		ID:       params.EventMessageID,
 		JSON:     event,
 		FromUser: params.FromUserID,
 		ToUser:   params.ToUserID,
