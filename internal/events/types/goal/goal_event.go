@@ -71,7 +71,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 
 		body := models.EventsubResponse{
 			Subscription: models.EventsubSubscription{
-				ID:      params.ID,
+				ID:      params.SubscriptionID,
 				Status:  params.SubscriptionStatus,
 				Type:    triggerMapping[params.Transport][params.Trigger],
 				Version: e.SubscriptionVersion(),
@@ -86,7 +86,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				CreatedAt: params.Timestamp,
 			},
 			Event: models.GoalEventSubEvent{
-				ID:                   params.ID,
+				ID:                   util.RandomGUID(),
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
@@ -125,7 +125,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 	}
 
 	return events.MockEventResponse{
-		ID:       params.ID,
+		ID:       params.EventMessageID,
 		JSON:     event,
 		FromUser: params.FromUserID,
 		ToUser:   params.ToUserID,

@@ -33,7 +33,7 @@ func VerifySubscriptionCommand() (command *cobra.Command) {
 	command.Flags().StringVarP(&transport, "transport", "T", "webhook", fmt.Sprintf("Preferred transport method for event. Defaults to EventSub.\nSupported values: %s", events.ValidTransports()))
 	command.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	command.Flags().StringVar(&timestamp, "timestamp", "", "Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.")
-	command.Flags().StringVarP(&eventID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.")
+	command.Flags().StringVarP(&subscriptionID, "subscription-id", "u", "", "Manually set the subscription/event ID of the event itself.")
 	command.Flags().StringVarP(&eventMessageID, "event-id", "I", "", "Manually set the Twitch-Eventsub-Message-Id header value for the event.")
 	command.Flags().StringVarP(&version, "version", "v", "", "Chooses the EventSub version used for a specific event. Not required for most events.")
 	command.Flags().BoolVarP(&noConfig, "no-config", "D", false, "Disables the use of the configuration, if it exists.")
@@ -91,8 +91,8 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		ForwardAddress:    forwardAddress,
 		Secret:            secret,
 		Timestamp:         timestamp,
-		EventID:           eventID,
 		EventMessageID:    eventMessageID,
+		SubscriptionID:    subscriptionID,
 		BroadcasterUserID: toUser,
 		Version:           version,
 	})
