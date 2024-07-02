@@ -12,7 +12,6 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/test_setup"
-	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestRefireEvent(t *testing.T) {
@@ -25,7 +24,7 @@ func TestRefireEvent(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	var eventMessageID = util.RandomGUID();
+	var eventMessageID = "testtriggereventid";
 
 	params := TriggerParameters{
 		Event:          "gift",
