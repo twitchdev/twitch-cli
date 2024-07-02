@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	configure_event "github.com/twitchdev/twitch-cli/internal/events/configure"
 	"github.com/twitchdev/twitch-cli/internal/events/trigger"

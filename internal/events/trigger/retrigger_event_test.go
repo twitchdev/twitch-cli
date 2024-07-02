@@ -12,6 +12,7 @@ import (
 
 	"github.com/twitchdev/twitch-cli/internal/models"
 	"github.com/twitchdev/twitch-cli/test_setup"
+	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
 func TestRefireEvent(t *testing.T) {
@@ -24,8 +25,11 @@ func TestRefireEvent(t *testing.T) {
 	}))
 	defer ts.Close()
 
+	var eventMessageID = util.RandomGUID();
+
 	params := TriggerParameters{
 		Event:          "gift",
+		EventMessageID: eventMessageID,
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
@@ -47,7 +51,7 @@ func TestRefireEvent(t *testing.T) {
 	err = json.Unmarshal([]byte(response), &body)
 	a.Nil(err)
 
-	json, err := RefireEvent(body.Subscription.ID, params)
+	json, err := RefireEvent(eventMessageID, params)
 	a.Nil(err)
 	a.Equal(response, json)
 }
