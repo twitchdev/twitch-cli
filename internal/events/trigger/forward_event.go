@@ -68,7 +68,7 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 
 	switch p.Transport {
 	case models.TransportWebhook:
-		req.Header.Set("Twitch-Eventsub-Message-Id", p.EventMessageID)
+		req.Header.Set("Twitch-Eventsub-Message-Id", p.ID)
 		req.Header.Set("Twitch-Eventsub-Subscription-Type", p.Event)
 		req.Header.Set("Twitch-Eventsub-Subscription-Version", p.SubscriptionVersion)
 		switch p.Type {

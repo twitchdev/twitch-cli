@@ -19,7 +19,7 @@ func RetriggerCommand() (command *cobra.Command) {
 	}
 
 	command.Flags().StringVarP(&forwardAddress, "forward-address", "F", "", "Forward address for mock event (webhook only).")
-	command.Flags().StringVarP(&eventID, "id", "i", "", "ID of the event to be refired.")
+	command.Flags().StringVarP(&eventMessageID, "id", "i", "", "ID of the event to be refired.")
 	command.Flags().StringVarP(&secret, "secret", "s", "", "Webhook secret. If defined, signs all forwarded events with the SHA256 HMAC and must be 10-100 characters in length.")
 	command.Flags().BoolVarP(&noConfig, "no-config", "D", false, "Disables the use of the configuration, if it exists.")
 	command.MarkFlagRequired("id")
@@ -49,7 +49,8 @@ func retriggerCmdRun(cmd *cobra.Command, args []string) error {
 		forwardAddress = defaults.ForwardAddress
 	}
 
-	res, err := trigger.RefireEvent(eventID, trigger.TriggerParameters{
+	//color.New().Add(color.FgGreen).Println(fmt.Sprintf(`Refire %v`, eventMessageID));
+	res, err := trigger.RefireEvent(eventMessageID, trigger.TriggerParameters{
 		ForwardAddress: forwardAddress,
 		Secret:         secret,
 		Timestamp:      util.GetTimestamp().Format(time.RFC3339Nano),

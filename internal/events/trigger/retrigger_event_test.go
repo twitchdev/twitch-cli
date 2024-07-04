@@ -24,8 +24,11 @@ func TestRefireEvent(t *testing.T) {
 	}))
 	defer ts.Close()
 
+	var eventMessageID = "testtriggereventid";
+
 	params := TriggerParameters{
 		Event:          "gift",
+		EventMessageID: eventMessageID,
 		Transport:      models.TransportWebhook,
 		IsAnonymous:    false,
 		FromUser:       "",
@@ -47,7 +50,7 @@ func TestRefireEvent(t *testing.T) {
 	err = json.Unmarshal([]byte(response), &body)
 	a.Nil(err)
 
-	json, err := RefireEvent(body.Subscription.ID, params)
+	json, err := RefireEvent(eventMessageID, params)
 	a.Nil(err)
 	a.Equal(response, json)
 }
