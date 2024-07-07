@@ -4,20 +4,11 @@ package trigger
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
-	"net/rpc"
-	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/spf13/viper"
-	"github.com/twitchdev/twitch-cli/internal/database"
-	"github.com/twitchdev/twitch-cli/internal/events"
 	"github.com/twitchdev/twitch-cli/internal/events/types"
-	"github.com/twitchdev/twitch-cli/internal/models"
-	rpc_handler "github.com/twitchdev/twitch-cli/internal/rpc"
 	"github.com/twitchdev/twitch-cli/internal/util"
 )
 
@@ -61,8 +52,107 @@ type TriggerResponse struct {
 	Timestamp string
 }
 
-// Fire emits an event using the TriggerParameters defined above.
 func Fire(p TriggerParameters) (string, error) {
+	// Register all events before we proceed
+	err := types.RegisterAllEvents()
+	if err != nil {
+		return "", err
+	}
+
+	if p.ClientID == "" {
+		p.ClientID = viper.GetString("ClientID") // Get from config
+
+		if p.ClientID == "" {
+			// --client-id wasn't used, and config file doesn't have a Client ID set.
+			// Generate a randomized one
+			p.ClientID = util.RandomClientID()
+		}
+	}
+
+	if p.ToUser == "" {
+		p.ToUser = util.RandomUserID()
+	}
+
+	if p.FromUser == "" {
+		p.FromUser = util.RandomUserID()
+	}
+
+	if p.GameID == "" {
+		p.GameID = fmt.Sprint(util.RandomInt(10 * 1000))
+	}
+
+	switch p.Tier {
+	case "":
+		p.Tier = "1000"
+	case "1000", "2000", "3000":
+		// do nothing, these are valid values
+	default:
+		return "", fmt.Errorf(
+			"Discarding event: Invalid tier provided.\n" +
+				"Valid values are 1000, 2000 or 3000")
+	}
+
+	if p.EventMessageID == "" {
+		p.EventMessageID = util.RandomGUID()
+	}
+
+	if p.Timestamp == "" {
+		p.Timestamp = util.GetTimestamp().Format(time.RFC3339Nano)
+	} else {
+		// Verify custom timestamp
+		_, err := time.Parse(time.RFC3339Nano, p.Timestamp)
+		if err != nil {
+			return "", fmt.Errorf(
+				`Discarding event: Invalid timestamp provided.
+Please follow RFC3339Nano, which is used by Twitch as seen here:
+https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`)
+		}
+	}
+
+	mockAbstract, err := types.NEW_GetByTriggerAndTransportAndVersion(p.Event, p.Transport, p.Version)
+	if err != nil {
+		return "", err
+	}
+
+	mockEvent := types.MockEventBase{
+		Subscription: make(map[string]interface{}),
+		Event:        make(map[string]interface{}),
+	}
+
+	_ = map[string]types.MockAbstractData(mockEvent.Subscription)
+
+	//mockEvent.Subscription, err = types.GenerateEventObject(
+	//	mockAbstract.Subscription.(map[string]types.MockAbstractData),
+	//)
+
+	// Go through subscription data
+	for identifier, innards := range mockAbstract.Subscription {
+		if innards.Type == "string" {
+			mockEvent.Subscription[identifier] = "Test"
+		} else if innards.Type == "string[]" {
+			mockEvent.Subscription[identifier] = []string{}
+		} else if innards.Type == "int" {
+			mockEvent.Subscription[identifier] = 0
+		} else if innards.Type == "int[]" {
+			mockEvent.Subscription[identifier] = []int{}
+		} else if innards.Type == "object" {
+			// TODO
+			mockEvent.Subscription[identifier] = make(map[string]interface{})
+		} else if innards.Type == "object[]" {
+			mockEvent.Subscription[identifier] = []map[string]interface{}{}
+		}
+	}
+
+	j, err := json.Marshal(mockEvent)
+	if err != nil {
+		return "", err
+	}
+
+	return string(j), nil
+}
+
+// Fire emits an event using the TriggerParameters defined above.
+/*func Fire(p TriggerParameters) (string, error) {
 	var resp events.MockEventResponse
 	var err error
 
@@ -269,4 +359,4 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 	}
 
 	return string(resp.JSON), nil
-}
+}*/

@@ -1,0 +1,62 @@
+# channel.subscribe
+
+metadata:
+  supported_transports: [ webhook, websocket ]
+  type: channel.subscribe
+  version: 1
+
+subscription:
+  id:
+    type: string
+    ref: event_id
+  type:
+    type: string
+    ref: subscription_type
+  version:
+    type: string
+    ref: subscription_version
+  status:
+    type: string
+    ref: status
+  condition:
+    type: object
+    data:
+      broadcaster_user_id:
+        type: string
+        ref: target_id
+  transport:
+    type: object
+    ref: transport
+  created_at:
+    type: string
+    ref: created_at
+  cost:
+    type: int
+    ref: cost
+
+event:
+  user_id:
+    type: string
+    ref: --
+  user_login:
+    type: string
+    ref: --
+  user_name:
+    type: string
+    ref: --
+  broadcaster_user_id:
+    type: string
+    ref: --
+  broadcaster_user_login:
+    type: string
+    ref: --
+  broadcaster_user_name:
+    type: string
+    ref: --
+  tier:
+    type: string
+    ref: --
+  is_gift:
+    type: boolean
+    ref: --
+    optional: true
