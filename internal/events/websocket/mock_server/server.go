@@ -409,7 +409,7 @@ func (ws *WebSocketServer) HandleRPCEventSubForwarding(eventsubBody string, clie
 	didSend := false
 
 	for _, client := range ws.Clients.All() {
-		if clientName != "" && !strings.EqualFold(strings.ToLower(clientName), clientName) {
+		if clientName != "" && !strings.EqualFold(strings.ToLower(clientName), client.clientName) {
 			// When --session is used, only send to that client
 			continue
 		}
