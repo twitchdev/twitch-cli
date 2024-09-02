@@ -71,7 +71,7 @@ func StartWebsocketServer(enableDebug bool, ip string, port int, enableSSL bool,
 	serverManager.primaryServer = initialServer.ServerId
 
 	// Allow exit with Ctrl + C
-	stop := make(chan os.Signal)
+	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 
 	m := http.NewServeMux()
