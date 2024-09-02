@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -89,8 +88,6 @@ func CheckForUpdatesAndPrintNotice() {
 
 // Makes the call to Github's Releases API to check for the latest release version, and compares it to the current version.
 func areWeRunningLatestVersion() (bool, string, error) {
-	REGEX_TAG_NAME_VERSION := regexp.MustCompile("^(?:v)(.+)") // Removes the v from the start of the tag, if it exists
-
 	client := &http.Client{
 		Timeout: time.Second * 2,
 	}
@@ -118,7 +115,14 @@ func areWeRunningLatestVersion() (bool, string, error) {
 		return false, "", err
 	}
 
-	latestReleaseVersion, err := vrs.NewVersion(REGEX_TAG_NAME_VERSION.FindAllStringSubmatch(obj.TagName, -1)[0][1])
+	var latestversion string
+	if strings.HasPrefix(obj.TagName, "v") {
+		latestversion = obj.TagName[1:]
+	} else {
+		latestversion = obj.TagName
+	}
+
+	latestReleaseVersion, err := vrs.NewVersion(latestversion)
 	if err != nil {
 		return false, "", err
 	}
