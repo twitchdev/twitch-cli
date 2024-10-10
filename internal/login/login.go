@@ -26,6 +26,7 @@ type LoginParameters struct {
 	ClientID     string
 	ClientSecret string
 	Scopes       string
+	ForceVerify  string
 	Token        string
 	URL          string
 	RedirectURL  string
@@ -129,6 +130,9 @@ func UserCredentialsLogin_AuthorizationCodeFlow(p LoginParameters, webserverIP s
 	q.Set("redirect_uri", p.RedirectURL)
 	if p.Scopes != "" {
 		q.Set("scope", p.Scopes)
+	}
+	if p.ForceVerify != "" {
+		q.Set("force_verify", p.ForceVerify)
 	}
 
 	state, err := generateState()
