@@ -124,6 +124,7 @@ The commands are described below, and any accompanying args/flags will be in the
 The CLI currently supports the following products: 
 
 - [api](./docs/api.md)
+- [completion](./docs/completion.md)
 - [configure](./docs/configure.md)
 - [event](docs/event.md)
 - [mock-api](docs/mock-api.md)
