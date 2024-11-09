@@ -6,19 +6,19 @@ The `token` product is used to fetch access tokens for an application
 
 ## Token Types
 
-The Twitch CLI provides access to two types of tokens: App Access Tokens and User Access Tokens. 
+The Twitch CLI provides access to two types of tokens: App Access Tokens and User Access Tokens.
 
-**App Access Tokens** 
+**App Access Tokens**
 
-[App Access Tokens](https://dev.twitch.tv/docs/authentication/#app-access-tokens) can access APIs that don't require the user's permission. For example, getting a list of videos. 
+[App Access Tokens](https://dev.twitch.tv/docs/authentication/#app-access-tokens) can access APIs that don't require the user's permission. For example, getting a list of videos.
 
-**User Access Tokens** 
+**User Access Tokens**
 
 [User Access Tokens](https://dev.twitch.tv/docs/authentication/#user-access-tokens) provide access to APIs a user must grant permission to. For example, starting or stopping a poll. The specific APIs and functionality granted to a token is defined via [scopes](https://dev.twitch.tv/docs/authentication/scopes/).
 
 ## Client IDs and Client Secrets
 
-Getting Access Tokens requires use of a Client ID and Client Secret which are associated with a Twitch Developer's Application. Creating an application is done by registration. Details on that process [are here](https://dev.twitch.tv/docs/authentication/register-app/). Client IDs are generated automatically when an application is registered. Client Secrets must be generated explicitly. This can be done by visiting [the Developer Applications Console](https://dev.twitch.tv/console/apps), choosing "Manage" for the app, then using the "New Secret" button at the bottom of the page. 
+Getting Access Tokens requires use of a Client ID and Client Secret which are associated with a Twitch Developer's Application. Creating an application is done by registration. Details on that process [are here](https://dev.twitch.tv/docs/authentication/register-app/). Client IDs are generated automatically when an application is registered. Client Secrets must be generated explicitly. This can be done by visiting [the Developer Applications Console](https://dev.twitch.tv/console/apps), choosing "Manage" for the app, then using the "New Secret" button at the bottom of the page.
 
 Adding the Client ID and Client Secret to the CLI tool is done with:
 
@@ -26,7 +26,7 @@ Adding the Client ID and Client Secret to the CLI tool is done with:
 twitch configure
 ```
 
-Running that starts prompts asking for the credentials. 
+Running that starts prompts asking for the credentials.
 
 ## Fetching App Access Tokens
 
@@ -42,7 +42,6 @@ Running that returns a result with the token like:
 2023/08/23 13:19:08 App Access Token: 01234abcdetc...
 ```
 
-
 ## Fetching User Access Tokens
 
 Fetching User Access Tokens requires setting an _OAuth Redirect URL_. Those URLs are defined on the _Manage_ page for each app in the [Developer's Application Console](https://dev.twitch.tv/console/apps). The twitch CLI uses `http://localhost:3000`. Two important notes when adding that to the OAuth Redirect URLs section:
@@ -52,12 +51,11 @@ Fetching User Access Tokens requires setting an _OAuth Redirect URL_. Those URLs
 
 **The User Flag**
 
-The `-u` flag is what sets the `token` product to fetch a User Access Token instead of an App Access Token. 
-
+The `-u` flag is what sets the `token` product to fetch a User Access Token instead of an App Access Token.
 
 **Scopes**
 
-User Access Tokens use scopes to determine which APIs and features they have access to. The requested scopes are defined via a space separated list following an `-s` flag with the `token` product. 
+User Access Tokens use scopes to determine which APIs and features they have access to. The requested scopes are defined via a space separated list following an `-s` flag with the `token` product.
 
 The full list of available scopes [here in the Twitch Documentation](https://dev.twitch.tv/docs/authentication/scopes/)
 
@@ -69,7 +67,7 @@ A full example fetching a User Access Token with the ability to do shoutouts and
 twitch token -u -s "moderator:manage:shoutouts moderator:manage:shield_mode"
 ```
 
-Running that produce some initial output in the terminal and opens a browser to a Twitch authorization page. If you're not already signed in, you'll be asked to do so. When signed-in, the page displays the authorization request including the requested scopes. Clicking the "Authorize" button at the bottom redirects the browser back to the `http://localhost:3000` address where the `twitch` CLI picks it up and complete the process by parsing the data returned in the URL. 
+Running that produce some initial output in the terminal and opens a browser to a Twitch authorization page. If you're not already signed in, you'll be asked to do so. When signed-in, the page displays the authorization request including the requested scopes. Clicking the "Authorize" button at the bottom redirects the browser back to the `http://localhost:3000` address where the `twitch` CLI picks it up and complete the process by parsing the data returned in the URL.
 
 The browser will display a message like:
 
@@ -140,6 +138,7 @@ By default, this uses the Client ID and Client Secret stored in your config file
 ```
 twitch token --refresh ABCDEfghij0123456789abcdefghijABCDEFGHIJ --client-id uo6dggojyb8d6soh92zknwmi5ej1q2 --secret yigv8zib6nuczcoy08u8g1nxh6wjgu
 ```
+
 When overriding the Client ID, your config file will **not** be updated with the new access token, client ID, or secret.
 
 ## Alternate IP for User Token Webserver
@@ -160,19 +159,17 @@ twitch token -u -p 3030 -s "moderator:manage:shoutouts moderator:manage:shield_m
 
 NOTE: You must update the first entry in the _OAuth Redirect URLs_ section of your app's management page in the [Developer's Application Console](https://dev.twitch.tv/console/apps) to match the new port number. Make sure there is no `/` at the end of the URL (e.g. use `http://localhost:3030` and not `http://localhost:3030/`) and that the URL is the first entry in the list if there is more than one.
 
-
 ## Alternate Host
 
 If you'd like to change the hostname for one reason or another (e.g. binding to a local domain), you can use the `--redirect-host` to change the domain. You should _not_ prefix it with `http` or `https`.
 
-Example: 
+Example:
 
 ```
 twitch token -u --redirect-host contoso.com
 ```
 
 NOTE: You must update the first entry in the _OAuth Redirect URLs_ section of your app's management page in the [Developer's Application Console](https://dev.twitch.tv/console/apps) to match the new port number. Make sure there is no `/` at the end of the URL (e.g. use `http://localhost:3030` and not `http://localhost:3030/`) and that the URL is the first entry in the list if there is more than one.
-
 
 ## Errors
 
@@ -189,24 +186,24 @@ Error Details: Parameter redirect_uri does not match registered URI
 
 None.
 
-
 **Flags**
 
-| Flag              | Shorthand | Description                                                                                                      | Example                                       | Required? (Y/N) |
-|-------------------|-----------|------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|-----------------|
-| `--user-token`    | `-u`      | Whether to fetch a user token or not. Default is false.                                                          | `token -u`                                    | N               |
-| `--dcf`           |           | Uses Device Code Flow for your User Access Token. Can only be used with --user-token                             | `token -u --dcf`                              | N               |
-| `--scopes`        | `-s`      | The space separated scopes to use when getting a user token.                                                     | `-s "user:read:email user_read"`              | N               |
-| `--revoke`        | `-r`      | Instead of generating a new token, revoke the one passed to this parameter.                                      | `-r 0123456789abcdefghijABCDEFGHIJ`           | N               |
-| `--validate`      | `-v`      | Instead of generating a new token, validate the one passed to this parameter.                                    | `-v 0123456789abcdefghijABCDEFGHIJ`           | N               |
-| `--refresh`       | `-R`      | Instead of generating a new token, refresh the token associated with the Refresh Token passed to this parameter. | `-R ABCDEfghij0123456789abcdefghijABCDEFGHIJ` | N               |
-| `--ip`            |           | Manually set the port to be used for the User Token web server. The default binds to all interfaces. (0.0.0.0)   | `--ip 127.0.0.1`                              | N               |
-| `--port`          | `-p`      | Override/manually set the port for token actions. (The default is 3000)                                          | `-p 3030`                                     | N               |
-| `--client-id`     |           | Override/manually set Client ID for token actions. By default Client ID from CLI config will be used.            | `--client-id uo6dggojyb8d6soh92zknwmi5ej1q2`  | N               |
-| `--secret`        |           | Override/manually set Client Secret for token actions. By default Client Secret from CLI config will be used.    | `--secret yigv8zib6nuczcoy08u8g1nxh6wjgu`     | N               |
-| `--redirect-host` |           | Override/manually set the redirect host token actions. The default is `localhost`                                | `--redirect-host contoso.com`                 | N               |
+| Flag              | Shorthand | Description                                                                                                                   | Example                                       | Required? (Y/N) |
+| ----------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------- |
+| `--user-token`    | `-u`      | Whether to fetch a user token or not. Default is false.                                                                       | `token -u`                                    | N               |
+| `--dcf`           |           | Uses Device Code Flow for your User Access Token. Can only be used with --user-token                                          | `token -u --dcf`                              | N               |
+| `--forceverify`   |           | Sets `force_verify` to true, so you can check scopes and which account you are authing as. Can only be used with --user-token | `token -u --forceverify`                      | N               |
+| `--scopes`        | `-s`      | The space separated scopes to use when getting a user token.                                                                  | `-s "user:read:email user_read"`              | N               |
+| `--revoke`        | `-r`      | Instead of generating a new token, revoke the one passed to this parameter.                                                   | `-r 0123456789abcdefghijABCDEFGHIJ`           | N               |
+| `--validate`      | `-v`      | Instead of generating a new token, validate the one passed to this parameter.                                                 | `-v 0123456789abcdefghijABCDEFGHIJ`           | N               |
+| `--refresh`       | `-R`      | Instead of generating a new token, refresh the token associated with the Refresh Token passed to this parameter.              | `-R ABCDEfghij0123456789abcdefghijABCDEFGHIJ` | N               |
+| `--ip`            |           | Manually set the port to be used for the User Token web server. The default binds to all interfaces. (0.0.0.0)                | `--ip 127.0.0.1`                              | N               |
+| `--port`          | `-p`      | Override/manually set the port for token actions. (The default is 3000)                                                       | `-p 3030`                                     | N               |
+| `--client-id`     |           | Override/manually set Client ID for token actions. By default Client ID from CLI config will be used.                         | `--client-id uo6dggojyb8d6soh92zknwmi5ej1q2`  | N               |
+| `--secret`        |           | Override/manually set Client Secret for token actions. By default Client Secret from CLI config will be used.                 | `--secret yigv8zib6nuczcoy08u8g1nxh6wjgu`     | N               |
+| `--redirect-host` |           | Override/manually set the redirect host token actions. The default is `localhost`                                             | `--redirect-host contoso.com`                 | N               |
 
 ## Notes
 
-- If you've already authorized the app, the webpage will redirect back immediately without requiring any interaction
-- You'll be asked to fill in the Client ID and Client Secret if you run the `token` product without having already set them
+-   If you've already authorized the app, the webpage will redirect back immediately without requiring any interaction
+-   You'll be asked to fill in the Client ID and Client Secret if you run the `token` product without having already set them
