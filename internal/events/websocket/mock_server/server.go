@@ -251,7 +251,9 @@ func (ws *WebSocketServer) WsPageHandler(w http.ResponseWriter, r *http.Request)
 
 		mt, message, err := conn.ReadMessage()
 		if err != nil && ws.Status != 0 { // If server is shut down, clients should already be disconnectd.
-			log.Printf("read err [%v]: %v", client.clientName, err)
+			if _, ok := err.(*websocket.CloseError); !ok || websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+				log.Printf("read err [%v]: %v", client.clientName, err)
+			}
 
 			ws.muClients.Lock()
 			client.CloseWithReason(closeClientDisconnected)

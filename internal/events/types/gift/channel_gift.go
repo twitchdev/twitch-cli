@@ -69,7 +69,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				BroadcasterUserID:    params.ToUserID,
 				BroadcasterUserLogin: params.ToUserName,
 				BroadcasterUserName:  params.ToUserName,
-				Tier:                 "1000",
+				Tier:                 params.Tier,
 				Total:                int(params.Cost),
 				CumulativeTotal:      &total,
 				IsAnonymous:          params.IsAnonymous,
