@@ -35,7 +35,9 @@ func TriggerCommand() (command *cobra.Command) {
 
 	// per-topic flags
 	command.Flags().StringVarP(&toUser, "to-user", "t", "", "User ID of the receiver of the event. For example, the user that receives a follow. In most contexts, this is the broadcaster.")
+	command.Flags().StringVarP(&toUserName, "to-user-name", "", "", "User Name of the receiver of the event. For example, the user that receives a follow. In most contexts, this is the broadcaster.")
 	command.Flags().StringVarP(&fromUser, "from-user", "f", "", "User ID of the user sending the event, for example the user following another user.")
+	command.Flags().StringVarP(&fromUserName, "from-user-name", "", "", "User Name of the user sending the event, for example the user following another user.")
 	command.Flags().StringVarP(&giftUser, "gift-user", "g", "", "Used only for \"gift\" events. Denotes the User ID of the gifting user.")
 	command.Flags().BoolVarP(&isAnonymous, "anonymous", "a", false, "Denotes if the event is anonymous. Only applies to Gift and Sub events.")
 	command.Flags().IntVarP(&count, "count", "c", 1, "Number of times to run an event. This can be used to simulate rapid events, such as multiple sub gift, or large number of cheers.")
@@ -99,7 +101,9 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 			Transport:           transport,
 			ForwardAddress:      forwardAddress,
 			FromUser:            fromUser,
+			FromUserName:        fromUserName,
 			ToUser:              toUser,
+			ToUserName:          toUserName,
 			GiftUser:            giftUser,
 			Secret:              secret,
 			IsAnonymous:         isAnonymous,
