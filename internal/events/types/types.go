@@ -13,6 +13,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_grant"
 	"github.com/twitchdev/twitch-cli/internal/events/types/authorization_revoke"
 	"github.com/twitchdev/twitch-cli/internal/events/types/ban"
+	"github.com/twitchdev/twitch-cli/internal/events/types/channel_moderate_v2"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_redemption"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_points_reward"
 	"github.com/twitchdev/twitch-cli/internal/events/types/channel_update_v1"
@@ -65,6 +66,7 @@ func AllEvents() []events.MockEvent {
 		shoutout.Event{},
 		channel_update_v1.Event{},
 		channel_update_v2.Event{},
+		channel_moderate_v2.Event{},
 		streamup.Event{},
 		streamdown.Event{},
 		subscribe.Event{},
