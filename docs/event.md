@@ -35,53 +35,54 @@ Used to either create or send mock events for use with local webhooks testing.
 
 This command can take either the Event or Alias listed as an argument. It is preferred that you work with the Event, but for backwards compatibility Aliases still work.
 
-| Event                                                    | Alias                 | Description |
-|----------------------------------------------------------|-----------------------|-------------|
-| `channel.ban`                                            | `ban`                 | Channel ban event. |
-| `channel.channel_points_custom_reward.add`               | `add-reward`          | Channel Points event for a Custom Reward being added. |
-| `channel.channel_points_custom_reward.remove`            | `remove-reward`       | Channel Points event for a Custom Reward being removed. |
-| `channel.channel_points_custom_reward.update`            | `update-reward`       | Channel Points event for a Custom Reward being updated. |
-| `channel.channel_points_custom_reward_redemption.add`    | `add-redemption`      | Channel Points EventSub event for a redemption being performed. |
-| `channel.channel_points_custom_reward_redemption.update` | `add-update`          | Channel Points EventSub event for a redemption being performed. |
-| `channel.charity_campaign.donate`                        | `charity-donate`      | Charity campaign donation occurance event. |
-| `channel.charity_campaign.progress`                      | `charity-progress`    | Charity campaign progress event. |
-| `channel.charity_campaign.start`                         | `charity-start`       | Charity campaign start event. |
-| `channel.charity_campaign.stop`                          | `charity-stop`        | Charity campaign stop event. |
-| `channel.cheer`                                          | `cheer`               | Channel event for receiving cheers. |
-| `channel.follow`                                         | `follow`              | Channel event for receiving a follow. |
-| `channel.goal.begin`                                     | `goal-begin`          | Channel creator goal start event. |
-| `channel.goal.end`                                       | `goal-end`            | Channel creator goal end event. |
-| `channel.goal.progress`                                  | `goal-progress`       | Channel creator goal progress event. |
-| `channel.hype_train.begin`                               | `hype-train-begin`    | Channel hype train start event. |
-| `channel.hype_train.end`                                 | `hype-train-end`      | Channel hype train start event. |
-| `channel.hype_train.progress`                            | `hype-train-progress` | Channel hype train start event. |
-| `channel.moderator.add`                                  | `add-moderator`       | Channel moderator add event. |
-| `channel.moderator.remove`                               | `remove-moderator`    | Channel moderator removal event. |
-| `channel.poll.begin`                                     | `poll-begin`          | Channel poll begin event. |
-| `channel.poll.end`                                       | `poll-end`            | Channel poll end event. |
-| `channel.poll.progress`                                  | `poll-progress`       | Channel poll progress event. |
-| `channel.prediction.begin`                               | `prediction-begin`    | Channel prediction begin event. |
-| `channel.prediction.end`                                 | `prediction-end`      | Channel prediction end event. |
-| `channel.prediction.lock`                                | `prediction-lock`     | Channel prediction lock event. |
-| `channel.prediction.progress`                            | `prediction-progress` | Channel prediction progress event. |
-| `channel.raid`                                           | `raid`                | Channel raid event with a random viewer count. |
-| `channel.shield_mode.begin`                              | `shield-mode-begin`   | Channel Shield Mode activate event. |
-| `channel.shield_mode.end`                                | `shield-mode-end`     | Channel Shield Mode deactivate event. |
-| `channel.shoutout.create`                                | `shoutout-create`     | Channel shoutout created event. This is for outgoing shoutouts, from your channel to another. |
-| `channel.shoutout.receive`                               | `shoutout-received`   | Channel shoutout created event. This is for incoming shoutouts, to your channel from anothers. |
-| `channel.subscribe`                                      | `subscribe`           | A standard subscription event. Triggers a basic tier 1 sub, but can be flexible with --tier |
-| `channel.subscribe`                                      | `gift`                | A gifted subscription event. Triggers a basic tier 1 sub, but can be flexible with --tier |
-| `channel.subscription.end`                               | `unsubscribe`         | A standard subscription end event. Triggers a basic tier 1 sub, but can be flexible with --tier |
-| `channel.subscription.gift`                              | `channel-gift`        | Channel gifting event; not to be confused with the `gift` event. This event is a description of the number of gifts given by a user. |
-| `channel.subscription.message`                           | `subscribe-message`   | Subscription Message event. |
-| `channel.unban`                                          | `unban`               | Channel unban event. |
-| `channel.update`                                         | `stream-change`       | Channel update event. When a broadcaster updates channel properties. |
-| `drop.entitlement.grant`                                 | `drop`                | Drop Entitlement event. |
-| `extension.bits_transaction.create`                      | `transaction`         | Bits in Extensions transactions events. |
-| `stream.offline`                                         | `streamdown`          | Stream offline event. |
-| `stream.online`                                          | `streamup`            | Stream online event. |
-| `user.authorization.grant`                               | `grant`               | Authorization grant event. |
-| `user.authorization.revoke`                              | `revoke`              | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly. |
+| Event                                                    | Alias                  | Description |
+|----------------------------------------------------------|------------------------|-------------|
+| `automod.message.hold`                                   | `automod-message-hold` | Automod caught a message for review. |
+| `channel.ban`                                            | `ban`                  | Channel ban event. |
+| `channel.channel_points_custom_reward.add`               | `add-reward`           | Channel Points event for a Custom Reward being added. |
+| `channel.channel_points_custom_reward.remove`            | `remove-reward`        | Channel Points event for a Custom Reward being removed. |
+| `channel.channel_points_custom_reward.update`            | `update-reward`        | Channel Points event for a Custom Reward being updated. |
+| `channel.channel_points_custom_reward_redemption.add`    | `add-redemption`       | Channel Points EventSub event for a redemption being performed. |
+| `channel.channel_points_custom_reward_redemption.update` | `add-update`           | Channel Points EventSub event for a redemption being performed. |
+| `channel.charity_campaign.donate`                        | `charity-donate`       | Charity campaign donation occurance event. |
+| `channel.charity_campaign.progress`                      | `charity-progress`     | Charity campaign progress event. |
+| `channel.charity_campaign.start`                         | `charity-start`        | Charity campaign start event. |
+| `channel.charity_campaign.stop`                          | `charity-stop`         | Charity campaign stop event. |
+| `channel.cheer`                                          | `cheer`                | Channel event for receiving cheers. |
+| `channel.follow`                                         | `follow`               | Channel event for receiving a follow. |
+| `channel.goal.begin`                                     | `goal-begin`           | Channel creator goal start event. |
+| `channel.goal.end`                                       | `goal-end`             | Channel creator goal end event. |
+| `channel.goal.progress`                                  | `goal-progress`        | Channel creator goal progress event. |
+| `channel.hype_train.begin`                               | `hype-train-begin`     | Channel hype train start event. |
+| `channel.hype_train.end`                                 | `hype-train-end`       | Channel hype train start event. |
+| `channel.hype_train.progress`                            | `hype-train-progress`  | Channel hype train start event. |
+| `channel.moderator.add`                                  | `add-moderator`        | Channel moderator add event. |
+| `channel.moderator.remove`                               | `remove-moderator`     | Channel moderator removal event. |
+| `channel.poll.begin`                                     | `poll-begin`           | Channel poll begin event. |
+| `channel.poll.end`                                       | `poll-end`             | Channel poll end event. |
+| `channel.poll.progress`                                  | `poll-progress`        | Channel poll progress event. |
+| `channel.prediction.begin`                               | `prediction-begin`     | Channel prediction begin event. |
+| `channel.prediction.end`                                 | `prediction-end`       | Channel prediction end event. |
+| `channel.prediction.lock`                                | `prediction-lock`      | Channel prediction lock event. |
+| `channel.prediction.progress`                            | `prediction-progress`  | Channel prediction progress event. |
+| `channel.raid`                                           | `raid`                 | Channel raid event with a random viewer count. |
+| `channel.shield_mode.begin`                              | `shield-mode-begin`    | Channel Shield Mode activate event. |
+| `channel.shield_mode.end`                                | `shield-mode-end`      | Channel Shield Mode deactivate event. |
+| `channel.shoutout.create`                                | `shoutout-create`      | Channel shoutout created event. This is for outgoing shoutouts, from your channel to another. |
+| `channel.shoutout.receive`                               | `shoutout-received`    | Channel shoutout created event. This is for incoming shoutouts, to your channel from anothers. |
+| `channel.subscribe`                                      | `subscribe`            | A standard subscription event. Triggers a basic tier 1 sub, but can be flexible with --tier |
+| `channel.subscribe`                                      | `gift`                 | A gifted subscription event. Triggers a basic tier 1 sub, but can be flexible with --tier |
+| `channel.subscription.end`                               | `unsubscribe`          | A standard subscription end event. Triggers a basic tier 1 sub, but can be flexible with --tier |
+| `channel.subscription.gift`                              | `channel-gift`         | Channel gifting event; not to be confused with the `gift` event. This event is a description of the number of gifts given by a user. |
+| `channel.subscription.message`                           | `subscribe-message`    | Subscription Message event. |
+| `channel.unban`                                          | `unban`                | Channel unban event. |
+| `channel.update`                                         | `stream-change`        | Channel update event. When a broadcaster updates channel properties. |
+| `drop.entitlement.grant`                                 | `drop`                 | Drop Entitlement event. |
+| `extension.bits_transaction.create`                      | `transaction`          | Bits in Extensions transactions events. |
+| `stream.offline`                                         | `streamdown`           | Stream offline event. |
+| `stream.online`                                          | `streamup`             | Stream online event. |
+| `user.authorization.grant`                               | `grant`                | Authorization grant event. |
+| `user.authorization.revoke`                              | `revoke`               | User authorization revoke event. Uses local Client as set in `twitch configure` or generates one randomly. |
 
 
 
