@@ -35,7 +35,9 @@ func TriggerCommand() (command *cobra.Command) {
 
 	// per-topic flags
 	command.Flags().StringVarP(&toUser, "to-user", "t", "", "User ID of the receiver of the event. For example, the user that receives a follow. In most contexts, this is the broadcaster.")
+	command.Flags().StringVarP(&toUserName, "to-user-name", "", "", "User Name of the receiver of the event. For example, the user that receives a follow. In most contexts, this is the broadcaster.")
 	command.Flags().StringVarP(&fromUser, "from-user", "f", "", "User ID of the user sending the event, for example the user following another user.")
+	command.Flags().StringVarP(&fromUserName, "from-user-name", "", "", "User Name of the user sending the event, for example the user following another user.")
 	command.Flags().StringVarP(&giftUser, "gift-user", "g", "", "Used only for \"gift\" events. Denotes the User ID of the gifting user.")
 	command.Flags().BoolVarP(&isAnonymous, "anonymous", "a", false, "Denotes if the event is anonymous. Only applies to Gift and Sub events.")
 	command.Flags().IntVarP(&count, "count", "c", 1, "Number of times to run an event. This can be used to simulate rapid events, such as multiple sub gift, or large number of cheers.")
@@ -57,6 +59,7 @@ func TriggerCommand() (command *cobra.Command) {
 	command.Flags().StringVar(&websocketClient, "session", "", "Defines a specific websocket client/session to forward an event to. Used only with \"websocket\" transport.")
 	command.Flags().StringVar(&banStart, "ban-start", "", "Sets the timestamp a ban started at.")
 	command.Flags().StringVar(&banEnd, "ban-end", "", "Sets the timestamp a ban is intended to end at. If not set, the ban event will appear as permanent. This flag can take a timestamp or relative time (600, 600s, 10d4h12m55s)")
+	command.Flags().StringVar(&moderateAction, "moderate-action", "", "Specifies which moderate action to emit for \"channel.moderate\"")
 
 	return
 }
@@ -99,7 +102,9 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 			Transport:           transport,
 			ForwardAddress:      forwardAddress,
 			FromUser:            fromUser,
+			FromUserName:        fromUserName,
 			ToUser:              toUser,
+			ToUserName:          toUserName,
 			GiftUser:            giftUser,
 			Secret:              secret,
 			IsAnonymous:         isAnonymous,
@@ -119,6 +124,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 			WebSocketClient:     websocketClient,
 			BanStartTimestamp:   banStart,
 			BanEndTimestamp:     banEnd,
+			ModerateAction:      moderateAction,
 		})
 
 		if err != nil {

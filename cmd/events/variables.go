@@ -8,7 +8,9 @@ var (
 	transport           string
 	noConfig            bool
 	fromUser            string
+	fromUserName        string
 	toUser              string
+	toUserName          string
 	giftUser            string
 	subscriptionID      string
 	eventMessageID      string
@@ -30,4 +32,5 @@ var (
 	websocketClient     string
 	banStart            string
 	banEnd              string
+	moderateAction      string
 )

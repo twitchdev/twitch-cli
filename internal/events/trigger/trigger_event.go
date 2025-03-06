@@ -27,7 +27,9 @@ type TriggerParameters struct {
 	Transport           string
 	IsAnonymous         bool
 	FromUser            string
+	FromUserName        string
 	ToUser              string
+	ToUserName          string
 	GiftUser            string
 	EventStatus         string
 	SubscriptionStatus  string
@@ -51,6 +53,7 @@ type TriggerParameters struct {
 	WebSocketClient     string
 	BanStartTimestamp   string
 	BanEndTimestamp     string
+	ModerateAction      string
 }
 
 type TriggerResponse struct {
@@ -80,8 +83,16 @@ func Fire(p TriggerParameters) (string, error) {
 		p.ToUser = util.RandomUserID()
 	}
 
+	if p.ToUserName == "" {
+		p.ToUserName = "testBroadcaster"
+	}
+
 	if p.FromUser == "" {
 		p.FromUser = util.RandomUserID()
+	}
+
+	if p.FromUserName == "" {
+		p.FromUserName = "testFromUser"
 	}
 
 	if p.GameID == "" {
@@ -128,9 +139,9 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		Trigger:             p.Event,
 		Transport:           p.Transport,
 		FromUserID:          p.FromUser,
-		FromUserName:        "testFromUser",
+		FromUserName:        p.FromUserName,
 		ToUserID:            p.ToUser,
-		ToUserName:          "testBroadcaster",
+		ToUserName:          p.ToUserName,
 		IsAnonymous:         p.IsAnonymous,
 		Cost:                p.Cost,
 		EventStatus:         p.EventStatus,
@@ -147,6 +158,7 @@ https://dev.twitch.tv/docs/eventsub/handling-webhook-events#processing-an-event`
 		GiftUser:            p.GiftUser,
 		BanStartTimestamp:   p.BanStartTimestamp,
 		BanEndTimestamp:     p.BanEndTimestamp,
+		ModerateAction:      p.ModerateAction,
 	}
 
 	e, err := types.GetByTriggerAndTransportAndVersion(p.Event, p.Transport, p.Version)
