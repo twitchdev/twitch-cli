@@ -45,7 +45,6 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 
 	isExtensionsLiveEndpoint := false // https://github.com/twitchdev/twitch-cli/issues/157
 
-	data.Data = make([]interface{}, 0)
 	client, err := GetClientInformation()
 	if err != nil {
 		return fmt.Errorf("Error fetching client information: %v", err.Error())
@@ -186,7 +185,7 @@ func NewRequest(method string, path string, queryParameters []string, body []byt
 		runCounter++
 	}
 
-	if data.Data == nil {
+	if data.Data == nil && data.Error == "" {
 		data.Data = make([]interface{}, 0)
 	}
 	// handle json marshalling better; returns empty slice vs. null
