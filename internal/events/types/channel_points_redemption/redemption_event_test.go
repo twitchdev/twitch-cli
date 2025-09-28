@@ -27,6 +27,7 @@ func TestEventSub(t *testing.T) {
 		ItemID:             "12345678-1234-abcd-5678-000000000000",
 		Cost:               1337,
 		ItemName:           "Testing",
+		UserInput:          "testing",
 	}
 
 	r, err := Event{}.GenerateEvent(params)
@@ -42,6 +43,7 @@ func TestEventSub(t *testing.T) {
 	a.Equal(params.Cost, body.Event.Reward.Cost)
 	a.Equal(params.ItemID, body.Event.Reward.ID)
 	a.Equal(params.ItemName, body.Event.Reward.Title)
+	a.Equal(params.UserInput, body.Event.UserInput)
 
 	params = events.MockEventParameters{
 		Transport:  models.TransportWebhook,

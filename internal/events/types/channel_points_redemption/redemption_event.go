@@ -77,7 +77,7 @@ func (e Event) GenerateEvent(params events.MockEventParameters) (events.MockEven
 				UserID:               params.FromUserID,
 				UserLogin:            params.FromUserName,
 				UserName:             params.FromUserName,
-				UserInput:            "Test Input From CLI",
+				UserInput:            params.UserInput,
 				Status:               params.EventStatus,
 				Reward: models.RedemptionReward{
 					ID:     params.ItemID,

@@ -115,6 +115,7 @@ This command can take either the Event or Alias listed as an argument. It is pre
 | `--timestamp`             |           | Sets the timestamp to be used in payloads and headers. Must be in RFC3339Nano format.                                           | `--timestamp 2017-04-13T14:34:23`            | N               |
 | `--to-user`               | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                              | `-t 44635596`                                | N               |
 | `--transport`             | `-T`      | The method used to send events. Can either be `webhook` or `websocket`. Default is `webhook`.                                   | `-T webhook`                                 | N               |
+| `--user-input`            |           | Sets the user input used for the event. Only applies to channel point redemptions.                                              | `--user-input Awesome redemption!`           | N               |
 
 **Examples**
 
