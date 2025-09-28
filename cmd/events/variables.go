@@ -30,4 +30,5 @@ var (
 	websocketClient     string
 	banStart            string
 	banEnd              string
+	userInput           string
 )
