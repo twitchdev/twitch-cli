@@ -56,6 +56,14 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 	clientID = viper.GetString("clientId")
 	clientSecret = viper.GetString("clientSecret")
 
+	if overrideClientId != "" {
+		clientID = overrideClientId
+	}
+
+	if overrideClientSecret != "" {
+		clientSecret = overrideClientSecret
+	}
+
 	webserverPort := strconv.Itoa(tokenServerPort)
 	redirectURL := fmt.Sprintf("http://%v:%v", redirectHost, webserverPort)
 
@@ -68,14 +76,6 @@ func loginCmdRun(cmd *cobra.Command, args []string) error {
 
 		clientID = viper.GetString("clientId")
 		clientSecret = viper.GetString("clientSecret")
-	}
-
-	if overrideClientId != "" {
-		clientID = overrideClientId
-	}
-
-	if overrideClientSecret != "" {
-		clientSecret = overrideClientSecret
 	}
 
 	forceVerifyWord := "false"
