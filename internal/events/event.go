@@ -30,6 +30,7 @@ type MockEventParameters struct {
 	ClientID            string
 	BanStartTimestamp   string
 	BanEndTimestamp     string
+	ModerateAction      string
 }
 
 type MockEventResponse struct {

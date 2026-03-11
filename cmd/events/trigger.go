@@ -59,6 +59,7 @@ func TriggerCommand() (command *cobra.Command) {
 	command.Flags().StringVar(&websocketClient, "session", "", "Defines a specific websocket client/session to forward an event to. Used only with \"websocket\" transport.")
 	command.Flags().StringVar(&banStart, "ban-start", "", "Sets the timestamp a ban started at.")
 	command.Flags().StringVar(&banEnd, "ban-end", "", "Sets the timestamp a ban is intended to end at. If not set, the ban event will appear as permanent. This flag can take a timestamp or relative time (600, 600s, 10d4h12m55s)")
+	command.Flags().StringVar(&moderateAction, "moderate-action", "", "Specifies which moderate action to emit for \"channel.moderate\"")
 
 	return
 }
@@ -123,6 +124,7 @@ func triggerCmdRun(cmd *cobra.Command, args []string) error {
 			WebSocketClient:     websocketClient,
 			BanStartTimestamp:   banStart,
 			BanEndTimestamp:     banEnd,
+			ModerateAction:      moderateAction,
 		})
 
 		if err != nil {

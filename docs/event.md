@@ -117,6 +117,7 @@ This command can take either the Event or Alias listed as an argument. It is pre
 | `--to-user`               | `-t`      | Denotes the receiver's TUID of the event, usually the broadcaster.                                                                      | `-t 44635596`                                | N               |
 | `--to-user-name`          |           | Denotes the receiver's Twitch Username of the event, usually the broadcaster.                                                           | `--to-user-name testname`                    | N               |
 | `--transport`             | `-T`      | The method used to send events. Can either be `webhook` or `websocket`. Default is `webhook`.                                           | `-T webhook`                                 | N               |
+| `--moderate-action`       |           | The moderate action used for the `channel.moderate` topic. If none is specified, a random event is sent.                                | `--moderate-action vip`                      | N               |
 
 **Examples**
 
