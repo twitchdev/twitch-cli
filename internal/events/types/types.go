@@ -25,6 +25,7 @@ import (
 	"github.com/twitchdev/twitch-cli/internal/events/types/gift"
 	"github.com/twitchdev/twitch-cli/internal/events/types/goal"
 	"github.com/twitchdev/twitch-cli/internal/events/types/hype_train"
+	"github.com/twitchdev/twitch-cli/internal/events/types/hype_train_v2"
 	"github.com/twitchdev/twitch-cli/internal/events/types/moderator_change"
 	"github.com/twitchdev/twitch-cli/internal/events/types/poll"
 	"github.com/twitchdev/twitch-cli/internal/events/types/prediction"
@@ -57,6 +58,7 @@ func AllEvents() []events.MockEvent {
 		gift.Event{},
 		goal.Event{},
 		hype_train.Event{},
+		hype_train_v2.Event{},
 		moderator_change.Event{},
 		poll.Event{},
 		prediction.Event{},
@@ -160,6 +162,9 @@ func GetByTriggerAndTransportAndVersion(trigger string, transport string, versio
 // This does not include any "beta" events, just old production versions
 func RemovedEvents() map[string]string {
 	return map[string]string{
-		"channel.follow": "1",
+		"channel.follow":             "1",
+		"channel.hype_train.begin":   "1",
+		"channel.hype_train.end":     "1",
+		"channel.hype_train.progress": "1",
 	}
 }
