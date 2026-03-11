@@ -52,9 +52,9 @@ This command can take either the Event or Alias listed as an argument. It is pre
 | `channel.goal.begin`                                     | `goal-begin`          | Channel creator goal start event. |
 | `channel.goal.end`                                       | `goal-end`            | Channel creator goal end event. |
 | `channel.goal.progress`                                  | `goal-progress`       | Channel creator goal progress event. |
-| `channel.hype_train.begin`                               | `hype-train-begin`    | Channel hype train start event. |
-| `channel.hype_train.end`                                 | `hype-train-end`      | Channel hype train start event. |
-| `channel.hype_train.progress`                            | `hype-train-progress` | Channel hype train start event. |
+| `channel.hype_train.begin`                               | `hype-train-begin`    | Channel hype train begin event. Supports V1 and V2; use `--version 2` for V2 with shared train and type fields. |
+| `channel.hype_train.end`                                 | `hype-train-end`      | Channel hype train end event. Supports V1 and V2; use `--version 2` for V2 with shared train and type fields. |
+| `channel.hype_train.progress`                            | `hype-train-progress` | Channel hype train progress event. Supports V1 and V2; use `--version 2` for V2 with shared train and type fields. |
 | `channel.moderator.add`                                  | `add-moderator`       | Channel moderator add event. |
 | `channel.moderator.remove`                               | `remove-moderator`    | Channel moderator removal event. |
 | `channel.poll.begin`                                     | `poll-begin`          | Channel poll begin event. |
