@@ -109,13 +109,12 @@ func ForwardEvent(p ForwardParamters) (*http.Response, error) {
 
 func getSignatureHeader(req *http.Request, id string, secret string, transport string, timestamp string, payload []byte) {
 	mac := hmac.New(sha256.New, []byte(secret))
-	ts, _ := time.Parse(time.RFC3339Nano, timestamp)
 
 	switch transport {
 	case models.TransportWebhook:
 		req.Header.Set("Twitch-Eventsub-Message-Timestamp", timestamp)
-		prefix := ts.AppendFormat([]byte(id), time.RFC3339Nano)
-		mac.Write(prefix)
+		// The signature must cover the exact timestamp string sent in the header
+		mac.Write([]byte(id + timestamp))
 		mac.Write(payload)
 		req.Header.Set("Twitch-Eventsub-Message-Signature", fmt.Sprintf("sha256=%x", mac.Sum(nil)))
 	}
